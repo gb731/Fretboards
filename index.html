@@ -142,6 +142,21 @@
   .boards.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .boards.cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .boards section.board { margin-bottom: 0; }
+  .boards { align-items: stretch; }
+  /* Titles stay on one line so every card, and every fretboard in it, keeps the same size */
+  .boards section.board h2 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .chord-sub {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 14px;
+    color: var(--muted);
+    margin: -6px 0 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .boards.cols-2 .chord-sub { font-size: 12px; margin: -4px 0 8px; }
+  .boards.cols-3 .chord-sub { font-size: 11px; margin: -3px 0 6px; }
+  .boards.cols-4 .chord-sub { font-size: 10px; margin: -2px 0 4px; }
   #singles { display: contents; }
   .boards .group-title { grid-column: 1 / -1; margin: 20px 0 0; }
 
@@ -207,6 +222,71 @@
     margin: 10px 0 0;
     line-height: 1.5;
   }
+
+  /* Floating controls: docked, sticky side panel on wide screens, slide-in drawer on narrow ones */
+  .layout { display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 20px; align-items: start; }
+  .layout:not(.ctl-open) { grid-template-columns: minmax(0, 1fr); }
+  .layout:not(.ctl-open) .panel { display: none; }
+  .content { min-width: 0; }
+  .panel {
+    position: sticky;
+    top: 12px;
+    max-height: calc(100vh - 24px);
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    background: #fffdf8;
+    border: 1px solid #e0d6c2;
+    border-radius: 6px;
+    padding: 16px 16px 8px;
+  }
+  .panel .keys, .panel .master { max-width: none; }
+  .panel-head { display: none; }
+  .scrim { display: none; }
+  .fab {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    z-index: 60;
+    padding: 12px 18px;
+    border: 0;
+    border-radius: 24px;
+    background: var(--ink);
+    color: #fffdf8;
+    font: 600 15px system-ui, -apple-system, "Segoe UI", sans-serif;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+  }
+  .fab:focus-visible { outline: 3px solid #b4532a; outline-offset: 2px; }
+  @media (max-width: 999px) {
+    .layout, .layout:not(.ctl-open) { display: block; }
+    .panel, .layout:not(.ctl-open) .panel {
+      display: block;
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: min(92vw, 400px);
+      max-height: none;
+      z-index: 50;
+      border-radius: 0 10px 10px 0;
+      transform: translateX(-105%);
+      transition: transform 0.2s ease;
+      box-shadow: 4px 0 18px rgba(0, 0, 0, 0.2);
+      padding-bottom: 80px;
+    }
+    .layout.ctl-open .panel { transform: none; }
+    .layout.ctl-open .scrim { display: block; position: fixed; inset: 0; z-index: 40; background: rgba(0, 0, 0, 0.12); }
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 0 0 12px;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      font-size: 16px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) { .panel { transition: none; } }
 </style>
 </head>
 <body>
@@ -215,6 +295,9 @@
   <p class="subtitle">Major-scale triads, CAGED shapes, and chord progressions in every key</p>
   <p class="intro">Pick a key, then choose which chords to show. Each chord has its own color, and where two chords share a note the dot is split. Every fretboard below follows your selection.</p>
 
+  <div class="layout ctl-open" id="layout">
+    <aside class="panel" id="panel" aria-label="Controls">
+      <div class="panel-head"><strong>Controls</strong><button type="button" class="key" id="panel-close">Done</button></div>
   <div class="keys" id="keys" role="group" aria-label="Key"></div>
 
   <div class="master">
@@ -222,8 +305,11 @@
     <div class="keys" id="bsize" role="group" aria-label="Board size"></div>
     <p class="hint">Smaller sizes put the fretboards side by side so more fit on screen. Pair a small size with Zoom to a fret range to keep the notes readable.</p>
 
+    <!-- 7th and 9th chord selection is hidden for now. To bring it back, remove this HTML comment
+         and the matching JS comment marked "7TH AND 9TH CHORD SELECTION".
     <p class="ctl-label">Chord type</p>
     <div class="keys" id="ctype" role="group" aria-label="Chord type"></div>
+    -->
 
     <p class="ctl-label" id="lbl-major">Major chords</p>
     <div class="chips" id="chord-major" role="group" aria-label="Major-type chords"></div>
@@ -231,9 +317,14 @@
     <div class="chips" id="chord-minor" role="group" aria-label="Minor-type chords"></div>
     <p class="hint" id="chord-hint"></p>
 
+    <p class="ctl-label">Progression order for the individual fretboards</p>
+    <div class="chips" id="seq-pick" role="group" aria-label="Add a chord to the progression"></div>
+    <div class="chips" id="seq-list" aria-live="polite"></div>
+    <p class="hint">Only chords switched on above appear here. Tap them in the order you want, such as 1, 3, 4, 6. The individual fretboards then show those chords in that order, repeats included. Tap a step to remove it, or Clear to return to the normal order.</p>
+
     <p class="ctl-label">CAGED shapes on the individual chord fretboards</p>
     <div class="keys" id="caged" role="group" aria-label="CAGED shapes"></div>
-    <p class="hint">Dashed bands mark where each of the five open-chord shapes lands for that chord. Pick one letter to fade every note outside it. Minor chords use the same shape positions with the third lowered. The vii chord is left out.</p>
+    <p class="hint">Dashed bands mark where each open-chord shape lands for that chord. Tap any combination of letters, such as C, A and D, to see the forms above and below each other. Notes outside the chosen shapes fade. Minor chords use the minor form (labeled like "Am shape") in the same positions. The vii chord is left out.</p>
 
     <p class="ctl-label" id="lbl-shapes">Outline playable triads on these strings</p>
     <div class="keys" id="shapes" role="group" aria-label="Playable shapes"></div>
@@ -243,12 +334,16 @@
     <div class="zoom-row off" id="zoom" role="group" aria-label="Zoom"></div>
     <p class="hint" id="zoom-readout"></p>
 
+    <!-- Progression selection is hidden for now. To bring it back, remove this HTML comment
+         and the matching JS comment marked "PROGRESSION SELECTION".
     <p class="ctl-label">Progression</p>
     <div class="keys" id="prog-presets" role="group" aria-label="Progression"></div>
     <div id="prog-start" hidden><div class="zoom-row" id="prog-start-row"></div></div>
     <p class="hint">Pick a progression to step through it chord by chord. Each chord uses the CAGED shape nearest the previous one, so you can see the smallest hand move. The progression fretboard sets its own zoom.</p>
+    -->
   </div>
-
+    </aside>
+    <div class="content">
   <div class="boards cols-1" id="boards">
   <section class="board" id="prog-section" hidden>
     <h2 id="prog-title"></h2>
@@ -283,6 +378,10 @@
   <h2 class="group-title" id="singles-title">Individual chords</h2>
   <div id="singles"></div>
   </div>
+    </div>
+    <div class="scrim" id="scrim"></div>
+  </div>
+  <button type="button" class="fab" id="fab" aria-expanded="true" aria-controls="panel">Hide controls</button>
 </main>
 
 <script>
@@ -386,23 +485,27 @@
     { letter: 'D', rootPc: 2, lo: 0, hi: 3 },
   ];
 
+  // Label for a CAGED shape: minor chords use the minor form, e.g. "Am"
+  const shapeName = b => b.letter + (b.minor ? 'm' : '');
+
+  // mode is 'all' or a Set of letters (any combination of C, A, G, E, D)
   function cagedBands(chord, mode) {
-    if (mode === 'off' || chord.dim) return [];
+    if (chord.dim || (mode !== 'all' && (!mode || mode.size === 0))) return [];
     const bands = [];
-    CAGED.filter(sh => mode === 'all' || sh.letter === mode).forEach(sh => {
+    CAGED.filter(sh => mode === 'all' || mode.has(sh.letter)).forEach(sh => {
       const base = (((chord.pcs[0] - sh.rootPc) % 12) + 12) % 12;
       for (let shift = base - 12; shift + sh.lo <= FRETS; shift += 12) {
         const lo = shift + sh.lo;
         const hi = Math.min(shift + sh.hi, FRETS);
         if (hi < 2 || hi - Math.max(lo, 0) < 1) continue; // too little of the shape fits on the neck
-        bands.push({ letter: sh.letter, lo, hi });
+        bands.push({ letter: sh.letter, lo, hi, minor: chord.type === 'minor' });
       }
     });
     return bands;
   }
 
   // Zoom state: when on, only frets from anchor - below to anchor + above are drawn.
-  const zoom = { on: false, anchor: 5, below: 2, above: 3 };
+  const zoom = { on: false, anchor: 5, below: 3, above: 3 };
 
   function currentWindow() {
     if (!zoom.on) return { lo: 0, hi: FRETS, zoomed: false, anchor: zoom.anchor };
@@ -481,8 +584,8 @@
       s += `<rect x="${mid - 31}" y="4" width="62" height="18" rx="9" fill="${pill}"/>`;
       s += `<text x="${mid}" y="16.5" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#fffdf8">${label}</text>`;
     };
-    if (extras.ghost) drawBand(extras.ghost.band, extras.ghost.chord.color, '#8a8272', `prev ${extras.ghost.band.letter}`, '2 4');
-    bands.forEach(b => drawBand(b, '#2b2a27', '#2b2a27', `${b.letter} shape`, '5 4'));
+    if (extras.ghost) drawBand(extras.ghost.band, extras.ghost.chord.color, '#8a8272', `prev ${shapeName(extras.ghost.band)}`, '2 4');
+    bands.forEach(b => drawBand(b, '#2b2a27', '#2b2a27', `${shapeName(b)} shape`, '5 4'));
 
     // Playable shape outlines (only shapes that fit entirely in view)
     const shapeKeys = new Set();
@@ -569,7 +672,8 @@
   const active = [true, true, true, true, true, true, true];
 
   // 'off', 'all', or a CAGED letter
-  let cagedMode = 'all';
+  const CAGED_LETTERS = ['C', 'A', 'G', 'E', 'D'];
+  const cagedSel = new Set(CAGED_LETTERS); // forms currently shown, in any combination
 
   // 'off', 'all', or the index of the lowest string of a string set
   let shapeMode = 3;
@@ -615,21 +719,97 @@
     document.getElementById(id + '-chips').innerHTML = legend(list, emptyMsg);
   }
 
+  // Progression order: scale-degree indexes (0-6) in the order tapped, repeats allowed.
+  // When set, the individual fretboards show exactly these chords in this order.
+  let progSeq = [];
+  const SEQ_MAX = 16;
+
+  // Steps whose chord is switched on above. Steps for switched-off chords stay stored
+  // (so toggling a chord back on restores them) but are left out of the boards and list.
+  function effectiveSeq() {
+    return progSeq.map((deg, idx) => ({ deg, idx })).filter(st => active[st.deg]);
+  }
+
+  function drawSeq() {
+    const pick = document.getElementById('seq-pick');
+    const list = document.getElementById('seq-list');
+    pick.innerHTML = '';
+    list.innerHTML = '';
+
+    let anyOn = false;
+    chords.forEach((c, i) => {
+      if (!active[i]) return; // the picker follows the chord chips above
+      anyOn = true;
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'chip';
+      b.innerHTML = `<span class="dot" style="background:${c.color}"></span><span>${i + 1} ${c.name}</span>`;
+      b.setAttribute('aria-label', `Add ${c.name}, degree ${i + 1}, to the progression`);
+      b.addEventListener('click', () => {
+        if (progSeq.length >= SEQ_MAX) return;
+        progSeq.push(i);
+        drawSeq();
+        renderAll();
+      });
+      pick.appendChild(b);
+    });
+    if (!anyOn) pick.innerHTML = '<span class="empty">Switch on chords above to add them here.</span>';
+
+    const eff = effectiveSeq();
+    if (!eff.length) {
+      list.innerHTML = progSeq.length
+        ? '<span class="empty">Your steps use chords that are switched off, so the boards use the normal order.</span>'
+        : '<span class="empty">No progression set, so the boards use the normal order.</span>';
+    }
+    eff.forEach((st, pos) => {
+      const c = chords[st.deg];
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'chip';
+      b.innerHTML = `<span class="dot" style="background:${c.color}"></span><span>${pos + 1}. ${st.deg + 1} ${c.name} \u00d7</span>`;
+      b.setAttribute('aria-label', `Remove step ${pos + 1}, ${c.name}`);
+      b.addEventListener('click', () => {
+        progSeq.splice(st.idx, 1);
+        drawSeq();
+        renderAll();
+      });
+      list.appendChild(b);
+    });
+    if (progSeq.length) {
+      const clear = document.createElement('button');
+      clear.type = 'button';
+      clear.className = 'key';
+      clear.textContent = 'Clear';
+      clear.addEventListener('click', () => {
+        progSeq = [];
+        drawSeq();
+        renderAll();
+      });
+      list.appendChild(clear);
+    }
+  }
+
   function renderSingles(selected) {
     const wrap = document.getElementById('singles');
     wrap.innerHTML = '';
-    if (!selected.length) {
+    const eff = effectiveSeq();
+    const seqMode = eff.length > 0;
+    const list = seqMode ? eff.map(st => chords[st.deg]) : selected;
+    document.getElementById('singles-title').textContent = seqMode
+      ? `Individual chords in ${currentKey}: ${eff.map(st => st.deg + 1).join('\u2013')}`
+      : `Individual chords in ${currentKey}`;
+    if (!list.length) {
       wrap.innerHTML = '<p class="empty">No chords selected. Turn on a chord above.</p>';
       return;
     }
-    selected.forEach(c => {
+    list.forEach((c, pos) => {
+      const prefix = seqMode ? `${pos + 1}. ` : '';
       const sec = document.createElement('section');
       sec.className = 'board';
       sec.innerHTML =
-        `<h2><span class="dot" style="background:${c.color}"></span>${c.roman}: ${c.name}` +
-        `<span class="sub-notes">${c.notes.map(n => n.name).join(' ')}</span>` +
-        `<span class="sub-notes">(${c.formula})</span></h2>` +
-        board([c], cagedBands(c, cagedMode), cagedMode !== 'all');
+        `<h2 class="single-title"><span class="dot" style="background:${c.color}"></span>${prefix}${c.roman}: ${c.name}</h2>` +
+        `<p class="chord-sub">${c.notes.map(n => n.name).join(' ')} (${c.formula})</p>` +
+        board([c], cagedBands(c, cagedSel), cagedSel.size > 0 && cagedSel.size < CAGED_LETTERS.length);
       wrap.appendChild(sec);
     });
   }
@@ -657,6 +837,7 @@
         btn.addEventListener('click', () => {
           active[i] = !active[i];
           btn.setAttribute('aria-pressed', String(active[i]));
+          drawSeq();
           renderAll();
         });
         wrap.appendChild(btn);
@@ -697,6 +878,7 @@
     document.getElementById('singles-title').textContent = `Individual chords in ${keyName}`;
 
     drawChordChips();
+    drawSeq();
     renderAll();
 
     document.querySelectorAll('#keys .key').forEach(b => {
@@ -754,6 +936,7 @@
     shapesWrap.appendChild(fadeBtn);
   }
 
+  /* 7TH AND 9TH CHORD SELECTION (hidden for now; remove this comment, and the HTML one, to bring it back)
   const CTYPE_OPTIONS = [['Triads', 3], ['7th chords', 4], ['9th chords', 5]];
   const ctypeWrap = document.getElementById('ctype');
   CTYPE_OPTIONS.forEach(([label, value]) => {
@@ -772,26 +955,36 @@
     });
     ctypeWrap.appendChild(b);
   });
+  */
 
-  const CAGED_OPTIONS = [
-    ['Off', 'off'], ['C', 'C'], ['A', 'A'], ['G', 'G'], ['E', 'E'], ['D', 'D'], ['All', 'all'],
-  ];
+  const CAGED_BUTTONS = [['Off', 'off'], ...CAGED_LETTERS.map(l => [l, l]), ['All', 'all']];
   const cagedWrap = document.getElementById('caged');
-  CAGED_OPTIONS.forEach(([label, value]) => {
+  function syncCaged() {
+    cagedWrap.querySelectorAll('.key').forEach((btn, i) => {
+      const v = CAGED_BUTTONS[i][1];
+      const on = v === 'off' ? cagedSel.size === 0
+        : v === 'all' ? cagedSel.size === CAGED_LETTERS.length
+        : cagedSel.has(v);
+      btn.setAttribute('aria-pressed', String(on));
+    });
+  }
+  CAGED_BUTTONS.forEach(([label, value]) => {
     const b = document.createElement('button');
     b.type = 'button';
     b.className = 'key';
     b.textContent = label;
-    b.setAttribute('aria-pressed', String(value === cagedMode));
+    b.setAttribute('aria-pressed', 'false');
     b.addEventListener('click', () => {
-      cagedMode = value;
-      cagedWrap.querySelectorAll('.key').forEach((btn, i) => {
-        btn.setAttribute('aria-pressed', String(CAGED_OPTIONS[i][1] === cagedMode));
-      });
+      if (value === 'off') cagedSel.clear();
+      else if (value === 'all') CAGED_LETTERS.forEach(l => cagedSel.add(l));
+      else if (cagedSel.has(value)) cagedSel.delete(value);
+      else cagedSel.add(value);
+      syncCaged();
       renderAll();
     });
     cagedWrap.appendChild(b);
   });
+  syncCaged();
 
   // ---- Progression stepper ----
   const PROGRESSIONS = [
@@ -826,7 +1019,7 @@
     const startBox = document.getElementById('prog-start');
     const p = PROGRESSIONS.find(x => x.id === prog.id);
     sec.hidden = !p;
-    startBox.hidden = !p;
+    if (startBox) startBox.hidden = !p;
     if (!p) return;
 
     const plan = planProgression(p.degrees, prog.start);
@@ -852,13 +1045,13 @@
     document.getElementById('prog-board').innerHTML =
       fretboard([cur.chord], [true], pcNames, currentShapeSets(), [cur.band], true, extras);
 
-    let info = `${cur.band.letter} shape, frets ${Math.max(cur.band.lo, 0)} to ${cur.band.hi}.`;
+    let info = `${shapeName(cur.band)} shape, frets ${Math.max(cur.band.lo, 0)} to ${cur.band.hi}.`;
     if (ghost) {
       const d = Math.round(bandCenter(cur.band) - bandCenter(ghost.band));
       const n = Math.abs(d);
       info += d === 0
         ? ' The hand stays in about the same spot.'
-        : ` The hand moves about ${n} fret${n === 1 ? '' : 's'} ${d > 0 ? 'up' : 'down'} the neck from the ${ghost.band.letter} shape.`;
+        : ` The hand moves about ${n} fret${n === 1 ? '' : 's'} ${d > 0 ? 'up' : 'down'} the neck from the ${shapeName(ghost.band)} shape.`;
       info += shared.length
         ? ` Shared note${shared.length > 1 ? 's' : ''}: ${shared.map(pc => pcNames[pc]).join(', ')}.`
         : ' No shared notes with the previous chord.';
@@ -896,6 +1089,7 @@
     if (e.key === 'ArrowLeft') stepProgression(-1);
   });
 
+  /* PROGRESSION SELECTION (hidden for now; remove this comment, and the HTML one, to bring it back)
   const PROG_OPTIONS = [['Off', 'off'], ...PROGRESSIONS.map(p => [p.label, p.id])];
   const progWrap = document.getElementById('prog-presets');
   PROG_OPTIONS.forEach(([label, value]) => {
@@ -943,6 +1137,7 @@
     box.append(label, minus, val, plus);
     row.appendChild(box);
   })();
+  */
 
   // Zoom controls: a toggle plus anchor / below / above steppers
   const zoomWrap = document.getElementById('zoom');
@@ -1020,6 +1215,27 @@
     });
     sizeWrap.appendChild(b);
   });
+
+  // Floating controls: docked side panel on wide screens, drawer on narrow ones
+  const layoutEl = document.getElementById('layout');
+  const fabEl = document.getElementById('fab');
+  let controlsOpen = true;
+  function setControls(open) {
+    controlsOpen = open;
+    layoutEl.classList.toggle('ctl-open', open);
+    fabEl.textContent = open ? 'Hide controls' : 'Controls';
+    fabEl.setAttribute('aria-expanded', String(open));
+  }
+  const wideQuery = (typeof window !== 'undefined' && window.matchMedia) ? window.matchMedia('(min-width: 1000px)') : null;
+  setControls(wideQuery ? wideQuery.matches : true);
+  if (wideQuery) {
+    const onChange = e => setControls(e.matches);
+    if (wideQuery.addEventListener) wideQuery.addEventListener('change', onChange);
+    else if (wideQuery.addListener) wideQuery.addListener(onChange);
+  }
+  fabEl.addEventListener('click', () => setControls(!controlsOpen));
+  document.getElementById('scrim').addEventListener('click', () => setControls(false));
+  document.getElementById('panel-close').addEventListener('click', () => setControls(false));
 
   drawShapeButtons();
   setKey('A', 9);
