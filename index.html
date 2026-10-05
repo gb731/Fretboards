@@ -20,7 +20,7 @@
     color: var(--ink);
     font-family: Georgia, "Iowan Old Style", "Times New Roman", serif;
   }
-  main { max-width: 960px; margin: 0 auto; }
+  main { max-width: 1400px; margin: 0 auto; }
   h1 { font-size: 30px; font-weight: 400; margin: 0 0 4px; }
   .subtitle { font-size: 19px; color: var(--muted); margin: 0 0 12px; }
   .intro {
@@ -133,6 +133,37 @@
   }
   h2 { font-size: 21px; font-weight: 400; margin: 0 0 12px; }
   svg { display: block; width: 100%; height: auto; }
+
+  /* Board grid: smaller sizes put the fretboards side by side */
+  .intro, .master, .keys { max-width: 960px; }
+  .boards { display: grid; gap: 16px; align-items: start; grid-template-columns: minmax(0, 1fr); }
+  .boards.cols-1 { max-width: 960px; }
+  .boards.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .boards.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .boards.cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .boards section.board { margin-bottom: 0; }
+  #singles { display: contents; }
+  .boards .group-title { grid-column: 1 / -1; margin: 20px 0 0; }
+
+  .boards.cols-2 section.board { padding: 14px 14px 12px; }
+  .boards.cols-2 h2 { font-size: 17px; margin-bottom: 8px; }
+  .boards.cols-2 .sub-notes { font-size: 13px; margin-left: 6px; }
+  .boards.cols-2 .chip, .boards.cols-2 .tag { font-size: 12px; padding: 4px 9px; }
+  .boards.cols-2 .hint { font-size: 12px; }
+
+  .boards.cols-3 section.board { padding: 10px 10px 8px; }
+  .boards.cols-3 h2 { font-size: 15px; margin-bottom: 6px; }
+  .boards.cols-3 .sub-notes { font-size: 11px; margin-left: 5px; }
+  .boards.cols-3 .chip, .boards.cols-3 .tag { font-size: 11px; padding: 3px 7px; gap: 5px; }
+  .boards.cols-3 .chips { margin-top: 8px; gap: 6px; }
+  .boards.cols-3 .hint { font-size: 11px; }
+
+  .boards.cols-4 section.board { padding: 8px 8px 6px; }
+  .boards.cols-4 h2 { font-size: 13px; margin-bottom: 4px; }
+  .boards.cols-4 .sub-notes { display: none; }
+  .boards.cols-4 .chip, .boards.cols-4 .tag { font-size: 10px; padding: 2px 6px; gap: 4px; }
+  .boards.cols-4 .chips { margin-top: 6px; gap: 4px; }
+  .boards.cols-4 .hint { font-size: 10px; }
   .chips {
     display: flex;
     flex-wrap: wrap;
@@ -187,6 +218,10 @@
   <div class="keys" id="keys" role="group" aria-label="Key"></div>
 
   <div class="master">
+    <p class="ctl-label">Board size</p>
+    <div class="keys" id="bsize" role="group" aria-label="Board size"></div>
+    <p class="hint">Smaller sizes put the fretboards side by side so more fit on screen. Pair a small size with Zoom to a fret range to keep the notes readable.</p>
+
     <p class="ctl-label">Chord type</p>
     <div class="keys" id="ctype" role="group" aria-label="Chord type"></div>
 
@@ -214,6 +249,7 @@
     <p class="hint">Pick a progression to step through it chord by chord. Each chord uses the CAGED shape nearest the previous one, so you can see the smallest hand move. The progression fretboard sets its own zoom.</p>
   </div>
 
+  <div class="boards cols-1" id="boards">
   <section class="board" id="prog-section" hidden>
     <h2 id="prog-title"></h2>
     <div class="prog-nav">
@@ -246,6 +282,7 @@
 
   <h2 class="group-title" id="singles-title">Individual chords</h2>
   <div id="singles"></div>
+  </div>
 </main>
 
 <script>
@@ -963,6 +1000,26 @@
   });
 
   zoomToggle.addEventListener('click', () => { zoom.on = !zoom.on; syncZoom(); });
+
+  // Board size: how many fretboards sit side by side
+  const SIZE_OPTIONS = [['1 across', 1], ['2 across', 2], ['3 across', 3], ['4 across', 4]];
+  let boardCols = 1;
+  const sizeWrap = document.getElementById('bsize');
+  SIZE_OPTIONS.forEach(([label, value]) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'key';
+    b.textContent = label;
+    b.setAttribute('aria-pressed', String(value === boardCols));
+    b.addEventListener('click', () => {
+      boardCols = value;
+      document.getElementById('boards').className = `boards cols-${boardCols}`;
+      sizeWrap.querySelectorAll('.key').forEach((btn, i) => {
+        btn.setAttribute('aria-pressed', String(SIZE_OPTIONS[i][1] === boardCols));
+      });
+    });
+    sizeWrap.appendChild(b);
+  });
 
   drawShapeButtons();
   setKey('A', 9);
