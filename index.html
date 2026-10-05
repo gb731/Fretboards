@@ -242,6 +242,11 @@
   }
   .panel .keys, .panel .master { max-width: none; }
   .panel-head { display: none; }
+  .keymode { margin: 0 0 20px; }
+  .keymode .keys { margin: 0 0 14px; }
+  .keymode .ctl-label:not(:first-child) { margin-top: 4px; }
+  .keymode .hint { margin: -4px 0 0; }
+  .panel .master { margin-top: 0; }
   .scrim { display: none; }
   .fab {
     position: fixed;
@@ -291,14 +296,20 @@
 </head>
 <body>
 <main>
-  <h1>Guitar Triad Fretboards</h1>
-  <p class="subtitle">Major-scale triads, CAGED shapes, and chord progressions in every key</p>
-  <p class="intro">Pick a key, then choose which chords to show. Each chord has its own color, and where two chords share a note the dot is split. Every fretboard below follows your selection.</p>
+  <h1>Fretboards</h1>
+  <p class="subtitle">Triads, CAGED shapes, and chord progressions in every key and mode</p>
+  <p class="intro">Pick a key and a mode, then choose which chords to show. Each chord has its own color, and where two chords share a note the dot is split. Every fretboard below follows your selection.</p>
 
   <div class="layout ctl-open" id="layout">
     <aside class="panel" id="panel" aria-label="Controls">
       <div class="panel-head"><strong>Controls</strong><button type="button" class="key" id="panel-close">Done</button></div>
-  <div class="keys" id="keys" role="group" aria-label="Key"></div>
+  <div class="keymode">
+    <p class="ctl-label">Key (root note)</p>
+    <div class="keys" id="keys" role="group" aria-label="Key"></div>
+    <p class="ctl-label">Mode</p>
+    <div class="keys" id="modes" role="group" aria-label="Mode"></div>
+    <p class="hint" id="mode-hint"></p>
+  </div>
 
   <div class="master">
     <p class="ctl-label">Board size</p>
@@ -324,7 +335,7 @@
 
     <p class="ctl-label">CAGED shapes on the individual chord fretboards</p>
     <div class="keys" id="caged" role="group" aria-label="CAGED shapes"></div>
-    <p class="hint">Dashed bands mark where each open-chord shape lands for that chord. Tap any combination of letters, such as C, A and D, to see the forms above and below each other. Notes outside the chosen shapes fade. Minor chords use the minor form (labeled like "Am shape") in the same positions. The vii chord is left out.</p>
+    <p class="hint">Dashed bands mark where each open-chord shape lands for that chord. Tap any combination of letters, such as C, A and D, to see the forms above and below each other. Notes outside the chosen shapes fade. Minor chords use the minor form (labeled like "Am shape") in the same positions. Diminished chords are left out.</p>
 
     <p class="ctl-label" id="lbl-shapes">Outline playable triads on these strings</p>
     <div class="keys" id="shapes" role="group" aria-label="Playable shapes"></div>
@@ -387,26 +398,42 @@
 <script>
   const LETTERS = ['C','D','E','F','G','A','B'];
   const LETTER_PC = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
-  const MAJOR_STEPS = [0, 2, 4, 5, 7, 9, 11];
   const TUNING = [4, 9, 2, 7, 11, 4]; // low E to high E
   const FRETS = 22; // standard electric guitar neck
 
-  // Key name, root pitch class
+  // Key button label, root pitch class (the note names are chosen automatically per mode)
   const KEYS = [
-    ['C', 0], ['Db', 1], ['D', 2], ['Eb', 3], ['E', 4], ['F', 5],
-    ['F#', 6], ['G', 7], ['Ab', 8], ['A', 9], ['Bb', 10], ['B', 11],
+    ['C', 0], ['C#/Db', 1], ['D', 2], ['D#/Eb', 3], ['E', 4], ['F', 5],
+    ['F#/Gb', 6], ['G', 7], ['G#/Ab', 8], ['A', 9], ['A#/Bb', 10], ['B', 11],
   ];
+
+  // Modes: semitone steps from the root for each of the seven scale degrees
+  const MODES = [
+    { id: 'major',      label: 'Major',      word: 'major',      steps: [0, 2, 4, 5, 7, 9, 11], note: 'The standard bright major scale (Ionian).' },
+    { id: 'minor',      label: 'Minor',      word: 'minor',      steps: [0, 2, 3, 5, 7, 8, 10], note: 'Natural minor (Aeolian), the major scale started on its 6th note.' },
+    { id: 'dorian',     label: 'Dorian',     word: 'Dorian',     steps: [0, 2, 3, 5, 7, 9, 10], note: 'Minor with a raised 6th. A jazzy, funky minor sound.' },
+    { id: 'mixolydian', label: 'Mixolydian', word: 'Mixolydian', steps: [0, 2, 4, 5, 7, 9, 10], note: 'Major with a lowered 7th. Bluesy and rock-friendly.' },
+    { id: 'phrygian',   label: 'Phrygian',   word: 'Phrygian',   steps: [0, 1, 3, 5, 7, 8, 10], note: 'Minor with a lowered 2nd. Dark, with a Spanish flavor.' },
+    { id: 'lydian',     label: 'Lydian',     word: 'Lydian',     steps: [0, 2, 4, 6, 7, 9, 11], note: 'Major with a raised 4th. Bright and dreamy.' },
+    { id: 'locrian',    label: 'Locrian',    word: 'Locrian',    steps: [0, 1, 3, 5, 6, 8, 10], note: 'Minor with a lowered 2nd and 5th. Unstable, rarely used for whole songs.' },
+  ];
+
+  // Spellings to try for each root; the one needing the fewest sharps/flats wins
+  const ROOT_NAMES = {
+    0: ['C'], 1: ['Db', 'C#'], 2: ['D'], 3: ['Eb', 'D#'], 4: ['E'], 5: ['F'],
+    6: ['F#', 'Gb'], 7: ['G'], 8: ['Ab', 'G#'], 9: ['A'], 10: ['Bb', 'A#'], 11: ['B'],
+  };
 
   // One color per scale degree (I ii iii IV V vi vii), shared by all boards
   const DEG_COLORS = ['#c0492b', '#b8861b', '#3f8f4a', '#1f7a8c', '#3a4fb0', '#8a4fa0', '#b03a6e'];
 
-  // Build the properly spelled scale for a key
-  function buildScale(keyName, rootPc) {
+  // Build a properly spelled scale: each letter used once, in order, from the root's letter
+  function buildScale(keyName, rootPc, steps) {
     const startIdx = LETTERS.indexOf(keyName[0]);
     const notes = [];
     for (let d = 0; d < 7; d++) {
       const letter = LETTERS[(startIdx + d) % 7];
-      const pc = (rootPc + MAJOR_STEPS[d]) % 12;
+      const pc = (rootPc + steps[d]) % 12;
       let diff = pc - LETTER_PC[letter];
       if (diff > 6) diff -= 12;
       if (diff < -6) diff += 12;
@@ -416,6 +443,17 @@
     return notes;
   }
 
+  // Pick the root spelling (e.g. Db vs C#) that gives the simplest scale, avoiding double sharps/flats
+  function spellScale(rootPc, steps) {
+    let best = null;
+    ROOT_NAMES[rootPc].forEach(name => {
+      const notes = buildScale(name, rootPc, steps);
+      const cost = notes.reduce((t, n) => { const acc = n.name.length - 1; return t + (acc >= 2 ? 10 : acc); }, 0);
+      if (!best || cost < best.cost) best = { name, notes, cost };
+    });
+    return best;
+  }
+
   // Stack thirds from scale degree d: 3 notes = triad, 4 = seventh chord, 5 = ninth chord
   function stack(scale, d, size) {
     return [0, 2, 4, 6, 8].slice(0, size).map(k => scale[(d + k) % 7]);
@@ -423,7 +461,7 @@
 
   // Chord quality from the intervals above the root (in stacking order)
   const QUALITY = {
-    '0,4,7': '', '0,3,7': 'm', '0,3,6': 'dim',
+    '0,4,7': '', '0,3,7': 'm', '0,3,6': 'dim', '0,4,8': 'aug',
     '0,4,7,11': 'maj7', '0,3,7,10': 'm7', '0,4,7,10': '7', '0,3,6,10': 'm7b5',
     '0,4,7,11,2': 'maj9', '0,3,7,10,2': 'm9', '0,4,7,10,2': '9',
     '0,3,7,10,1': 'm7b9', '0,3,6,10,1': 'm7b5b9',
@@ -653,21 +691,16 @@
     return s;
   }
 
-  // Chords in scale-degree order. type decides which group board and chip row they join.
-  const CHORD_DEFS = [
-    { deg: 0, roman: 'I',   suffix: '',    type: 'major' },
-    { deg: 1, roman: 'ii',  suffix: 'm',   type: 'minor' },
-    { deg: 2, roman: 'iii', suffix: 'm',   type: 'minor' },
-    { deg: 3, roman: 'IV',  suffix: '',    type: 'major' },
-    { deg: 4, roman: 'V',   suffix: '',    type: 'major' },
-    { deg: 5, roman: 'vi',  suffix: 'm',   type: 'minor' },
-    { deg: 6, roman: 'vii', suffix: 'dim', type: 'minor' },
-  ];
+  // Chords are built per scale degree from the chosen mode. Their quality decides the Roman numeral
+  // and which group (major or minor/diminished) they join.
+  const BASE_ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'];
 
   let chords = [];
   let pcNames = {};
-  let currentKey = 'A';
+  let currentKey = 'A';   // spelled root, e.g. "Eb"
   let currentRoot = 9;
+  let currentMode = 'major';
+  let currentScale = 'A major'; // root plus mode, used in headings
   let stackSize = 3; // 3 = triads, 4 = 7th chords, 5 = 9th chords
   const active = [true, true, true, true, true, true, true];
 
@@ -796,8 +829,8 @@
     const seqMode = eff.length > 0;
     const list = seqMode ? eff.map(st => chords[st.deg]) : selected;
     document.getElementById('singles-title').textContent = seqMode
-      ? `Individual chords in ${currentKey}: ${eff.map(st => st.deg + 1).join('\u2013')}`
-      : `Individual chords in ${currentKey}`;
+      ? `Individual chords in ${currentScale}: ${eff.map(st => st.deg + 1).join('\u2013')}`
+      : `Individual chords in ${currentScale}`;
     if (!list.length) {
       wrap.innerHTML = '<p class="empty">No chords selected. Turn on a chord above.</p>';
       return;
@@ -845,57 +878,95 @@
     });
   }
 
-  function setKey(keyName, rootPc) {
-    currentKey = keyName;
+  function setScale(rootPc, modeId) {
+    const mode = MODES.find(m => m.id === modeId) || MODES[0];
+    const spelled = spellScale(rootPc, mode.steps);
     currentRoot = rootPc;
-    const scale = buildScale(keyName, rootPc);
+    currentMode = mode.id;
+    currentKey = spelled.name;
+    currentScale = `${spelled.name} ${mode.word}`;
+    const scale = spelled.notes;
     pcNames = {};
     scale.forEach(n => pcNames[n.pc] = n.name);
 
-    chords = CHORD_DEFS.map((d, i) => {
-      const notes = stack(scale, d.deg, stackSize);
+    chords = [0, 1, 2, 3, 4, 5, 6].map(deg => {
+      const notes = stack(scale, deg, stackSize);
       const intervals = notes.map(n => (n.pc - notes[0].pc + 12) % 12);
+      const third = (scale[(deg + 2) % 7].pc - scale[deg].pc + 12) % 12; // 3 = minor third, 4 = major third
+      const fifth = (scale[(deg + 4) % 7].pc - scale[deg].pc + 12) % 12; // 6 = diminished, 7 = perfect, 8 = augmented
+      const dim = third === 3 && fifth === 6;
+      const aug = third === 4 && fifth === 8;
+      let roman = BASE_ROMAN[deg];
+      if (third === 3) roman = roman.toLowerCase();
+      if (dim) roman += '\u00b0';
+      if (aug) roman += '+';
       return {
-        roman: d.roman,
+        roman,
         name: notes[0].name + (QUALITY[intervals.join(',')] || ''),
         notes,
         pcs: notes.map(n => n.pc),
-        color: DEG_COLORS[i],
-        type: d.type,
-        dim: d.deg === 6, // vii is excluded from CAGED
+        color: DEG_COLORS[deg],
+        type: third === 4 ? 'major' : 'minor', // minor and diminished chords share the minor group
+        dim,                                    // diminished chords get no CAGED shape
         formula: intervals.map(v => INTERVAL_LABEL[v] || v).join(' '),
       };
     });
 
-    document.getElementById('combined-title').textContent = `Combined selected chords in ${keyName}`;
-    document.getElementById('major-title').textContent = `${familyLabel('major')} in ${keyName}`;
-    document.getElementById('minor-title').textContent = `${familyLabel('minor')} in ${keyName}`;
+    const dimChords = chords.filter(c => c.dim);
+    const chordHint = stackSize === 3
+      ? (dimChords.length
+          ? `The ${dimChords.map(c => c.roman).join(' and ')} chord (${dimChords.map(c => c.name).join(', ')}) is diminished rather than minor. It sits with the minor chords, and CAGED shapes skip it.`
+          : 'Every chord in this mode is major or minor.')
+      : CHORD_HINTS[stackSize];
+
+    document.getElementById('mode-hint').textContent = `${currentScale}: ${scale.map(n => n.name).join(' ')}. ${mode.note}`;
+    document.getElementById('combined-title').textContent = `Combined selected chords in ${currentScale}`;
+    document.getElementById('major-title').textContent = `${familyLabel('major')} in ${currentScale}`;
+    document.getElementById('minor-title').textContent = `${familyLabel('minor')} in ${currentScale}`;
     document.getElementById('lbl-major').textContent = familyLabel('major');
     document.getElementById('lbl-minor').textContent = familyLabel('minor');
-    document.getElementById('chord-hint').textContent = CHORD_HINTS[stackSize];
+    document.getElementById('chord-hint').textContent = chordHint;
     document.getElementById('lbl-shapes').textContent = `Outline playable ${SHAPE_TEXT[stackSize][0]} on these strings`;
     document.getElementById('hint-shapes').textContent = SHAPE_TEXT[stackSize][1] + ' Notes outside the outlines fade, so only the playable shapes stand out. Switch off Fade other notes to see every chord tone.';
-    document.getElementById('singles-title').textContent = `Individual chords in ${keyName}`;
+    document.getElementById('singles-title').textContent = `Individual chords in ${currentScale}`;
 
     drawChordChips();
     drawSeq();
     renderAll();
 
     document.querySelectorAll('#keys .key').forEach(b => {
-      b.setAttribute('aria-pressed', String(b.dataset.key === keyName));
+      b.setAttribute('aria-pressed', String(Number(b.dataset.pc) === rootPc));
+    });
+    document.querySelectorAll('#modes .key').forEach(b => {
+      b.setAttribute('aria-pressed', String(b.dataset.mode === mode.id));
     });
   }
 
+  // Kept for the controls that still call it: change the root, keep the mode
+  function setKey(keyName, rootPc) { setScale(rootPc, currentMode); }
+
   const keysWrap = document.getElementById('keys');
-  KEYS.forEach(([name, pc]) => {
+  KEYS.forEach(([label, pc]) => {
     const b = document.createElement('button');
     b.type = 'button';
     b.className = 'key';
-    b.dataset.key = name;
-    b.textContent = name;
+    b.dataset.pc = String(pc);
+    b.textContent = label;
     b.setAttribute('aria-pressed', 'false');
-    b.addEventListener('click', () => setKey(name, pc));
+    b.addEventListener('click', () => setScale(pc, currentMode));
     keysWrap.appendChild(b);
+  });
+
+  const modesWrap = document.getElementById('modes');
+  MODES.forEach(m => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'key';
+    b.dataset.mode = m.id;
+    b.textContent = m.label;
+    b.setAttribute('aria-pressed', 'false');
+    b.addEventListener('click', () => setScale(currentRoot, m.id));
+    modesWrap.appendChild(b);
   });
 
   const STRING_NAMES = ['E', 'A', 'D', 'G', 'B', 'e'];
@@ -1040,7 +1111,7 @@
 
     document.getElementById('prog-title').innerHTML =
       `<span class="dot" style="background:${cur.chord.color}"></span>Step ${prog.step + 1} of ${plan.length}: ${cur.chord.roman} ${cur.chord.name}` +
-      `<span class="sub-notes">${p.label} in ${currentKey}</span>`;
+      `<span class="sub-notes">${p.label} in ${currentScale}</span>`;
 
     document.getElementById('prog-board').innerHTML =
       fretboard([cur.chord], [true], pcNames, currentShapeSets(), [cur.band], true, extras);
@@ -1238,7 +1309,7 @@
   document.getElementById('panel-close').addEventListener('click', () => setControls(false));
 
   drawShapeButtons();
-  setKey('A', 9);
+  setScale(9, 'major');
   syncZoom();
 </script>
 </body>
