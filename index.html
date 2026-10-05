@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guitar Triad Fretboards</title>
+<style>
+  :root {
+    --paper: #f6f1e7;
+    --ink: #2b2a27;
+    --muted: #7a7466;
+    --wood: #e9dcc3;
+    --line: #5a4d3c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 32px 20px 48px;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  }
+  main { max-width: 960px; margin: 0 auto; }
+  h1 { font-size: 30px; font-weight: 400; margin: 0 0 4px; }
+  .subtitle { font-size: 19px; color: var(--muted); margin: 0 0 12px; }
+  .intro {
+    color: var(--muted);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 15px;
+    margin: 0 0 20px;
+    line-height: 1.5;
+  }
+  .keys {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 26px;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  .ctl-label {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 14px;
+    color: var(--muted);
+    margin: 0 0 8px;
+  }
+  .master { margin: -10px 0 26px; }
+  .master .keys { margin: 0 0 8px; }
+  .master .chips { margin: 0 0 10px; }
+  .master .ctl-label:not(:first-child) { margin-top: 18px; }
+  .zoom-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    margin: 0 0 8px;
+  }
+  .stepper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 5px 4px 12px;
+    background: #fff;
+    border: 1.5px solid #d9ceb8;
+    border-radius: 20px;
+    font-size: 14px;
+  }
+  .zoom-row.off .stepper { opacity: 0.55; }
+  .stepper .val { min-width: 24px; text-align: center; font-weight: 600; }
+  .stepper button {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1.5px solid #d9ceb8;
+    background: #f6f1e7;
+    color: var(--ink);
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .stepper button:focus-visible { outline: 3px solid #2b2a27; outline-offset: 2px; }
+  .prog-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 12px;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  #prog-steps { margin: 0 0 14px; }
+  .chip.step[aria-pressed="false"] { opacity: 1; }
+  .chip.step[aria-pressed="false"] .dot { background: inherit; }
+  .chip.step[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+  .group-title { font-size: 21px; font-weight: 400; margin: 36px 0 14px; }
+  .sub-notes {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 15px;
+    color: var(--muted);
+    margin-left: 10px;
+  }
+  h2 .dot {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    margin-right: 10px;
+    vertical-align: -1px;
+  }
+  .key {
+    min-width: 48px;
+    padding: 8px 12px;
+    background: #fff;
+    border: 1.5px solid #d9ceb8;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .key[aria-pressed="true"] {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: #fffdf8;
+  }
+  .key:focus-visible, .chip:focus-visible { outline: 3px solid #2b2a27; outline-offset: 2px; }
+  section.board {
+    background: #fffdf8;
+    border: 1px solid #e0d6c2;
+    border-radius: 6px;
+    padding: 22px 24px 20px;
+    margin-bottom: 28px;
+  }
+  h2 { font-size: 21px; font-weight: 400; margin: 0 0 12px; }
+  svg { display: block; width: 100%; height: auto; }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 14px;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  .chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px;
+    background: #fff;
+    border: 1.5px solid #d9ceb8;
+    border-radius: 20px;
+    font-size: 14px;
+    color: var(--ink);
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .chip .dot { width: 14px; height: 14px; border-radius: 50%; flex: none; }
+  .chip .nt { color: var(--muted); }
+  .tag {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 11px;
+    background: #fff;
+    border: 1.5px solid #e6dcc7;
+    border-radius: 20px;
+    font-size: 14px;
+  }
+  .tag .dot { width: 14px; height: 14px; border-radius: 50%; flex: none; }
+  .empty { font-size: 14px; color: var(--muted); }
+  .chip[aria-pressed="false"] { opacity: 0.45; }
+  .chip[aria-pressed="false"] .dot { background: #ccc !important; }
+  .hint {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 13px;
+    color: var(--muted);
+    margin: 10px 0 0;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>Guitar Triad Fretboards</h1>
+  <p class="subtitle">Major-scale triads, CAGED shapes, and chord progressions in every key</p>
+  <p class="intro">Pick a key, then choose which chords to show. Each chord has its own color, and where two chords share a note the dot is split. Every fretboard below follows your selection.</p>
+
+  <div class="keys" id="keys" role="group" aria-label="Key"></div>
+
+  <div class="master">
+    <p class="ctl-label">Chord type</p>
+    <div class="keys" id="ctype" role="group" aria-label="Chord type"></div>
+
+    <p class="ctl-label" id="lbl-major">Major chords</p>
+    <div class="chips" id="chord-major" role="group" aria-label="Major-type chords"></div>
+    <p class="ctl-label" id="lbl-minor">Minor chords</p>
+    <div class="chips" id="chord-minor" role="group" aria-label="Minor-type chords"></div>
+    <p class="hint" id="chord-hint"></p>
+
+    <p class="ctl-label">CAGED shapes on the individual chord fretboards</p>
+    <div class="keys" id="caged" role="group" aria-label="CAGED shapes"></div>
+    <p class="hint">Dashed bands mark where each of the five open-chord shapes lands for that chord. Pick one letter to fade every note outside it. Minor chords use the same shape positions with the third lowered. The vii chord is left out.</p>
+
+    <p class="ctl-label" id="lbl-shapes">Outline playable triads on these strings</p>
+    <div class="keys" id="shapes" role="group" aria-label="Playable shapes"></div>
+    <p class="hint" id="hint-shapes"></p>
+
+    <p class="ctl-label">Zoom to a fret range</p>
+    <div class="zoom-row off" id="zoom" role="group" aria-label="Zoom"></div>
+    <p class="hint" id="zoom-readout"></p>
+
+    <p class="ctl-label">Progression</p>
+    <div class="keys" id="prog-presets" role="group" aria-label="Progression"></div>
+    <div id="prog-start" hidden><div class="zoom-row" id="prog-start-row"></div></div>
+    <p class="hint">Pick a progression to step through it chord by chord. Each chord uses the CAGED shape nearest the previous one, so you can see the smallest hand move. The progression fretboard sets its own zoom.</p>
+  </div>
+
+  <section class="board" id="prog-section" hidden>
+    <h2 id="prog-title"></h2>
+    <div class="prog-nav">
+      <button type="button" class="key" id="prog-back">Back</button>
+      <button type="button" class="key" id="prog-next">Next</button>
+    </div>
+    <div class="chips" id="prog-steps"></div>
+    <div id="prog-board"></div>
+    <p class="hint" id="prog-info"></p>
+    <p class="hint">Solid dots are the current chord. Dashed rings show the previous chord's shape, and notes with a dark ring are shared by both chords.</p>
+  </section>
+
+  <section class="board">
+    <h2 id="combined-title">Combined chords</h2>
+    <div id="combined"></div>
+    <div class="chips" id="combined-chips"></div>
+  </section>
+
+  <section class="board">
+    <h2 id="major-title">Major chords</h2>
+    <div id="major"></div>
+    <div class="chips" id="major-chips"></div>
+  </section>
+
+  <section class="board">
+    <h2 id="minor-title">Minor chords</h2>
+    <div id="minor"></div>
+    <div class="chips" id="minor-chips"></div>
+  </section>
+
+  <h2 class="group-title" id="singles-title">Individual chords</h2>
+  <div id="singles"></div>
+</main>
+
+<script>
+  const LETTERS = ['C','D','E','F','G','A','B'];
+  const LETTER_PC = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+  const MAJOR_STEPS = [0, 2, 4, 5, 7, 9, 11];
+  const TUNING = [4, 9, 2, 7, 11, 4]; // low E to high E
+  const FRETS = 22; // standard electric guitar neck
+
+  // Key name, root pitch class
+  const KEYS = [
+    ['C', 0], ['Db', 1], ['D', 2], ['Eb', 3], ['E', 4], ['F', 5],
+    ['F#', 6], ['G', 7], ['Ab', 8], ['A', 9], ['Bb', 10], ['B', 11],
+  ];
+
+  // One color per scale degree (I ii iii IV V vi vii), shared by all boards
+  const DEG_COLORS = ['#c0492b', '#b8861b', '#3f8f4a', '#1f7a8c', '#3a4fb0', '#8a4fa0', '#b03a6e'];
+
+  // Build the properly spelled scale for a key
+  function buildScale(keyName, rootPc) {
+    const startIdx = LETTERS.indexOf(keyName[0]);
+    const notes = [];
+    for (let d = 0; d < 7; d++) {
+      const letter = LETTERS[(startIdx + d) % 7];
+      const pc = (rootPc + MAJOR_STEPS[d]) % 12;
+      let diff = pc - LETTER_PC[letter];
+      if (diff > 6) diff -= 12;
+      if (diff < -6) diff += 12;
+      const acc = diff === 0 ? '' : diff === 1 ? '#' : diff === -1 ? 'b' : diff === 2 ? '##' : 'bb';
+      notes.push({ name: letter + acc, pc });
+    }
+    return notes;
+  }
+
+  // Stack thirds from scale degree d: 3 notes = triad, 4 = seventh chord, 5 = ninth chord
+  function stack(scale, d, size) {
+    return [0, 2, 4, 6, 8].slice(0, size).map(k => scale[(d + k) % 7]);
+  }
+
+  // Chord quality from the intervals above the root (in stacking order)
+  const QUALITY = {
+    '0,4,7': '', '0,3,7': 'm', '0,3,6': 'dim',
+    '0,4,7,11': 'maj7', '0,3,7,10': 'm7', '0,4,7,10': '7', '0,3,6,10': 'm7b5',
+    '0,4,7,11,2': 'maj9', '0,3,7,10,2': 'm9', '0,4,7,10,2': '9',
+    '0,3,7,10,1': 'm7b9', '0,3,6,10,1': 'm7b5b9',
+  };
+  const INTERVAL_LABEL = { 0: 'R', 1: 'b9', 2: '9', 3: 'b3', 4: '3', 6: 'b5', 7: '5', 10: 'b7', 11: '7' };
+
+  function slice(cx, cy, r, a0, a1, color) {
+    const p = (a) => [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+    const [x0, y0] = p(a0), [x1, y1] = p(a1);
+    const large = (a1 - a0) > Math.PI ? 1 : 0;
+    return `<path d="M${cx} ${cy} L${x0.toFixed(2)} ${y0.toFixed(2)} A${r} ${r} 0 ${large} 1 ${x1.toFixed(2)} ${y1.toFixed(2)} Z" fill="${color}"/>`;
+  }
+
+  // Playable shapes, with one note per string on neighboring strings and every
+  // note (an open string counts as fret 0) inside a 4-fret stretch.
+  //  triads:      3 strings, all three chord tones
+  //  7th chords:  4 strings, all four chord tones
+  //  9th chords:  4 strings, any four tones that include the 3rd, 7th and 9th
+  function playableShapes(chord, low) {
+    const n = chord.pcs.length;
+    const count = n === 3 ? 3 : 4;
+    if (low + count > 6) return [];
+    const required = n === 5 ? [chord.pcs[1], chord.pcs[3], chord.pcs[4]] : chord.pcs;
+    const opts = [];
+    for (let k = 0; k < count; k++) {
+      const list = [];
+      for (let f = 0; f <= FRETS; f++) {
+        if (chord.pcs.includes((TUNING[low + k] + f) % 12)) list.push(f);
+      }
+      opts.push(list);
+    }
+    const shapes = [];
+    const pick = (k, frets) => {
+      if (k === count) {
+        const pcs = frets.map((f, j) => (TUNING[low + j] + f) % 12);
+        if (new Set(pcs).size !== count) return;
+        if (!required.every(pc => pcs.includes(pc))) return;
+        shapes.push({ low, frets });
+        return;
+      }
+      for (const f of opts[k]) {
+        const next = [...frets, f];
+        if (Math.max(...next) - Math.min(...next) > 3) continue; // open strings count as fret 0
+        pick(k + 1, next);
+      }
+    };
+    pick(0, []);
+    return shapes;
+  }
+
+  // The five open-chord shapes. Each is a fret box measured in open position,
+  // with the pitch class of its root. Sliding the box by the distance between
+  // its root and the chord's root gives the same shape higher up the neck.
+  const CAGED = [
+    { letter: 'C', rootPc: 0, lo: 0, hi: 3 },
+    { letter: 'A', rootPc: 9, lo: 0, hi: 2 },
+    { letter: 'G', rootPc: 7, lo: 0, hi: 3 },
+    { letter: 'E', rootPc: 4, lo: 0, hi: 2 },
+    { letter: 'D', rootPc: 2, lo: 0, hi: 3 },
+  ];
+
+  function cagedBands(chord, mode) {
+    if (mode === 'off' || chord.dim) return [];
+    const bands = [];
+    CAGED.filter(sh => mode === 'all' || sh.letter === mode).forEach(sh => {
+      const base = (((chord.pcs[0] - sh.rootPc) % 12) + 12) % 12;
+      for (let shift = base - 12; shift + sh.lo <= FRETS; shift += 12) {
+        const lo = shift + sh.lo;
+        const hi = Math.min(shift + sh.hi, FRETS);
+        if (hi < 2 || hi - Math.max(lo, 0) < 1) continue; // too little of the shape fits on the neck
+        bands.push({ letter: sh.letter, lo, hi });
+      }
+    });
+    return bands;
+  }
+
+  // Zoom state: when on, only frets from anchor - below to anchor + above are drawn.
+  const zoom = { on: false, anchor: 5, below: 2, above: 3 };
+
+  function currentWindow() {
+    if (!zoom.on) return { lo: 0, hi: FRETS, zoomed: false, anchor: zoom.anchor };
+    let lo = Math.max(0, zoom.anchor - zoom.below);
+    let hi = Math.min(FRETS, zoom.anchor + zoom.above);
+    if (hi - lo < 2) hi = Math.min(FRETS, lo + 2);
+    if (hi - lo < 2) lo = Math.max(0, hi - 2);
+    return { lo, hi, zoomed: true, anchor: zoom.anchor };
+  }
+
+  function fretboard(chords, active, pcNames, shapeSets, bands = [], dimOutside = false, extras = {}) {
+    const win = extras.win || currentWindow();
+    const hasOpen = win.lo === 0;          // open strings only appear when the window reaches the nut
+    const start = Math.max(win.lo, 1);     // first fret drawn as a cell
+    const hi = win.hi;
+    const cells = hi - start + 1;
+    const FW = win.zoomed ? Math.max(44, Math.min(62, Math.floor(950 / cells))) : 44;
+    const L = 56, SS = 34, T = 44, R = 15;
+    const extra = hi === FRETS ? 20 : 0;   // small overhang past the last fret
+    const W = L + cells * FW + extra + 16;
+    const H = T + 5 * SS + 56;
+    const xFret = f => L + (f - start + 0.5) * FW;
+    const xNote = f => f === 0 ? L - 24 : xFret(f);
+    const inView = f => f === 0 ? hasOpen : (f >= start && f <= hi);
+    const yStr = i => T + (5 - i) * SS; // i = 0 is low E, drawn at the bottom
+    const style = win.zoomed ? ` style="max-width:${Math.round(W * 1.2)}px"` : '';
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Fretboard diagram"${style}>`;
+
+    s += `<rect x="${L}" y="${T - 14}" width="${cells * FW + extra}" height="${5 * SS + 28}" rx="4" fill="var(--wood)"/>`;
+
+    // Column tint on the anchor fret
+    if (win.zoomed && inView(win.anchor)) {
+      const ax = win.anchor === 0 ? L - 44 : L + (win.anchor - start) * FW;
+      const aw = win.anchor === 0 ? 44 : FW;
+      s += `<rect x="${ax}" y="${T - 14}" width="${aw}" height="${5 * SS + 28}" fill="#2b2a27" fill-opacity="0.07"/>`;
+    }
+
+    [3, 5, 7, 9, 15, 17, 19, 21].filter(f => f >= start && f <= hi).forEach(f => {
+      s += `<circle cx="${xFret(f)}" cy="${T + 2.5 * SS}" r="5" fill="#cbbb9c"/>`;
+    });
+    [12, 24].filter(f => f >= start && f <= hi).forEach(f => {
+      s += `<circle cx="${xFret(f)}" cy="${T + 1.5 * SS}" r="5" fill="#cbbb9c"/>`;
+      s += `<circle cx="${xFret(f)}" cy="${T + 3.5 * SS}" r="5" fill="#cbbb9c"/>`;
+    });
+
+    for (let f = start; f <= hi; f++) {
+      const x = L + (f - start + 1) * FW;
+      s += `<line x1="${x}" y1="${T - 14}" x2="${x}" y2="${T + 5 * SS + 14}" stroke="#a89a80" stroke-width="2"/>`;
+    }
+    if (hasOpen) {
+      s += `<rect x="${L - 5}" y="${T - 14}" width="6" height="${5 * SS + 28}" fill="#f6f1e7" stroke="#a89a80"/>`;
+    } else {
+      s += `<line x1="${L}" y1="${T - 14}" x2="${L}" y2="${T + 5 * SS + 14}" stroke="#a89a80" stroke-width="2"/>`;
+    }
+
+    for (let i = 0; i < 6; i++) {
+      const w = 2.6 - i * 0.35;
+      s += `<line x1="${L}" y1="${yStr(i)}" x2="${L + cells * FW + extra}" y2="${yStr(i)}" stroke="var(--line)" stroke-width="${w.toFixed(2)}"/>`;
+    }
+
+    for (let f = start; f <= hi; f++) {
+      const isAnchor = win.zoomed && f === win.anchor;
+      s += `<text x="${xFret(f)}" y="${T + 5 * SS + 36}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" ${isAnchor ? 'font-weight="700" fill="#2b2a27"' : 'fill="#7a7466"'}>${f}</text>`;
+    }
+
+    // CAGED bands, clipped to the visible window
+    const drawBand = (b, stroke, pill, label, dash) => {
+      const floor = hasOpen ? 0 : start;
+      if (b.hi < floor || b.lo > hi) return;
+      const bl = Math.max(b.lo, floor), bh = Math.min(b.hi, hi);
+      const x0 = bl <= 0 ? L - 44 : L + (bl - start) * FW + 2;
+      const x1 = L + (bh - start + 1) * FW - 2;
+      const y0 = 22, y1 = T + 5 * SS + 14;
+      const mid = (x0 + x1) / 2;
+      s += `<rect x="${x0}" y="${y0}" width="${x1 - x0}" height="${y1 - y0}" rx="6" fill="${stroke}" fill-opacity="0.07" stroke="${stroke}" stroke-opacity="0.55" stroke-width="1.5" stroke-dasharray="${dash}"/>`;
+      s += `<rect x="${mid - 31}" y="4" width="62" height="18" rx="9" fill="${pill}"/>`;
+      s += `<text x="${mid}" y="16.5" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#fffdf8">${label}</text>`;
+    };
+    if (extras.ghost) drawBand(extras.ghost.band, extras.ghost.chord.color, '#8a8272', `prev ${extras.ghost.band.letter}`, '2 4');
+    bands.forEach(b => drawBand(b, '#2b2a27', '#2b2a27', `${b.letter} shape`, '5 4'));
+
+    // Playable shape outlines (only shapes that fit entirely in view)
+    const shapeKeys = new Set();
+    chords.forEach((c, k) => {
+      if (!active[k]) return;
+      shapeSets.forEach(low => {
+        playableShapes(c, low).forEach(sh => {
+          if (!sh.frets.every(inView)) return;
+          sh.frets.forEach((f, j) => shapeKeys.add((low + j) + ',' + f));
+          const xs = sh.frets.map(xNote);
+          const x0 = Math.min(...xs) - R - 5;
+          const x1 = Math.max(...xs) + R + 5;
+          const y0 = yStr(low + sh.frets.length - 1) - R - 5;
+          const y1 = yStr(low) + R + 5;
+          s += `<rect x="${x0}" y="${y0}" width="${x1 - x0}" height="${y1 - y0}" rx="16" fill="${c.color}" fill-opacity="0.12" stroke="${c.color}" stroke-width="2.5"/>`;
+        });
+      });
+    });
+
+    // Previous chord's shape as hollow rings, so the hand move is visible
+    if (extras.ghost) {
+      const g = extras.ghost;
+      for (let i = 0; i < 6; i++) {
+        for (let f = hasOpen ? 0 : start; f <= hi; f++) {
+          if (f < g.band.lo || f > g.band.hi) continue;
+          const pc = (TUNING[i] + f) % 12;
+          if (!g.chord.pcs.includes(pc)) continue;
+          const cx = xNote(f), cy = yStr(i);
+          s += `<circle cx="${cx}" cy="${cy}" r="${R - 2}" fill="#fffdf8" fill-opacity="0.55" stroke="${g.chord.color}" stroke-width="2" stroke-dasharray="3 3"/>`;
+          s += `<text x="${cx}" y="${cy + 4}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="${g.chord.color}">${pcNames[pc]}</text>`;
+        }
+      }
+    }
+
+    for (let i = 0; i < 6; i++) {
+      for (let f = hasOpen ? 0 : start; f <= hi; f++) {
+        const pc = (TUNING[i] + f) % 12;
+        const owners = chords.filter((c, k) => active[k] && c.pcs.includes(pc));
+        if (!owners.length) continue;
+        const cx = xNote(f);
+        const cy = yStr(i);
+        const bandFaded = dimOutside && bands.length > 0 && !bands.some(b => f >= b.lo && f <= b.hi);
+        const shapeFaded = fadeOthers && shapeSets.length > 0 && !shapeKeys.has(i + ',' + f);
+        const faded = bandFaded || shapeFaded;
+        if (faded) s += '<g opacity="0.2">';
+        if (owners.length === 1) {
+          s += `<circle cx="${cx}" cy="${cy}" r="${R}" fill="${owners[0].color}"/>`;
+        } else {
+          const n = owners.length;
+          owners.forEach((c, k) => {
+            const a0 = -Math.PI / 2 + (k * 2 * Math.PI) / n;
+            const a1 = -Math.PI / 2 + ((k + 1) * 2 * Math.PI) / n;
+            s += slice(cx, cy, R, a0, a1, c.color);
+          });
+        }
+        s += `<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="#fffdf8" stroke-width="1.5"/>`;
+        if (extras.ringPcs && extras.ringPcs.has(pc) && !faded) {
+          s += `<circle cx="${cx}" cy="${cy}" r="${R + 3.5}" fill="none" stroke="#2b2a27" stroke-width="2.5"/>`;
+        }
+        s += `<text x="${cx}" y="${cy + 4.5}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#fff" stroke="#2b2a27" stroke-width="2.6" stroke-opacity="0.55" paint-order="stroke">${pcNames[pc]}</text>`;
+        if (faded) s += '</g>';
+      }
+    }
+    s += `</svg>`;
+    return s;
+  }
+
+  // Chords in scale-degree order. type decides which group board and chip row they join.
+  const CHORD_DEFS = [
+    { deg: 0, roman: 'I',   suffix: '',    type: 'major' },
+    { deg: 1, roman: 'ii',  suffix: 'm',   type: 'minor' },
+    { deg: 2, roman: 'iii', suffix: 'm',   type: 'minor' },
+    { deg: 3, roman: 'IV',  suffix: '',    type: 'major' },
+    { deg: 4, roman: 'V',   suffix: '',    type: 'major' },
+    { deg: 5, roman: 'vi',  suffix: 'm',   type: 'minor' },
+    { deg: 6, roman: 'vii', suffix: 'dim', type: 'minor' },
+  ];
+
+  let chords = [];
+  let pcNames = {};
+  let currentKey = 'A';
+  let currentRoot = 9;
+  let stackSize = 3; // 3 = triads, 4 = 7th chords, 5 = 9th chords
+  const active = [true, true, true, true, true, true, true];
+
+  // 'off', 'all', or a CAGED letter
+  let cagedMode = 'all';
+
+  // 'off', 'all', or the index of the lowest string of a string set
+  let shapeMode = 3;
+  let fadeOthers = true; // fade notes that are not part of an outlined shape
+  function voiceCount() { return stackSize === 3 ? 3 : 4; }
+  function currentShapeSets() {
+    if (shapeMode === 'off') return [];
+    const maxLow = 6 - voiceCount();
+    if (shapeMode === 'all') return Array.from({ length: maxLow + 1 }, (_, i) => i);
+    return [Math.min(shapeMode, maxLow)];
+  }
+
+  const FAMILY = {
+    major: { triad: 'Major chords', other: 'I, IV, V chords' },
+    minor: { triad: 'Minor chords', other: 'ii, iii, vi, vii chords' },
+  };
+  const familyLabel = type => stackSize === 3 ? FAMILY[type].triad : FAMILY[type].other;
+
+  const CHORD_HINTS = {
+    3: 'The vii chord is diminished rather than minor. It sits with the minor chords because it is degree 7 of the scale.',
+    4: 'Each chord adds one more third from the scale: I and IV become major 7ths, V becomes the dominant 7, ii, iii and vi become minor 7ths, and vii becomes half-diminished (m7b5).',
+    5: 'Each chord adds another third on top of its 7th. The iii and vii chords end up with a flat 9, which is why they sound tense.',
+  };
+  const SHAPE_TEXT = {
+    3: ['triads', 'An outline marks a triad with one note on each of three neighboring strings, all within a 4-fret stretch. An open string counts as fret 0, so open strings only show up in shapes near the nut. Outlines match the chord color.'],
+    4: ['7th chord shapes', 'An outline marks a seventh chord with one note on each of four neighboring strings, using all four chord tones within a 4-fret stretch. An open string counts as fret 0, so open strings only show up near the nut.'],
+    5: ['9th chord shapes', 'An outline marks four neighboring strings holding the 3rd, 7th and 9th plus the root or 5th, all within a 4-fret stretch. An open string counts as fret 0. This is a common way to voice a 9th chord on guitar.'],
+  };
+
+  function board(list, bands = [], dimOutside = false) {
+    return fretboard(list, list.map(() => true), pcNames, currentShapeSets(), bands, dimOutside);
+  }
+
+  function legend(list, emptyMsg) {
+    if (!list.length) return `<span class="empty">${emptyMsg}</span>`;
+    return list.map(c =>
+      `<span class="tag"><span class="dot" style="background:${c.color}"></span><span>${c.roman} ${c.name}</span></span>`
+    ).join('');
+  }
+
+  function renderGroup(id, list, emptyMsg) {
+    document.getElementById(id).innerHTML = board(list);
+    document.getElementById(id + '-chips').innerHTML = legend(list, emptyMsg);
+  }
+
+  function renderSingles(selected) {
+    const wrap = document.getElementById('singles');
+    wrap.innerHTML = '';
+    if (!selected.length) {
+      wrap.innerHTML = '<p class="empty">No chords selected. Turn on a chord above.</p>';
+      return;
+    }
+    selected.forEach(c => {
+      const sec = document.createElement('section');
+      sec.className = 'board';
+      sec.innerHTML =
+        `<h2><span class="dot" style="background:${c.color}"></span>${c.roman}: ${c.name}` +
+        `<span class="sub-notes">${c.notes.map(n => n.name).join(' ')}</span>` +
+        `<span class="sub-notes">(${c.formula})</span></h2>` +
+        board([c], cagedBands(c, cagedMode), cagedMode !== 'all');
+      wrap.appendChild(sec);
+    });
+  }
+
+  function renderAll() {
+    const selected = chords.filter((c, i) => active[i]);
+    renderGroup('combined', selected, 'No chords selected. Turn on a chord above.');
+    renderGroup('major', selected.filter(c => c.type === 'major'), 'No major chords selected.');
+    renderGroup('minor', selected.filter(c => c.type === 'minor'), 'No minor chords selected.');
+    renderSingles(selected);
+    renderProgression();
+  }
+
+  function drawChordChips() {
+    ['major', 'minor'].forEach(type => {
+      const wrap = document.getElementById('chord-' + type);
+      wrap.innerHTML = '';
+      chords.forEach((c, i) => {
+        if (c.type !== type) return;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'chip';
+        btn.setAttribute('aria-pressed', String(active[i]));
+        btn.innerHTML = `<span class="dot" style="background:${c.color}"></span><span>${c.roman} ${c.name}</span><span class="nt">${c.notes.map(n => n.name).join(' ')}</span>`;
+        btn.addEventListener('click', () => {
+          active[i] = !active[i];
+          btn.setAttribute('aria-pressed', String(active[i]));
+          renderAll();
+        });
+        wrap.appendChild(btn);
+      });
+    });
+  }
+
+  function setKey(keyName, rootPc) {
+    currentKey = keyName;
+    currentRoot = rootPc;
+    const scale = buildScale(keyName, rootPc);
+    pcNames = {};
+    scale.forEach(n => pcNames[n.pc] = n.name);
+
+    chords = CHORD_DEFS.map((d, i) => {
+      const notes = stack(scale, d.deg, stackSize);
+      const intervals = notes.map(n => (n.pc - notes[0].pc + 12) % 12);
+      return {
+        roman: d.roman,
+        name: notes[0].name + (QUALITY[intervals.join(',')] || ''),
+        notes,
+        pcs: notes.map(n => n.pc),
+        color: DEG_COLORS[i],
+        type: d.type,
+        dim: d.deg === 6, // vii is excluded from CAGED
+        formula: intervals.map(v => INTERVAL_LABEL[v] || v).join(' '),
+      };
+    });
+
+    document.getElementById('combined-title').textContent = `Combined selected chords in ${keyName}`;
+    document.getElementById('major-title').textContent = `${familyLabel('major')} in ${keyName}`;
+    document.getElementById('minor-title').textContent = `${familyLabel('minor')} in ${keyName}`;
+    document.getElementById('lbl-major').textContent = familyLabel('major');
+    document.getElementById('lbl-minor').textContent = familyLabel('minor');
+    document.getElementById('chord-hint').textContent = CHORD_HINTS[stackSize];
+    document.getElementById('lbl-shapes').textContent = `Outline playable ${SHAPE_TEXT[stackSize][0]} on these strings`;
+    document.getElementById('hint-shapes').textContent = SHAPE_TEXT[stackSize][1] + ' Notes outside the outlines fade, so only the playable shapes stand out. Switch off Fade other notes to see every chord tone.';
+    document.getElementById('singles-title').textContent = `Individual chords in ${keyName}`;
+
+    drawChordChips();
+    renderAll();
+
+    document.querySelectorAll('#keys .key').forEach(b => {
+      b.setAttribute('aria-pressed', String(b.dataset.key === keyName));
+    });
+  }
+
+  const keysWrap = document.getElementById('keys');
+  KEYS.forEach(([name, pc]) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'key';
+    b.dataset.key = name;
+    b.textContent = name;
+    b.setAttribute('aria-pressed', 'false');
+    b.addEventListener('click', () => setKey(name, pc));
+    keysWrap.appendChild(b);
+  });
+
+  const STRING_NAMES = ['E', 'A', 'D', 'G', 'B', 'e'];
+  const shapesWrap = document.getElementById('shapes');
+  function drawShapeButtons() {
+    const n = voiceCount();
+    const options = [['Off', 'off']];
+    for (let low = 0; low <= 6 - n; low++) options.push([STRING_NAMES.slice(low, low + n).join(' '), low]);
+    options.push(['All', 'all']);
+    if (typeof shapeMode === 'number') shapeMode = Math.min(shapeMode, 6 - n);
+    shapesWrap.innerHTML = '';
+    options.forEach(([label, value]) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'key';
+      b.textContent = label;
+      b.setAttribute('aria-pressed', String(value === shapeMode));
+      b.addEventListener('click', () => {
+        shapeMode = value;
+        shapesWrap.querySelectorAll('.key').forEach((btn, i) => {
+          if (i < options.length) btn.setAttribute('aria-pressed', String(options[i][1] === shapeMode));
+        });
+        renderAll();
+      });
+      shapesWrap.appendChild(b);
+    });
+
+    const fadeBtn = document.createElement('button');
+    fadeBtn.type = 'button';
+    fadeBtn.className = 'key';
+    fadeBtn.textContent = 'Fade other notes';
+    fadeBtn.setAttribute('aria-pressed', String(fadeOthers));
+    fadeBtn.addEventListener('click', () => {
+      fadeOthers = !fadeOthers;
+      fadeBtn.setAttribute('aria-pressed', String(fadeOthers));
+      renderAll();
+    });
+    shapesWrap.appendChild(fadeBtn);
+  }
+
+  const CTYPE_OPTIONS = [['Triads', 3], ['7th chords', 4], ['9th chords', 5]];
+  const ctypeWrap = document.getElementById('ctype');
+  CTYPE_OPTIONS.forEach(([label, value]) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'key';
+    b.textContent = label;
+    b.setAttribute('aria-pressed', String(value === stackSize));
+    b.addEventListener('click', () => {
+      stackSize = value;
+      ctypeWrap.querySelectorAll('.key').forEach((btn, i) => {
+        btn.setAttribute('aria-pressed', String(CTYPE_OPTIONS[i][1] === stackSize));
+      });
+      drawShapeButtons();
+      setKey(currentKey, currentRoot);
+    });
+    ctypeWrap.appendChild(b);
+  });
+
+  const CAGED_OPTIONS = [
+    ['Off', 'off'], ['C', 'C'], ['A', 'A'], ['G', 'G'], ['E', 'E'], ['D', 'D'], ['All', 'all'],
+  ];
+  const cagedWrap = document.getElementById('caged');
+  CAGED_OPTIONS.forEach(([label, value]) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'key';
+    b.textContent = label;
+    b.setAttribute('aria-pressed', String(value === cagedMode));
+    b.addEventListener('click', () => {
+      cagedMode = value;
+      cagedWrap.querySelectorAll('.key').forEach((btn, i) => {
+        btn.setAttribute('aria-pressed', String(CAGED_OPTIONS[i][1] === cagedMode));
+      });
+      renderAll();
+    });
+    cagedWrap.appendChild(b);
+  });
+
+  // ---- Progression stepper ----
+  const PROGRESSIONS = [
+    { id: 'i-iv-v',   label: 'I\u2013IV\u2013V',      degrees: [0, 3, 4] },
+    { id: 'i-v-vi-iv', label: 'I\u2013V\u2013vi\u2013IV', degrees: [0, 4, 5, 3] },
+    { id: 'i-vi-iv-v', label: 'I\u2013vi\u2013IV\u2013V', degrees: [0, 5, 3, 4] },
+    { id: 'ii-v-i',   label: 'ii\u2013V\u2013I',      degrees: [1, 4, 0] },
+    { id: 'blues',    label: '12-bar blues', degrees: [0, 0, 0, 0, 3, 3, 0, 0, 4, 3, 0, 4] },
+  ];
+  const prog = { id: 'off', step: 0, start: 5 };
+
+  const bandCenter = b => (Math.max(b.lo, 0) + b.hi) / 2;
+
+  // For each chord, pick the CAGED shape whose center is closest to the previous one
+  function planProgression(degrees, startFret) {
+    let ref = startFret;
+    return degrees.map(deg => {
+      const chord = chords[deg];
+      const options = cagedBands(chord, 'all');
+      let best = options[0], bestDist = Infinity;
+      options.forEach(b => {
+        const d = Math.abs(bandCenter(b) - ref);
+        if (d < bestDist) { best = b; bestDist = d; }
+      });
+      ref = bandCenter(best);
+      return { chord, band: best };
+    });
+  }
+
+  function renderProgression() {
+    const sec = document.getElementById('prog-section');
+    const startBox = document.getElementById('prog-start');
+    const p = PROGRESSIONS.find(x => x.id === prog.id);
+    sec.hidden = !p;
+    startBox.hidden = !p;
+    if (!p) return;
+
+    const plan = planProgression(p.degrees, prog.start);
+    prog.step = Math.min(prog.step, plan.length - 1);
+    const cur = plan[prog.step];
+    const prev = prog.step > 0 ? plan[prog.step - 1] : null;
+    const sameChord = !!prev && prev.chord === cur.chord;
+    const ghost = prev && !sameChord ? prev : null;
+
+    // Window that fits the current shape, and the previous one so the move is visible
+    const lo = Math.max(0, Math.min(cur.band.lo, ghost ? ghost.band.lo : cur.band.lo) - 1);
+    let hi = Math.min(FRETS, Math.max(cur.band.hi, ghost ? ghost.band.hi : cur.band.hi) + 1);
+    if (hi - lo < 2) hi = Math.min(FRETS, lo + 2);
+    const win = { lo, hi, zoomed: true, anchor: -1 };
+
+    const shared = ghost ? cur.chord.pcs.filter(pc => ghost.chord.pcs.includes(pc)) : [];
+    const extras = { win, ghost, ringPcs: ghost ? new Set(shared) : null };
+
+    document.getElementById('prog-title').innerHTML =
+      `<span class="dot" style="background:${cur.chord.color}"></span>Step ${prog.step + 1} of ${plan.length}: ${cur.chord.roman} ${cur.chord.name}` +
+      `<span class="sub-notes">${p.label} in ${currentKey}</span>`;
+
+    document.getElementById('prog-board').innerHTML =
+      fretboard([cur.chord], [true], pcNames, currentShapeSets(), [cur.band], true, extras);
+
+    let info = `${cur.band.letter} shape, frets ${Math.max(cur.band.lo, 0)} to ${cur.band.hi}.`;
+    if (ghost) {
+      const d = Math.round(bandCenter(cur.band) - bandCenter(ghost.band));
+      const n = Math.abs(d);
+      info += d === 0
+        ? ' The hand stays in about the same spot.'
+        : ` The hand moves about ${n} fret${n === 1 ? '' : 's'} ${d > 0 ? 'up' : 'down'} the neck from the ${ghost.band.letter} shape.`;
+      info += shared.length
+        ? ` Shared note${shared.length > 1 ? 's' : ''}: ${shared.map(pc => pcNames[pc]).join(', ')}.`
+        : ' No shared notes with the previous chord.';
+    } else if (sameChord) {
+      info += ' Same chord as the previous step, so the shape holds.';
+    }
+    document.getElementById('prog-info').textContent = info;
+
+    const steps = document.getElementById('prog-steps');
+    steps.innerHTML = '';
+    plan.forEach((st, i) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'chip step';
+      b.setAttribute('aria-pressed', String(i === prog.step));
+      b.innerHTML = `<span class="dot" style="background:${st.chord.color}"></span><span>${i + 1}. ${st.chord.roman} ${st.chord.name}</span>`;
+      b.addEventListener('click', () => { prog.step = i; renderProgression(); });
+      steps.appendChild(b);
+    });
+  }
+
+  function stepProgression(d) {
+    const p = PROGRESSIONS.find(x => x.id === prog.id);
+    if (!p) return;
+    const n = p.degrees.length;
+    prog.step = (prog.step + d + n) % n;
+    renderProgression();
+  }
+
+  document.getElementById('prog-back').addEventListener('click', () => stepProgression(-1));
+  document.getElementById('prog-next').addEventListener('click', () => stepProgression(1));
+  document.addEventListener('keydown', e => {
+    if (prog.id === 'off' || e.altKey || e.ctrlKey || e.metaKey) return;
+    if (e.key === 'ArrowRight') stepProgression(1);
+    if (e.key === 'ArrowLeft') stepProgression(-1);
+  });
+
+  const PROG_OPTIONS = [['Off', 'off'], ...PROGRESSIONS.map(p => [p.label, p.id])];
+  const progWrap = document.getElementById('prog-presets');
+  PROG_OPTIONS.forEach(([label, value]) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'key';
+    b.textContent = label;
+    b.setAttribute('aria-pressed', String(value === prog.id));
+    b.addEventListener('click', () => {
+      prog.id = value;
+      prog.step = 0;
+      progWrap.querySelectorAll('.key').forEach((btn, i) => {
+        btn.setAttribute('aria-pressed', String(PROG_OPTIONS[i][1] === prog.id));
+      });
+      renderProgression();
+    });
+    progWrap.appendChild(b);
+  });
+
+  // "Start near fret" stepper decides where the first chord's shape lands
+  (function buildStartStepper() {
+    const row = document.getElementById('prog-start-row');
+    const box = document.createElement('div');
+    box.className = 'stepper';
+    const label = document.createElement('span');
+    label.textContent = 'Start near fret';
+    const minus = document.createElement('button');
+    minus.type = 'button';
+    minus.textContent = '\u2212';
+    minus.setAttribute('aria-label', 'Decrease start fret');
+    const val = document.createElement('span');
+    val.className = 'val';
+    val.textContent = prog.start;
+    const plus = document.createElement('button');
+    plus.type = 'button';
+    plus.textContent = '+';
+    plus.setAttribute('aria-label', 'Increase start fret');
+    const bump = d => {
+      prog.start = Math.min(FRETS, Math.max(0, prog.start + d));
+      val.textContent = prog.start;
+      renderProgression();
+    };
+    minus.addEventListener('click', () => bump(-1));
+    plus.addEventListener('click', () => bump(1));
+    box.append(label, minus, val, plus);
+    row.appendChild(box);
+  })();
+
+  // Zoom controls: a toggle plus anchor / below / above steppers
+  const zoomWrap = document.getElementById('zoom');
+  const zoomRead = document.getElementById('zoom-readout');
+  const zoomToggle = document.createElement('button');
+  zoomToggle.type = 'button';
+  zoomToggle.className = 'key';
+  zoomToggle.textContent = 'Zoom';
+  zoomToggle.setAttribute('aria-pressed', 'false');
+  zoomWrap.appendChild(zoomToggle);
+
+  const STEPPERS = [
+    { key: 'anchor', label: 'Anchor fret', min: 0, max: FRETS },
+    { key: 'below',  label: 'Frets below', min: 0, max: 12 },
+    { key: 'above',  label: 'Frets above', min: 0, max: 12 },
+  ];
+  const valEls = {};
+
+  function syncZoom() {
+    zoomToggle.setAttribute('aria-pressed', String(zoom.on));
+    zoomWrap.classList.toggle('off', !zoom.on);
+    STEPPERS.forEach(st => { valEls[st.key].textContent = zoom[st.key]; });
+    const w = currentWindow();
+    zoomRead.textContent = zoom.on
+      ? `Showing frets ${w.lo} to ${w.hi}, anchored on fret ${zoom.anchor}.`
+      : 'Showing the whole neck. Turn zoom on, or change a value, to focus on a fret range.';
+    renderAll();
+  }
+
+  STEPPERS.forEach(st => {
+    const box = document.createElement('div');
+    box.className = 'stepper';
+    const label = document.createElement('span');
+    label.textContent = st.label;
+    const minus = document.createElement('button');
+    minus.type = 'button';
+    minus.textContent = '\u2212';
+    minus.setAttribute('aria-label', `Decrease ${st.label.toLowerCase()}`);
+    const val = document.createElement('span');
+    val.className = 'val';
+    const plus = document.createElement('button');
+    plus.type = 'button';
+    plus.textContent = '+';
+    plus.setAttribute('aria-label', `Increase ${st.label.toLowerCase()}`);
+    valEls[st.key] = val;
+    const bump = d => {
+      zoom[st.key] = Math.min(st.max, Math.max(st.min, zoom[st.key] + d));
+      zoom.on = true;
+      syncZoom();
+    };
+    minus.addEventListener('click', () => bump(-1));
+    plus.addEventListener('click', () => bump(1));
+    box.append(label, minus, val, plus);
+    zoomWrap.appendChild(box);
+  });
+
+  zoomToggle.addEventListener('click', () => { zoom.on = !zoom.on; syncZoom(); });
+
+  drawShapeButtons();
+  setKey('A', 9);
+  syncZoom();
+</script>
+</body>
+</html>
