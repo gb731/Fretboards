@@ -247,6 +247,16 @@
   .keymode .ctl-label:not(:first-child) { margin-top: 4px; }
   .keymode .hint { margin: -4px 0 0; }
   .panel .master { margin-top: 0; }
+  .ctl-group {
+    margin: 28px 0 12px;
+    padding-top: 14px;
+    border-top: 1px solid #e0d6c2;
+    font: 700 12px system-ui, -apple-system, "Segoe UI", sans-serif;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .master > .ctl-group:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
   .scrim { display: none; }
   .fab {
     position: fixed;
@@ -292,6 +302,41 @@
     }
   }
   @media (prefers-reduced-motion: reduce) { .panel { transition: none; } }
+
+  /* Audio: tappable notes and shapes, Play buttons, playing feedback */
+  svg { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  .boards section.board { position: relative; }
+  .single-title { padding-right: 72px; }
+  .play {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    padding: 5px 11px;
+    font: 600 12px system-ui, -apple-system, "Segoe UI", sans-serif;
+    border: 1.5px solid #d9ceb8;
+    border-radius: 16px;
+    background: #fff;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .play:active { background: #f0e8d6; }
+  .play:focus-visible { outline: 3px solid #2b2a27; outline-offset: 2px; }
+  .boards.cols-2 .play { top: 8px; right: 8px; font-size: 11px; padding: 3px 9px; }
+  .boards.cols-3 .play { top: 6px; right: 6px; font-size: 10px; padding: 2px 7px; }
+  .boards.cols-4 .play { top: 5px; right: 5px; font-size: 9px; padding: 2px 6px; }
+  .boards.cols-2 .single-title { padding-right: 62px; }
+  .boards.cols-3 .single-title { padding-right: 52px; }
+  .boards.cols-4 .single-title { padding-right: 46px; }
+  .note.playing { animation: notepulse 0.5s ease-out; transform-box: fill-box; transform-origin: center; }
+  @keyframes notepulse { 0% { transform: scale(1.4); } 100% { transform: scale(1); } }
+  .shape.playing { animation: shapeflash 0.7s ease-out; }
+  @keyframes shapeflash { 0% { fill-opacity: 0.5; stroke-width: 4.5; } 100% { fill-opacity: 0.12; stroke-width: 2.5; } }
+  .stepper input[type="range"] { width: 130px; accent-color: #2b2a27; }
+  .stepper .val.wide { min-width: 58px; }
+  .stepper label { cursor: default; }
+  .key.hit { box-shadow: inset 0 0 0 2px #b4532a; }
+  section.board.now-playing { box-shadow: 0 0 0 3px #b4532a; }
+  @media (prefers-reduced-motion: reduce) { .note.playing, .shape.playing { animation: none; } }
 </style>
 </head>
 <body>
@@ -312,6 +357,7 @@
   </div>
 
   <div class="master">
+    <h3 class="ctl-group" id="fretboard-heading">Fretboard options</h3>
     <p class="ctl-label">Board size</p>
     <div class="keys" id="bsize" role="group" aria-label="Board size"></div>
     <p class="hint">Smaller sizes put the fretboards side by side so more fit on screen. Pair a small size with Zoom to a fret range to keep the notes readable.</p>
@@ -352,6 +398,59 @@
     <div id="prog-start" hidden><div class="zoom-row" id="prog-start-row"></div></div>
     <p class="hint">Pick a progression to step through it chord by chord. Each chord uses the CAGED shape nearest the previous one, so you can see the smallest hand move. The progression fretboard sets its own zoom.</p>
     -->
+
+    <h3 class="ctl-group" id="sound-heading">Sound</h3>
+    <div class="keys" id="sound-row" role="group" aria-label="Sound">
+      <button type="button" class="key" id="sound-toggle" aria-pressed="true">Sound on</button>
+      <button type="button" class="key" id="play-prog">Play chords</button>
+      <button type="button" class="key" id="stop-audio">Stop</button>
+      <button type="button" class="key" id="loop-toggle" aria-pressed="false">Loop</button>
+      <button type="button" class="key" id="pad-toggle" aria-pressed="true">Pad</button>
+    </div>
+    <div class="zoom-row" id="tempo-row" role="group" aria-label="Tempo">
+      <div class="stepper">
+        <label for="tempo">Tempo</label>
+        <input type="range" id="tempo" min="40" max="200" step="1" value="80" aria-label="Tempo in beats per minute">
+        <span class="val wide" id="tempo-val">80 BPM</span>
+      </div>
+      <div class="stepper">
+        <span>Beats per chord</span>
+        <button type="button" id="beats-minus" aria-label="Fewer beats per chord">&minus;</button>
+        <span class="val" id="beats-val">2</span>
+        <button type="button" id="beats-plus" aria-label="More beats per chord">+</button>
+      </div>
+    </div>
+    <p class="hint" id="tempo-note"></p>
+
+    <p class="ctl-label">Drums (they play along with Play progression)</p>
+    <div class="keys" id="drum-row" role="group" aria-label="Drums">
+      <button type="button" class="key" id="drum-kick" aria-pressed="true">Bass drum</button>
+      <button type="button" class="key" id="drum-snare" aria-pressed="true">Snare</button>
+    </div>
+    <div class="keys" id="drum-patterns" role="group" aria-label="Drum pattern"></div>
+    <p class="hint" id="drum-note"></p>
+
+    <p class="ctl-label">Mix</p>
+    <div class="zoom-row" id="mix-row" role="group" aria-label="Volume mix">
+      <div class="stepper">
+        <label for="mix-guitar">Guitar</label>
+        <input type="range" id="mix-guitar" min="0" max="100" step="1" value="100">
+        <span class="val wide" id="mix-guitar-val">100%</span>
+      </div>
+      <div class="stepper">
+        <label for="mix-pad">Pad</label>
+        <input type="range" id="mix-pad" min="0" max="100" step="1" value="70">
+        <span class="val wide" id="mix-pad-val">70%</span>
+      </div>
+      <div class="stepper">
+        <label for="mix-drums">Drums</label>
+        <input type="range" id="mix-drums" min="0" max="100" step="1" value="100">
+        <span class="val wide" id="mix-drums-val">100%</span>
+      </div>
+    </div>
+    <p class="hint">Pad plays a soft synth chord under each step, voiced to move as little as possible from chord to chord. Loop repeats the progression until you press Stop. While it loops you can change the tempo, drums, mix, or chord order, and the change takes effect on the next pass.</p>
+    <p class="hint">Tap any note to hear it, or tap a shape outline to hear it strummed from the low string up. Each individual chord's Play button strums one of its outlined shapes, nearest the anchor fret, so it follows your string set, zoom, and CAGED choices. If outlines are off, it picks a shape on any strings. Play progression plays your numbered steps in order, or all switched-on chords if no progression is set, with the drums keeping time at the same tempo. On iPad, make sure the silent switch is off.</p>
+    <p class="hint" id="sound-status" aria-live="polite"></p>
   </div>
     </aside>
     <div class="content">
@@ -578,7 +677,7 @@
     if (win.zoomed && inView(win.anchor)) {
       const ax = win.anchor === 0 ? L - 44 : L + (win.anchor - start) * FW;
       const aw = win.anchor === 0 ? 44 : FW;
-      s += `<rect x="${ax}" y="${T - 14}" width="${aw}" height="${5 * SS + 28}" fill="#2b2a27" fill-opacity="0.07"/>`;
+      s += `<rect x="${ax}" y="${T - 14}" width="${aw}" height="${5 * SS + 28}" fill="#2b2a27" fill-opacity="0.07" pointer-events="none"/>`;
     }
 
     [3, 5, 7, 9, 15, 17, 19, 21].filter(f => f >= start && f <= hi).forEach(f => {
@@ -618,9 +717,11 @@
       const x1 = L + (bh - start + 1) * FW - 2;
       const y0 = 22, y1 = T + 5 * SS + 14;
       const mid = (x0 + x1) / 2;
+      s += '<g pointer-events="none">';
       s += `<rect x="${x0}" y="${y0}" width="${x1 - x0}" height="${y1 - y0}" rx="6" fill="${stroke}" fill-opacity="0.07" stroke="${stroke}" stroke-opacity="0.55" stroke-width="1.5" stroke-dasharray="${dash}"/>`;
       s += `<rect x="${mid - 31}" y="4" width="62" height="18" rx="9" fill="${pill}"/>`;
       s += `<text x="${mid}" y="16.5" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#fffdf8">${label}</text>`;
+      s += '</g>';
     };
     if (extras.ghost) drawBand(extras.ghost.band, extras.ghost.chord.color, '#8a8272', `prev ${shapeName(extras.ghost.band)}`, '2 4');
     bands.forEach(b => drawBand(b, '#2b2a27', '#2b2a27', `${shapeName(b)} shape`, '5 4'));
@@ -638,7 +739,7 @@
           const x1 = Math.max(...xs) + R + 5;
           const y0 = yStr(low + sh.frets.length - 1) - R - 5;
           const y1 = yStr(low) + R + 5;
-          s += `<rect x="${x0}" y="${y0}" width="${x1 - x0}" height="${y1 - y0}" rx="16" fill="${c.color}" fill-opacity="0.12" stroke="${c.color}" stroke-width="2.5"/>`;
+          s += `<rect x="${x0}" y="${y0}" width="${x1 - x0}" height="${y1 - y0}" rx="16" fill="${c.color}" fill-opacity="0.12" stroke="${c.color}" stroke-width="2.5" class="shape" data-low="${low}" data-frets="${sh.frets.join(',')}" style="cursor:pointer"/>`;
         });
       });
     });
@@ -646,6 +747,7 @@
     // Previous chord's shape as hollow rings, so the hand move is visible
     if (extras.ghost) {
       const g = extras.ghost;
+      s += '<g pointer-events="none">';
       for (let i = 0; i < 6; i++) {
         for (let f = hasOpen ? 0 : start; f <= hi; f++) {
           if (f < g.band.lo || f > g.band.hi) continue;
@@ -656,6 +758,7 @@
           s += `<text x="${cx}" y="${cy + 4}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="${g.chord.color}">${pcNames[pc]}</text>`;
         }
       }
+      s += '</g>';
     }
 
     for (let i = 0; i < 6; i++) {
@@ -668,7 +771,7 @@
         const bandFaded = dimOutside && bands.length > 0 && !bands.some(b => f >= b.lo && f <= b.hi);
         const shapeFaded = fadeOthers && shapeSets.length > 0 && !shapeKeys.has(i + ',' + f);
         const faded = bandFaded || shapeFaded;
-        if (faded) s += '<g opacity="0.2">';
+        s += `<g class="note" data-s="${i}" data-f="${f}"${faded ? ' opacity="0.2"' : ''} style="cursor:pointer">`;
         if (owners.length === 1) {
           s += `<circle cx="${cx}" cy="${cy}" r="${R}" fill="${owners[0].color}"/>`;
         } else {
@@ -684,7 +787,7 @@
           s += `<circle cx="${cx}" cy="${cy}" r="${R + 3.5}" fill="none" stroke="#2b2a27" stroke-width="2.5"/>`;
         }
         s += `<text x="${cx}" y="${cy + 4.5}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#fff" stroke="#2b2a27" stroke-width="2.6" stroke-opacity="0.55" paint-order="stroke">${pcNames[pc]}</text>`;
-        if (faded) s += '</g>';
+        s += '</g>';
       }
     }
     s += `</svg>`;
@@ -831,6 +934,8 @@
     document.getElementById('singles-title').textContent = seqMode
       ? `Individual chords in ${currentScale}: ${eff.map(st => st.deg + 1).join('\u2013')}`
       : `Individual chords in ${currentScale}`;
+    const playAll = document.getElementById('play-prog');
+    if (playAll) playAll.textContent = seqMode ? 'Play progression' : 'Play chords';
     if (!list.length) {
       wrap.innerHTML = '<p class="empty">No chords selected. Turn on a chord above.</p>';
       return;
@@ -840,9 +945,10 @@
       const sec = document.createElement('section');
       sec.className = 'board';
       sec.innerHTML =
+        `<button type="button" class="play" data-chord="${chords.indexOf(c)}" aria-label="Play ${c.name}">\u25b6 Play</button>` +
         `<h2 class="single-title"><span class="dot" style="background:${c.color}"></span>${prefix}${c.roman}: ${c.name}</h2>` +
         `<p class="chord-sub">${c.notes.map(n => n.name).join(' ')} (${c.formula})</p>` +
-        board([c], cagedBands(c, cagedSel), cagedSel.size > 0 && cagedSel.size < CAGED_LETTERS.length);
+        board([c], boardContext(c).bands, boardContext(c).dim);
       wrap.appendChild(sec);
     });
   }
@@ -1285,6 +1391,508 @@
       });
     });
     sizeWrap.appendChild(b);
+  });
+
+  // ---- Audio: a plucked-string synth built into the page (no files or libraries needed) ----
+  const OPEN_MIDI = [40, 45, 50, 55, 59, 64]; // E2 A2 D3 G3 B3 E4, low string to high
+  const midiOf = (stringIdx, fret) => OPEN_MIDI[stringIdx] + fret;
+  const freqOf = midi => 440 * Math.pow(2, (midi - 69) / 12);
+
+  // Karplus-Strong pluck. Returns the samples and the pitch they actually ring at; playback rate
+  // later corrects for the whole-sample delay length so every note lands in tune.
+  function pluckSamples(freq, sr, seconds) {
+    const n = Math.floor(sr * seconds);
+    const out = new Float32Array(n);
+    // The in-place update averages the sample N steps back with the one N-1 steps back,
+    // so the string rings at sr / (N - 0.5).
+    const N = Math.max(2, Math.round(sr / freq + 0.5));
+    const ring = new Float32Array(N);
+    let seed = (Math.round(freq * 100) + 12345) >>> 0;
+    const rnd = () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296 * 2 - 1; };
+    for (let i = 0; i < N; i++) ring[i] = rnd();
+    for (let pass = 0; pass < 2; pass++) {
+      for (let i = 0; i < N; i++) ring[i] = 0.5 * (ring[i] + ring[(i + 1) % N]); // soften the attack
+    }
+    let peak = 0;
+    for (let i = 0; i < N; i++) peak = Math.max(peak, Math.abs(ring[i]));
+    if (peak > 0) for (let i = 0; i < N; i++) ring[i] /= peak;
+    let idx = 0;
+    for (let i = 0; i < n; i++) {
+      const a = ring[idx], b = ring[(idx + 1) % N];
+      out[i] = a;
+      ring[idx] = 0.5 * (a + b) * 0.9985; // averaging filter plus a little damping
+      idx = (idx + 1) % N;
+    }
+    return { samples: out, f0: sr / (N - 0.5) };
+  }
+
+  let ac = null, master = null, soundOn = true;
+  const bufCache = new Map();
+  const liveSources = new Set();
+  let timers = [];
+  let loopTimer = null;                          // pending timer that schedules the next loop pass
+  const mix = { guitar: 1, pad: 0.7, drums: 1 }; // volume multipliers from the Mix sliders
+  const pad = { on: true };
+  const loop = { on: false };
+
+  function ensureAudio() {
+    if (!ac) {
+      const AC = typeof window !== 'undefined' && (window.AudioContext || window.webkitAudioContext);
+      if (!AC) return null;
+      ac = new AC();
+      const comp = ac.createDynamicsCompressor();
+      master = ac.createGain();
+      master.gain.value = 0.9;
+      master.connect(comp);
+      comp.connect(ac.destination);
+    }
+    if (ac.state === 'suspended' && ac.resume) ac.resume(); // iOS needs this inside a tap
+    return ac;
+  }
+
+  function bufferFor(midi) {
+    if (!bufCache.has(midi)) {
+      const f = freqOf(midi);
+      const { samples, f0 } = pluckSamples(f, ac.sampleRate, 2.6);
+      const buf = ac.createBuffer(1, samples.length, ac.sampleRate);
+      buf.getChannelData(0).set(samples);
+      bufCache.set(midi, { buf, rate: f / f0 });
+    }
+    return bufCache.get(midi);
+  }
+
+  function playNote(midi, when, level = 0.3, dest = null) {
+    const lv = level * mix.guitar;
+    if (lv < 0.001) return;
+    const { buf, rate } = bufferFor(midi);
+    const src = ac.createBufferSource();
+    src.buffer = buf;
+    src.playbackRate.value = rate;
+    const g = ac.createGain();
+    g.gain.setValueAtTime(0.0001, when);
+    g.gain.linearRampToValueAtTime(lv, when + 0.004);
+    g.gain.exponentialRampToValueAtTime(0.0001, when + 2.4);
+    src.connect(g);
+    g.connect(dest || master);
+    src.start(when);
+    src.stop(when + 2.5);
+    liveSources.add(src);
+    src.onended = () => liveSources.delete(src);
+  }
+
+  function stopAll() {
+    timers.forEach(t => clearTimeout(t));
+    timers = [];
+    loopTimer = null;
+    liveSources.forEach(src => { try { src.stop(); } catch (e) { /* already stopped */ } });
+    liveSources.clear();
+    document.querySelectorAll('.now-playing').forEach(el => el.classList.remove('now-playing'));
+  }
+
+  // Brief visual feedback, timed to when the note sounds
+  function flash(el, cls, whenSec, holdMs) {
+    if (!el) return;
+    const delay = Math.max(0, (whenSec - ac.currentTime) * 1000);
+    timers.push(setTimeout(() => {
+      if (el.isConnected === false) return;
+      el.classList.remove(cls);
+      void (el.getBoundingClientRect && el.getBoundingClientRect());
+      el.classList.add(cls);
+      timers.push(setTimeout(() => el.classList.remove(cls), holdMs));
+    }, delay));
+  }
+
+  // Strum frets (one per string, from string index `low` upward) low string first
+  function strum(low, frets, startAt, scope, dest) {
+    frets.forEach((f, j) => {
+      const t = startAt + j * 0.05;
+      playNote(midiOf(low + j, f), t, 0.3, dest);
+      if (scope) flash(scope.querySelector(`.note[data-s="${low + j}"][data-f="${f}"]`), 'playing', t, 520);
+    });
+    if (scope) flash(scope.querySelector(`.shape[data-low="${low}"][data-frets="${frets.join(',')}"]`), 'playing', startAt, 700);
+  }
+
+  // What an individual chord board shows for a chord: its CAGED bands, and whether notes outside
+  // them are faded. Drawing and playing both read this, so they always agree.
+  function boardContext(chord) {
+    return {
+      bands: cagedBands(chord, cagedSel),
+      dim: cagedSel.size > 0 && cagedSel.size < CAGED_LETTERS.length,
+    };
+  }
+
+  // The shapes a board highlights for a chord right now: outlined on the chosen strings, entirely
+  // inside the zoom window, and with no note faded by the CAGED choice. If outlines are switched
+  // off there is nothing outlined, so any string set is allowed.
+  function highlightedShapes(chord, bands, dim) {
+    const win = currentWindow();
+    const hasOpen = win.lo === 0;
+    const start = Math.max(win.lo, 1);
+    const inView = f => f === 0 ? hasOpen : (f >= start && f <= win.hi);
+    const inBand = f => bands.some(b => f >= b.lo && f <= b.hi);
+    const count = chord.pcs.length === 3 ? 3 : 4;
+    let sets = currentShapeSets();
+    const outlinesOn = sets.length > 0;
+    if (!outlinesOn) sets = Array.from({ length: 6 - count + 1 }, (_, i) => i);
+    const out = [];
+    sets.forEach(low => {
+      playableShapes(chord, low).forEach(sh => {
+        if (!sh.frets.every(inView)) return;
+        if (dim && bands.length > 0 && !sh.frets.every(inBand)) return; // those notes are faded
+        out.push(sh);
+      });
+    });
+    return out;
+  }
+
+  // Choose one highlighted shape, nearest `target` fret (and a little toward the middle strings)
+  function pickVoicing(chord, target, bands, dim) {
+    const count = chord.pcs.length === 3 ? 3 : 4;
+    const prefLow = count === 3 ? 2 : 1;
+    let best = null;
+    highlightedShapes(chord, bands, dim).forEach(sh => {
+      const mean = sh.frets.reduce((a, f) => a + f, 0) / sh.frets.length;
+      const score = Math.abs(mean - target) + 0.6 * Math.abs(sh.low - prefLow);
+      if (!best || score < best.score) best = { low: sh.low, frets: sh.frets, score, mean };
+    });
+    return best;
+  }
+
+  let statusTimer = null;
+  function say(msg) {
+    const el = document.getElementById('sound-status');
+    if (!el) return;
+    el.textContent = msg;
+    clearTimeout(statusTimer);
+    statusTimer = setTimeout(() => { el.textContent = ''; }, 6000);
+  }
+
+  function playChord(chord, card, startAt, target, dest) {
+    const ctxInfo = boardContext(chord);
+    const v = pickVoicing(chord, target, ctxInfo.bands, ctxInfo.dim);
+    if (v) strum(v.low, v.frets, startAt, card, dest);
+    return v;
+  }
+
+  // ---- Drums: a synthesized bass drum and snare, scheduled on the beat ----
+  const DRUM_PATTERNS = [
+    { id: 'rock', label: 'Rock', kick: [1, 0, 1, 0], snare: [0, 1, 0, 1], note: 'Bass drum on beats 1 and 3, snare on 2 and 4.' },
+    { id: 'four', label: 'Four on the floor', kick: [1, 1, 1, 1], snare: [0, 1, 0, 1], note: 'Bass drum on every beat, snare on 2 and 4.' },
+    { id: 'half', label: 'Half time', kick: [1, 0, 0, 0], snare: [0, 0, 1, 0], note: 'Bass drum on beat 1, snare on 3, for a slow, heavy feel.' },
+  ];
+  const drums = { kick: true, snare: true, pattern: 'rock' };
+
+  let noiseBuf = null;
+  function noiseBuffer() {
+    if (!noiseBuf) {
+      const n = Math.floor(ac.sampleRate * 0.3);
+      noiseBuf = ac.createBuffer(1, n, ac.sampleRate);
+      const d = noiseBuf.getChannelData(0);
+      let seed = 987654321;
+      for (let i = 0; i < n; i++) {
+        seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+        d[i] = seed / 4294967296 * 2 - 1;
+      }
+    }
+    return noiseBuf;
+  }
+
+  function track(src) {
+    liveSources.add(src);
+    src.onended = () => liveSources.delete(src);
+  }
+
+  // A short burst of filtered noise
+  function noiseBurst(when, type, freq, level, decay) {
+    level *= mix.drums;
+    if (level < 0.001) return;
+    const n = ac.createBufferSource();
+    n.buffer = noiseBuffer();
+    const f = ac.createBiquadFilter();
+    f.type = type;
+    f.frequency.value = freq;
+    const g = ac.createGain();
+    g.gain.setValueAtTime(0.0001, when);
+    g.gain.linearRampToValueAtTime(level, when + 0.002);
+    g.gain.exponentialRampToValueAtTime(0.0001, when + decay);
+    n.connect(f);
+    f.connect(g);
+    g.connect(master);
+    n.start(when);
+    n.stop(when + decay + 0.05);
+    track(n);
+  }
+
+  // A pitched thump whose frequency drops quickly
+  function thump(when, from, to, drop, level, decay) {
+    level *= mix.drums;
+    if (level < 0.001) return;
+    const o = ac.createOscillator();
+    o.type = 'triangle'; // has overtones, so small speakers can still play it
+    o.frequency.setValueAtTime(from, when);
+    o.frequency.exponentialRampToValueAtTime(to, when + drop);
+    const g = ac.createGain();
+    g.gain.setValueAtTime(0.0001, when);
+    g.gain.linearRampToValueAtTime(level, when + 0.003);
+    g.gain.exponentialRampToValueAtTime(0.0001, when + decay);
+    o.connect(g);
+    g.connect(master);
+    o.start(when);
+    o.stop(when + decay + 0.05);
+    track(o);
+  }
+
+  function playKick(when) {
+    thump(when, 180, 55, 0.11, 0.95, 0.42);
+    noiseBurst(when, 'bandpass', 2500, 0.3, 0.02); // beater click
+  }
+
+  function playSnare(when) {
+    noiseBurst(when, 'highpass', 1800, 0.55, 0.2);  // snare wires
+    thump(when, 220, 150, 0.07, 0.4, 0.13);          // drum head
+  }
+
+  function scheduleDrums(t0, totalBeats) {
+    if (!drums.kick && !drums.snare) return;
+    const pat = DRUM_PATTERNS.find(p => p.id === drums.pattern) || DRUM_PATTERNS[0];
+    const beatSec = 60 / tempo.bpm;
+    for (let b = 0; b < totalBeats; b++) {
+      const when = t0 + b * beatSec;
+      const pos = b % 4; // bars of four beats, continuing across chord changes
+      if (drums.kick && pat.kick[pos]) {
+        playKick(when);
+        flash(document.getElementById('drum-kick'), 'hit', when, 110);
+      }
+      if (drums.snare && pat.snare[pos]) {
+        playSnare(when);
+        flash(document.getElementById('drum-snare'), 'hit', when, 110);
+      }
+    }
+  }
+
+  // Tempo: each chord lasts `beats` beats at `bpm` beats per minute
+  const tempo = { bpm: 80, beats: 2 };
+  const chordSeconds = () => tempo.beats * 60 / tempo.bpm;
+
+  function syncTempo() {
+    document.getElementById('tempo-val').textContent = `${tempo.bpm} BPM`;
+    document.getElementById('beats-val').textContent = String(tempo.beats);
+    document.getElementById('tempo-note').textContent =
+      `Each chord lasts ${chordSeconds().toFixed(1)} seconds (${tempo.beats} beat${tempo.beats === 1 ? '' : 's'} at ${tempo.bpm} BPM). Each chord is cut off as the next one starts.`;
+  }
+
+  // ---- Pad: a soft synth chord under each step ----
+  // Voice the chord in close position around the middle of the keyboard, choosing the inversion
+  // that keeps the average pitch nearest the previous chord, so the pad glides instead of jumping.
+  function padNotes(chord, prevMean) {
+    const target = prevMean === null || prevMean === undefined ? 58 : prevMean;
+    let best = null;
+    for (let rot = 0; rot < chord.pcs.length; rot++) {
+      const order = chord.pcs.slice(rot).concat(chord.pcs.slice(0, rot));
+      for (let base = 45; base <= 63; base++) {
+        if (base % 12 !== order[0]) continue;
+        const notes = [base];
+        for (let i = 1; i < order.length; i++) {
+          let n = notes[i - 1] + 1;
+          while (n % 12 !== order[i]) n++;
+          notes.push(n);
+        }
+        if (notes[notes.length - 1] > 76) continue;
+        const mean = notes.reduce((x, y) => x + y, 0) / notes.length;
+        const score = Math.abs(mean - target);
+        if (!best || score < best.score) best = { notes, mean, score };
+      }
+    }
+    return best;
+  }
+
+  // Two slightly detuned sawtooth voices per note, through a low-pass filter, with a slow fade in and out
+  function playPad(chord, when, dur, prevMean) {
+    const lvl = 0.9 * mix.pad;
+    if (lvl < 0.001) return null;
+    const v = padNotes(chord, prevMean);
+    const atk = Math.min(0.45, dur * 0.5);
+    const rel = Math.min(0.7, dur * 0.6);
+    const gate = ac.createGain();
+    gate.gain.setValueAtTime(0.0001, when);
+    gate.gain.linearRampToValueAtTime(lvl, when + atk);
+    gate.gain.setValueAtTime(lvl, when + dur);
+    gate.gain.linearRampToValueAtTime(0.0001, when + dur + rel);
+    const lp = ac.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 1100;
+    lp.Q.value = 0.7;
+    lp.connect(gate);
+    gate.connect(master);
+    v.notes.forEach(m => {
+      const ng = ac.createGain();
+      ng.gain.value = 0.06;
+      ng.connect(lp);
+      [-6, 6].forEach(cents => {
+        const o = ac.createOscillator();
+        o.type = 'sawtooth';
+        o.frequency.value = freqOf(m);
+        o.detune.value = cents;
+        o.connect(ng);
+        o.start(when);
+        o.stop(when + dur + rel + 0.1);
+        track(o);
+      });
+    });
+    return v;
+  }
+
+  // Schedule one pass through the progression starting at t0. Returns its length in seconds.
+  function schedulePass(t0, st, first) {
+    const eff = effectiveSeq();
+    const steps = eff.length ? eff.map(x => chords[x.deg]) : chords.filter((c, i) => active[i]);
+    if (!steps.length) return 0;
+    const cards = Array.from(document.querySelectorAll('#singles .board'));
+    const beat = chordSeconds();
+    const skipped = [];
+    steps.forEach((c, k) => {
+      const when = t0 + k * beat;
+      // Each chord gets its own volume gate so it can be damped when the next chord arrives
+      const choke = ac.createGain();
+      choke.connect(master);
+      if (st.prevChoke) st.prevChoke.gain.setTargetAtTime(0.0001, when, 0.04);
+      st.prevChoke = choke;
+      const v = playChord(c, cards[k], when, st.target, choke);
+      if (v) st.target = v.mean; // keep the hand close to where the last chord was
+      else skipped.push(`${k + 1}. ${c.name}`);
+      if (pad.on) {
+        const pv = playPad(c, when, beat, st.padMean);
+        if (pv) st.padMean = pv.mean;
+      }
+      if (cards[k]) flash(cards[k], 'now-playing', when, beat * 1000 - 80);
+    });
+    scheduleDrums(t0, steps.length * tempo.beats);
+    if (first && skipped.length) say(`No highlighted shape for ${skipped.join(', ')} in this view, so ${skipped.length === 1 ? 'that step was' : 'those steps were'} skipped.`);
+    return steps.length * beat;
+  }
+
+  // Play the progression once, or keep repeating it while Loop is on. Each pass is scheduled just
+  // before the previous one ends, so the repeat is seamless and changes apply on the next pass.
+  function playProgression() {
+    if (!soundOn || !ensureAudio()) return;
+    stopAll();
+    const st = { target: zoom.anchor, prevChoke: null, padMean: null };
+    let start = ac.currentTime + 0.05;
+    let first = true;
+    const next = () => {
+      loopTimer = null;
+      if (!first && !loop.on) return; // Loop was switched off, so the last pass was the final one
+      const len = schedulePass(start, st, first);
+      first = false;
+      if (!len || !loop.on) return;
+      const nextStart = start + len;
+      const delay = Math.max(0, (nextStart - ac.currentTime - 0.6) * 1000);
+      start = nextStart;
+      loopTimer = setTimeout(next, delay);
+      timers.push(loopTimer);
+    };
+    next();
+  }
+
+  document.getElementById('boards').addEventListener('click', e => {
+    const btn = e.target.closest('[data-chord]');
+    const noteEl = e.target.closest('.note');
+    const shapeEl = e.target.closest('.shape');
+    if (!btn && !noteEl && !shapeEl) return;
+    if (!soundOn || !ensureAudio()) return;
+    const now = ac.currentTime + 0.02;
+    if (btn) {
+      stopAll();
+      const chord = chords[Number(btn.getAttribute('data-chord'))];
+      if (chord && !playChord(chord, btn.closest('section.board'), now, zoom.anchor)) {
+        say(`No highlighted shape to play for ${chord.name} in this view. Try another string set, a wider zoom, or more CAGED shapes.`);
+      }
+    } else if (noteEl) {
+      const si = Number(noteEl.getAttribute('data-s')), f = Number(noteEl.getAttribute('data-f'));
+      playNote(midiOf(si, f), now, 0.4);
+      flash(noteEl, 'playing', now, 520);
+    } else {
+      const low = Number(shapeEl.getAttribute('data-low'));
+      const frets = shapeEl.getAttribute('data-frets').split(',').map(Number);
+      const scope = shapeEl.closest('section.board') || shapeEl.closest('.content');
+      strum(low, frets, now, scope);
+    }
+  });
+
+  const soundToggle = document.getElementById('sound-toggle');
+  soundToggle.addEventListener('click', () => {
+    soundOn = !soundOn;
+    soundToggle.textContent = soundOn ? 'Sound on' : 'Sound off';
+    soundToggle.setAttribute('aria-pressed', String(soundOn));
+    if (!soundOn) stopAll();
+  });
+  document.getElementById('play-prog').addEventListener('click', playProgression);
+
+  const tempoEl = document.getElementById('tempo');
+  tempoEl.addEventListener('input', () => {
+    tempo.bpm = Math.min(200, Math.max(40, Number(tempoEl.value) || 80));
+    syncTempo();
+  });
+  document.getElementById('beats-minus').addEventListener('click', () => { tempo.beats = Math.max(1, tempo.beats - 1); syncTempo(); });
+  document.getElementById('beats-plus').addEventListener('click', () => { tempo.beats = Math.min(8, tempo.beats + 1); syncTempo(); });
+  syncTempo();
+
+  function syncDrumNote() {
+    const pat = DRUM_PATTERNS.find(p => p.id === drums.pattern) || DRUM_PATTERNS[0];
+    document.getElementById('drum-note').textContent =
+      `${pat.label}: ${pat.note} Bars are four beats long and keep going across chord changes.`;
+  }
+  [['drum-kick', 'kick', playKick], ['drum-snare', 'snare', playSnare]].forEach(([id, which, hit]) => {
+    const btn = document.getElementById(id);
+    btn.addEventListener('click', () => {
+      drums[which] = !drums[which];
+      btn.setAttribute('aria-pressed', String(drums[which]));
+      if (drums[which] && soundOn && ensureAudio()) hit(ac.currentTime + 0.02); // preview the drum
+    });
+  });
+  const patternWrap = document.getElementById('drum-patterns');
+  DRUM_PATTERNS.forEach(pat => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'key';
+    b.textContent = pat.label;
+    b.dataset.pattern = pat.id;
+    b.setAttribute('aria-pressed', String(pat.id === drums.pattern));
+    b.addEventListener('click', () => {
+      drums.pattern = pat.id;
+      patternWrap.querySelectorAll('.key').forEach(btn => {
+        btn.setAttribute('aria-pressed', String(btn.dataset.pattern === drums.pattern));
+      });
+      syncDrumNote();
+    });
+    patternWrap.appendChild(b);
+  });
+  syncDrumNote();
+  document.getElementById('stop-audio').addEventListener('click', stopAll);
+
+  const loopBtn = document.getElementById('loop-toggle');
+  loopBtn.addEventListener('click', () => {
+    loop.on = !loop.on;
+    loopBtn.setAttribute('aria-pressed', String(loop.on));
+  });
+  const padBtn = document.getElementById('pad-toggle');
+  padBtn.addEventListener('click', () => {
+    pad.on = !pad.on;
+    padBtn.setAttribute('aria-pressed', String(pad.on));
+    if (pad.on && soundOn && ensureAudio()) { // preview the pad on the first chord that is switched on
+      const c = chords.find((x, i) => active[i]) || chords[0];
+      playPad(c, ac.currentTime + 0.02, 1.4, null);
+    }
+  });
+  ['guitar', 'pad', 'drums'].forEach(k => {
+    const el = document.getElementById('mix-' + k);
+    const val = document.getElementById('mix-' + k + '-val');
+    el.addEventListener('input', () => {
+      const n = Number(el.value);
+      const pct = Number.isFinite(n) ? Math.min(100, Math.max(0, n)) : 100;
+      mix[k] = pct / 100;
+      val.textContent = pct + '%';
+    });
   });
 
   // Floating controls: docked side panel on wide screens, drawer on narrow ones
