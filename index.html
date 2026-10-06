@@ -383,6 +383,9 @@
     <div class="keys" id="caged" role="group" aria-label="CAGED shapes"></div>
     <p class="hint">Dashed bands mark where each open-chord shape lands for that chord. Tap any combination of letters, such as C, A and D, to see the forms above and below each other. Notes outside the chosen shapes fade. Minor chords use the minor form (labeled like "Am shape") in the same positions. Diminished chords are left out.</p>
 
+    <p class="ctl-label">Shape type</p>
+    <div class="keys" id="stype" role="group" aria-label="Shape type"></div>
+
     <p class="ctl-label" id="lbl-shapes">Outline playable triads on these strings</p>
     <div class="keys" id="shapes" role="group" aria-label="Playable shapes"></div>
     <p class="hint" id="hint-shapes"></p>
@@ -579,7 +582,7 @@
   //  triads:      3 strings, all three chord tones
   //  7th chords:  4 strings, all four chord tones
   //  9th chords:  4 strings, any four tones that include the 3rd, 7th and 9th
-  function playableShapes(chord, low) {
+  function triadShapes(chord, low) {
     const n = chord.pcs.length;
     const count = n === 3 ? 3 : 4;
     if (low + count > 6) return [];
@@ -609,6 +612,71 @@
     };
     pick(0, []);
     return shapes;
+  }
+
+  // How many fingers a set of frets needs (frets by string, low to high; 0 is an open string).
+  // A barre across the lowest fretted fret counts as one finger when every string it covers is
+  // fretted at that fret or higher; other notes on neighboring strings at the same fret share a finger.
+  function fingerCount(frets) {
+    const fretted = frets.map((f, i) => ({ f, i })).filter(x => x.f > 0);
+    if (!fretted.length) return 0;
+    const lowest = Math.min(...fretted.map(x => x.f));
+    const runs = idxs => idxs.reduce((n, v, k) => n + (k === 0 || v !== idxs[k - 1] + 1 ? 1 : 0), 0);
+    let fingers = 0;
+    [...new Set(fretted.map(x => x.f))].forEach(fret => {
+      const idxs = fretted.filter(x => x.f === fret).map(x => x.i).sort((a, b) => a - b);
+      if (fret === lowest) {
+        const barre = frets.slice(idxs[0], idxs[idxs.length - 1] + 1).every(f => f >= fret);
+        fingers += barre ? 1 : runs(idxs);
+      } else {
+        fingers += runs(idxs);
+      }
+    });
+    return fingers;
+  }
+
+  // Full chord shapes: every string from `low` up to the high e carries a chord tone, the lowest
+  // string plays the root, every chord tone appears, the shape fits a 4-fret stretch (an open string
+  // counts as fret 0), and it needs no more than four fingers. These are the familiar open and barre forms.
+  function fullShapes(chord, low) {
+    if (low > 2) return [];
+    const strings = 6 - low;
+    const rootPc = chord.pcs[0];
+    const opts = [];
+    for (let k = 0; k < strings; k++) {
+      const list = [];
+      for (let f = 0; f <= FRETS; f++) {
+        const pc = (TUNING[low + k] + f) % 12;
+        if (k === 0 ? pc === rootPc : chord.pcs.includes(pc)) list.push(f);
+      }
+      opts.push(list);
+    }
+    const shapes = [];
+    const pick = (k, frets) => {
+      if (k === strings) {
+        const pcs = new Set(frets.map((f, j) => (TUNING[low + j] + f) % 12));
+        if (!chord.pcs.every(pc => pcs.has(pc))) return;
+        if (fingerCount(frets) > 4) return;
+        shapes.push({ low, frets });
+        return;
+      }
+      for (const f of opts[k]) {
+        const next = [...frets, f];
+        if (Math.max(...next) - Math.min(...next) > 3) continue;
+        pick(k + 1, next);
+      }
+    };
+    pick(0, []);
+    return shapes;
+  }
+
+  // Which kind of shape the outlines, tapping and Play buttons use: 'triad' or 'full'
+  let shapeType = 'triad';
+  const shapeCache = new Map();
+  function playableShapes(chord, low) {
+    const key = shapeType + '|' + chord.pcs.join(',') + '|' + low;
+    if (!shapeCache.has(key)) shapeCache.set(key, shapeType === 'full' ? fullShapes(chord, low) : triadShapes(chord, low));
+    return shapeCache.get(key);
   }
 
   // The five open-chord shapes. Each is a fret box measured in open position,
@@ -650,7 +718,11 @@
     let hi = Math.min(FRETS, zoom.anchor + zoom.above);
     if (hi - lo < 2) hi = Math.min(FRETS, lo + 2);
     if (hi - lo < 2) lo = Math.max(0, hi - 2);
-    return { lo, hi, zoomed: true, anchor: zoom.anchor };
+    // Open strings belong to the first position, so a range that starts within two frets of the
+    // nut keeps the nut (and its open-string notes) in view.
+    const nutAdded = lo > 0 && lo <= 2;
+    if (nutAdded) lo = 0;
+    return { lo, hi, zoomed: true, anchor: zoom.anchor, nutAdded };
   }
 
   function fretboard(chords, active, pcNames, shapeSets, bands = [], dimOutside = false, extras = {}) {
@@ -813,11 +885,19 @@
 
   // 'off', 'all', or the index of the lowest string of a string set
   let shapeMode = 3;
+  const shapeModeByType = { triad: 3, full: 0 }; // remembers each type's string choice when you switch
   let fadeOthers = true; // fade notes that are not part of an outlined shape
-  function voiceCount() { return stackSize === 3 ? 3 : 4; }
+  // Fewest strings in a shape; string sets run from each possible lowest string up to the high e
+  function voiceCount() { return shapeType === 'full' ? 4 : (stackSize === 3 ? 3 : 4); }
   function currentShapeSets() {
     if (shapeMode === 'off') return [];
     const maxLow = 6 - voiceCount();
+    if (shapeType === 'full') {
+      // The buttons name the strings you may play. A shape can skip low strings it does not use,
+      // so choosing E A D G B e allows every shape, and fewer strings allow only the shapes that fit.
+      const from = shapeMode === 'all' ? 0 : Math.min(shapeMode, maxLow);
+      return Array.from({ length: maxLow - from + 1 }, (_, i) => from + i);
+    }
     if (shapeMode === 'all') return Array.from({ length: maxLow + 1 }, (_, i) => i);
     return [Math.min(shapeMode, maxLow)];
   }
@@ -838,6 +918,13 @@
     4: ['7th chord shapes', 'An outline marks a seventh chord with one note on each of four neighboring strings, using all four chord tones within a 4-fret stretch. An open string counts as fret 0, so open strings only show up near the nut.'],
     5: ['9th chord shapes', 'An outline marks four neighboring strings holding the 3rd, 7th and 9th plus the root or 5th, all within a 4-fret stretch. An open string counts as fret 0. This is a common way to voice a 9th chord on guitar.'],
   };
+
+  const FULL_TEXT = ['full chord shapes', 'An outline marks a complete chord shape: it starts on the root in the bass, covers every string from there up to the high e, includes every chord tone, fits a 4-fret stretch, and needs four fingers or fewer (a barre counts as one). An open string counts as fret 0. The buttons name the strings you can play. A shape may skip low strings it does not use, so with E A D G B e selected you get every shape: open forms at the nut and the barred C, A, G, E and D forms up the neck. Diminished chords only form 4-string shapes (D G B e), which are included whenever those strings are available.'];
+  function updateShapeText() {
+    const t = shapeType === 'full' ? FULL_TEXT : SHAPE_TEXT[stackSize];
+    document.getElementById('lbl-shapes').textContent = `Outline playable ${t[0]} on these strings`;
+    document.getElementById('hint-shapes').textContent = t[1] + ' Notes outside the outlines fade, so only the playable shapes stand out. Switch off Fade other notes to see every chord tone.';
+  }
 
   function board(list, bands = [], dimOutside = false) {
     return fretboard(list, list.map(() => true), pcNames, currentShapeSets(), bands, dimOutside);
@@ -1032,8 +1119,7 @@
     document.getElementById('lbl-major').textContent = familyLabel('major');
     document.getElementById('lbl-minor').textContent = familyLabel('minor');
     document.getElementById('chord-hint').textContent = chordHint;
-    document.getElementById('lbl-shapes').textContent = `Outline playable ${SHAPE_TEXT[stackSize][0]} on these strings`;
-    document.getElementById('hint-shapes').textContent = SHAPE_TEXT[stackSize][1] + ' Notes outside the outlines fade, so only the playable shapes stand out. Switch off Fade other notes to see every chord tone.';
+    updateShapeText();
     document.getElementById('singles-title').textContent = `Individual chords in ${currentScale}`;
 
     drawChordChips();
@@ -1080,8 +1166,9 @@
   function drawShapeButtons() {
     const n = voiceCount();
     const options = [['Off', 'off']];
-    for (let low = 0; low <= 6 - n; low++) options.push([STRING_NAMES.slice(low, low + n).join(' '), low]);
-    options.push(['All', 'all']);
+    for (let low = 0; low <= 6 - n; low++) options.push([STRING_NAMES.slice(low, shapeType === 'full' ? 6 : low + n).join(' '), low]);
+    if (shapeType !== 'full') options.push(['All', 'all']); // for full chords the first button already allows every shape
+    if (shapeType === 'full' && shapeMode === 'all') shapeMode = 0;
     if (typeof shapeMode === 'number') shapeMode = Math.min(shapeMode, 6 - n);
     shapesWrap.innerHTML = '';
     options.forEach(([label, value]) => {
@@ -1112,6 +1199,30 @@
     });
     shapesWrap.appendChild(fadeBtn);
   }
+
+  const STYPE_OPTIONS = [['Triads', 'triad'], ['Full chords', 'full']];
+  const stypeWrap = document.getElementById('stype');
+  STYPE_OPTIONS.forEach(([label, value]) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'key';
+    b.textContent = label;
+    b.setAttribute('aria-pressed', String(value === shapeType));
+    b.addEventListener('click', () => {
+      if (value === shapeType) return;
+      shapeModeByType[shapeType] = shapeMode;   // remember this type's string choice
+      shapeType = value;
+      shapeMode = shapeModeByType[value];
+      if (value === 'full' && shapeMode === 'all') shapeMode = 0;
+      stypeWrap.querySelectorAll('.key').forEach((btn, i) => {
+        btn.setAttribute('aria-pressed', String(STYPE_OPTIONS[i][1] === shapeType));
+      });
+      drawShapeButtons();   // rebuilds the string choices for this shape type
+      updateShapeText();
+      renderAll();
+    });
+    stypeWrap.appendChild(b);
+  });
 
   /* 7TH AND 9TH CHORD SELECTION (hidden for now; remove this comment, and the HTML one, to bring it back)
   const CTYPE_OPTIONS = [['Triads', 3], ['7th chords', 4], ['9th chords', 5]];
@@ -1339,7 +1450,7 @@
     STEPPERS.forEach(st => { valEls[st.key].textContent = zoom[st.key]; });
     const w = currentWindow();
     zoomRead.textContent = zoom.on
-      ? `Showing frets ${w.lo} to ${w.hi}, anchored on fret ${zoom.anchor}.`
+      ? `Showing frets ${w.lo} to ${w.hi}, anchored on fret ${zoom.anchor}.${w.nutAdded ? ' The nut is included because the range starts near it.' : ''}`
       : 'Showing the whole neck. Turn zoom on, or change a value, to focus on a fret range.';
     renderAll();
   }
@@ -1530,7 +1641,7 @@
     const start = Math.max(win.lo, 1);
     const inView = f => f === 0 ? hasOpen : (f >= start && f <= win.hi);
     const inBand = f => bands.some(b => f >= b.lo && f <= b.hi);
-    const count = chord.pcs.length === 3 ? 3 : 4;
+    const count = shapeType === 'full' ? 4 : (chord.pcs.length === 3 ? 3 : 4);
     let sets = currentShapeSets();
     const outlinesOn = sets.length > 0;
     if (!outlinesOn) sets = Array.from({ length: 6 - count + 1 }, (_, i) => i);
@@ -1547,8 +1658,7 @@
 
   // Choose one highlighted shape, nearest `target` fret (and a little toward the middle strings)
   function pickVoicing(chord, target, bands, dim) {
-    const count = chord.pcs.length === 3 ? 3 : 4;
-    const prefLow = count === 3 ? 2 : 1;
+    const prefLow = shapeType === 'full' ? 0 : (chord.pcs.length === 3 ? 2 : 1); // full chords: fullest first
     let best = null;
     highlightedShapes(chord, bands, dim).forEach(sh => {
       const mean = sh.frets.reduce((a, f) => a + f, 0) / sh.frets.length;
