@@ -1546,7 +1546,18 @@
   const pad = { on: true };
   const loop = { on: false };
 
+  // iPhone: Web Audio is "ambient" by default, so the ring/silent switch mutes it (video and music
+  // are not affected). Declaring a playback audio session (iOS 17 and later) lets it play regardless.
+  function useSpeakerSession() {
+    try {
+      if (typeof navigator !== 'undefined' && navigator.audioSession && navigator.audioSession.type !== 'playback') {
+        navigator.audioSession.type = 'playback';
+      }
+    } catch (e) { /* not supported */ }
+  }
+
   function ensureAudio() {
+    useSpeakerSession();
     if (!ac) {
       const AC = typeof window !== 'undefined' && (window.AudioContext || window.webkitAudioContext);
       if (!AC) return null;
@@ -1557,7 +1568,15 @@
       master.connect(comp);
       comp.connect(ac.destination);
     }
-    if (ac.state === 'suspended' && ac.resume) ac.resume(); // iOS needs this inside a tap
+    // Resume inside the tap. iOS also reports an "interrupted" state after a call, a lock or an app
+    // switch, so resume whenever the context is not running. Say so if the browser still blocks sound.
+    if (ac.state !== 'running' && ac.resume) {
+      const p = ac.resume();
+      const blocked = () => {
+        if (ac.state !== 'running') say('Your browser is blocking sound. On iPhone, check that the silent switch is off and the volume is up, then tap again.');
+      };
+      if (p && p.then) p.then(blocked, blocked);
+    }
     return ac;
   }
 
