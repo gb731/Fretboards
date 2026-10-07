@@ -123,6 +123,30 @@
     border-color: var(--ink);
     color: #fffdf8;
   }
+  .key:disabled { opacity: .45; cursor: not-allowed; }
+  .fbwrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .swipe-hint { display: none; }
+  @media (max-width: 700px) {
+    .fbwrap svg:not([style]) { min-width: 900px; }
+    .fbwrap svg[style] { min-width: 440px; }
+    .swipe-hint { display: block; }
+  }
+  button.tag { font-family: inherit; color: var(--ink); cursor: pointer; }
+  button.tag[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); font-weight: 600; }
+  .focus-hint { margin: 8px 0 0; }
+  details.quiz > summary { cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  details.quiz > summary::-webkit-details-marker { display: none; }
+  details.quiz > summary h2 { margin: 0; }
+  details.quiz > summary .chev { font-size: 14px; color: var(--muted); }
+  details.quiz[open] > summary .chev { transform: rotate(90deg); }
+  .quiz-body { margin-top: 12px; }
+  .quiz-q { font-size: 18px; margin: 12px 0 8px; font-family: Georgia, serif; }
+  .quiz-score { font-size: 14px; color: var(--muted); margin: 0 0 4px; }
+  .qcell { cursor: pointer; }
+  .qcell:hover circle.hit { fill: rgba(43,42,39,.12); }
+  .key.outside[aria-pressed="true"] { background: #1f7a8c; border-color: #1f7a8c; }
+  .warn-note { margin: 6px 0 0; padding: 6px 10px; border-left: 4px solid #1f7a8c; background: #e6f2f4; border-radius: 4px; font-size: 13px; color: #174d59; }
+  .warn-note[hidden] { display: none; }
   .key:focus-visible, .chip:focus-visible { outline: 3px solid #2b2a27; outline-offset: 2px; }
   section.board {
     background: #fffdf8;
@@ -344,6 +368,7 @@
   <h1>Fretboards</h1>
   <p class="subtitle">Triads, CAGED shapes, and chord progressions in every key and mode</p>
   <p class="intro">Pick a key and a mode, then choose which chords to show. Each chord has its own color, and where two chords share a note the dot is split. Every fretboard below follows your selection.</p>
+  <p class="hint swipe-hint">On a phone each fretboard is wider than the screen. Swipe it sideways to see the whole neck, or turn Zoom on to focus on a few frets.</p>
 
   <div class="layout ctl-open" id="layout">
     <aside class="panel" id="panel" aria-label="Controls">
@@ -354,10 +379,20 @@
     <p class="ctl-label">Mode</p>
     <div class="keys" id="modes" role="group" aria-label="Mode"></div>
     <p class="hint" id="mode-hint"></p>
+    <p class="ctl-label">Scale board notes</p>
+    <div class="keys" id="scaletype" role="group" aria-label="Scale board notes"></div>
+    <p class="ctl-label" id="outside-label">Outside the mode</p>
+    <div class="keys" id="scaleoutside" role="group" aria-label="Scales that include notes outside the mode"></div>
+    <p class="hint" id="scaletype-hint"></p>
+    <p class="warn-note" id="scaletype-warn" hidden></p>
   </div>
 
   <div class="master">
     <h3 class="ctl-group" id="fretboard-heading">Fretboard options</h3>
+    <p class="ctl-label">Dot labels</p>
+    <div class="keys" id="labelmode" role="group" aria-label="Dot labels"></div>
+    <p class="hint" id="labelmode-hint"></p>
+
     <p class="ctl-label">Board size</p>
     <div class="keys" id="bsize" role="group" aria-label="Board size"></div>
     <p class="hint">Smaller sizes put the fretboards side by side so more fit on screen. Pair a small size with Zoom to a fret range to keep the notes readable.</p>
@@ -381,7 +416,7 @@
 
     <p class="ctl-label">CAGED shapes on the individual chord fretboards</p>
     <div class="keys" id="caged" role="group" aria-label="CAGED shapes"></div>
-    <p class="hint">Dashed bands mark where each open-chord shape lands for that chord. Tap any combination of letters, such as C, A and D, to see the forms above and below each other. Notes outside the chosen shapes fade. Minor chords use the minor form (labeled like "Am shape") in the same positions. Diminished chords are left out.</p>
+    <p class="hint">Dashed bands mark where each open-chord shape lands for that chord. Tap any combination of letters, such as C, A and D, to see the forms above and below each other. Notes outside the chosen shapes fade. Minor chords use the minor form (labeled like "Am shape") in the same positions. Of the minor forms, Am, Em and Dm are the ones guitarists really play. The Cm and Gm shapes are awkward and rarely used, but they are shown so the five-shape pattern stays complete. Diminished chords are left out.</p>
 
     <p class="ctl-label">Shape type</p>
     <div class="keys" id="stype" role="group" aria-label="Shape type"></div>
@@ -471,9 +506,31 @@
   </section>
 
   <section class="board">
+    <h2 id="scale-title">Scale</h2>
+    <div id="scale"></div>
+    <div class="chips" id="scale-chips"></div>
+  </section>
+
+  <section class="board">
+    <details class="quiz" id="quiz">
+      <summary><h2>Quiz yourself</h2><span class="chev" aria-hidden="true">&#9654;</span></summary>
+      <div class="quiz-body">
+        <div class="keys" id="quiz-type" role="group" aria-label="Quiz type"></div>
+        <p class="quiz-score" id="quiz-score"></p>
+        <p class="quiz-q" id="quiz-q"></p>
+        <div id="quiz-board"></div>
+        <div class="keys" id="quiz-answers" role="group" aria-label="Answers"></div>
+        <div class="keys" id="quiz-actions"></div>
+        <p class="hint" id="quiz-feedback" aria-live="polite"></p>
+      </div>
+    </details>
+  </section>
+
+  <section class="board">
     <h2 id="combined-title">Combined chords</h2>
     <div id="combined"></div>
     <div class="chips" id="combined-chips"></div>
+    <p class="hint focus-hint">Tap a chord above to focus on it. Everything else fades. Tap it again to clear.</p>
   </section>
 
   <section class="board">
@@ -741,7 +798,7 @@
     const inView = f => f === 0 ? hasOpen : (f >= start && f <= hi);
     const yStr = i => T + (5 - i) * SS; // i = 0 is low E, drawn at the bottom
     const style = win.zoomed ? ` style="max-width:${Math.round(W * 1.2)}px"` : '';
-    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Fretboard diagram"${style}>`;
+    let s = `<div class="fbwrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Fretboard diagram"${style}>`;
 
     s += `<rect x="${L}" y="${T - 14}" width="${cells * FW + extra}" height="${5 * SS + 28}" rx="4" fill="var(--wood)"/>`;
 
@@ -781,6 +838,7 @@
     }
 
     // CAGED bands, clipped to the visible window
+    const labels = [];
     const drawBand = (b, stroke, pill, label, dash) => {
       const floor = hasOpen ? 0 : start;
       if (b.hi < floor || b.lo > hi) return;
@@ -791,17 +849,34 @@
       const mid = (x0 + x1) / 2;
       s += '<g pointer-events="none">';
       s += `<rect x="${x0}" y="${y0}" width="${x1 - x0}" height="${y1 - y0}" rx="6" fill="${stroke}" fill-opacity="0.07" stroke="${stroke}" stroke-opacity="0.55" stroke-width="1.5" stroke-dasharray="${dash}"/>`;
-      s += `<rect x="${mid - 31}" y="4" width="62" height="18" rx="9" fill="${pill}"/>`;
-      s += `<text x="${mid}" y="16.5" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#fffdf8">${label}</text>`;
       s += '</g>';
+      labels.push({ mid, pill, label });
     };
     if (extras.ghost) drawBand(extras.ghost.band, extras.ghost.chord.color, '#8a8272', `prev ${shapeName(extras.ghost.band)}`, '2 4');
     bands.forEach(b => drawBand(b, '#2b2a27', '#2b2a27', `${shapeName(b)} shape`, '5 4'));
+    // Shape labels. Where neighbors would collide, shorten them to just the name ("Dm"); if even
+    // those would touch, drop the later one (its dashed band is still drawn).
+    labels.sort((a, b) => a.mid - b.mid);
+    labels.forEach((l, i) => {
+      l.compact = (i > 0 && l.mid - labels[i - 1].mid < 68) || (i < labels.length - 1 && labels[i + 1].mid - l.mid < 68);
+    });
+    let lastRight = -Infinity;
+    s += '<g pointer-events="none">';
+    labels.forEach(l => {
+      const w = l.compact ? 34 : 62;
+      const text = l.compact ? l.label.replace(/ shape$/, '') : l.label;
+      if (l.mid - w / 2 < lastRight + 2) return;
+      lastRight = l.mid + w / 2;
+      s += `<rect x="${l.mid - w / 2}" y="4" width="${w}" height="18" rx="9" fill="${l.pill}"/>`;
+      s += `<text x="${l.mid}" y="16.5" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#fffdf8">${text}</text>`;
+    });
+    s += '</g>';
 
     // Playable shape outlines (only shapes that fit entirely in view)
     const shapeKeys = new Set();
     chords.forEach((c, k) => {
       if (!active[k]) return;
+      if (extras.focus && c !== extras.focus) return;
       shapeSets.forEach(low => {
         playableShapes(c, low).forEach(sh => {
           if (!sh.frets.every(inView)) return;
@@ -842,7 +917,8 @@
         const cy = yStr(i);
         const bandFaded = dimOutside && bands.length > 0 && !bands.some(b => f >= b.lo && f <= b.hi);
         const shapeFaded = fadeOthers && shapeSets.length > 0 && !shapeKeys.has(i + ',' + f);
-        const faded = bandFaded || shapeFaded;
+        const focusFaded = extras.focus && !owners.includes(extras.focus);
+        const faded = bandFaded || shapeFaded || focusFaded;
         s += `<g class="note" data-s="${i}" data-f="${f}"${faded ? ' opacity="0.2"' : ''} style="cursor:pointer">`;
         if (owners.length === 1) {
           s += `<circle cx="${cx}" cy="${cy}" r="${R}" fill="${owners[0].color}"/>`;
@@ -855,6 +931,9 @@
           });
         }
         s += `<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="#fffdf8" stroke-width="1.5"/>`;
+        if (extras.rootPcs && extras.rootPcs.has(pc) && !faded) {
+          s += `<circle cx="${cx}" cy="${cy}" r="${R + 3}" fill="none" stroke="#2b2a27" stroke-width="2.2"/>`;
+        }
         if (extras.ringPcs && extras.ringPcs.has(pc) && !faded) {
           s += `<circle cx="${cx}" cy="${cy}" r="${R + 3.5}" fill="none" stroke="#2b2a27" stroke-width="2.5"/>`;
         }
@@ -862,7 +941,7 @@
         s += '</g>';
       }
     }
-    s += `</svg>`;
+    s += `</svg></div>`;
     return s;
   }
 
@@ -876,6 +955,30 @@
   let currentRoot = 9;
   let currentMode = 'major';
   let currentScale = 'A major'; // root plus mode, used in headings
+  let scaleNotes = [];          // the seven notes of the selected scale, root first
+
+  // Dot labels: note names, or intervals. The scale and chord-group boards count from the key's
+  // root (1, b3, 5 ...). An individual chord board counts from that chord's own root (R, b3, 5).
+  let labelMode = 'names';
+  let focusDeg = null;          // degree index of the chord the group boards focus on, or null
+  const MAJOR_STEPS = [0, 2, 4, 5, 7, 9, 11];
+  const degLabel = (deg, semis) => {
+    const d = semis - MAJOR_STEPS[deg];
+    return (d < 0 ? 'b'.repeat(-d) : '#'.repeat(d)) + (deg + 1);
+  };
+  const modeSteps = () => (MODES.find(m => m.id === currentMode) || MODES[0]).steps;
+  function dotNames(single) {
+    if (labelMode === 'names') return pcNames;
+    const m = {};
+    if (single) {
+      const parts = single.formula.split(' ');
+      single.pcs.forEach((pc, i) => { m[pc] = parts[i]; });
+    } else {
+      const st = modeSteps();
+      scaleNotes.forEach((n, i) => { m[n.pc] = degLabel(i, st[i]); });
+    }
+    return m;
+  }
   let stackSize = 3; // 3 = triads, 4 = 7th chords, 5 = 9th chords
   const active = [true, true, true, true, true, true, true];
 
@@ -926,19 +1029,27 @@
     document.getElementById('hint-shapes').textContent = t[1] + ' Notes outside the outlines fade, so only the playable shapes stand out. Switch off Fade other notes to see every chord tone.';
   }
 
-  function board(list, bands = [], dimOutside = false) {
-    return fretboard(list, list.map(() => true), pcNames, currentShapeSets(), bands, dimOutside);
+  function board(list, bands = [], dimOutside = false, single = false, focus = null) {
+    const extras = {};
+    if (single && list.length === 1) extras.rootPcs = new Set([list[0].pcs[0]]);
+    if (focus) extras.focus = focus;
+    return fretboard(list, list.map(() => true), dotNames(single && list.length === 1 ? list[0] : null),
+      currentShapeSets(), bands, dimOutside, extras);
   }
 
+  // Legend entries are buttons: tap one to focus the group boards on that chord
   function legend(list, emptyMsg) {
     if (!list.length) return `<span class="empty">${emptyMsg}</span>`;
-    return list.map(c =>
-      `<span class="tag"><span class="dot" style="background:${c.color}"></span><span>${c.roman} ${c.name}</span></span>`
-    ).join('');
+    return list.map(c => {
+      const idx = chords.indexOf(c);
+      return `<button type="button" class="tag" data-focus="${idx}" aria-pressed="${focusDeg === idx}" aria-label="Focus on ${c.name}">` +
+        `<span class="dot" style="background:${c.color}"></span><span>${c.roman} ${c.name}</span></button>`;
+    }).join('');
   }
 
   function renderGroup(id, list, emptyMsg) {
-    document.getElementById(id).innerHTML = board(list);
+    const focus = focusDeg !== null && list.includes(chords[focusDeg]) ? chords[focusDeg] : null;
+    document.getElementById(id).innerHTML = board(list, [], false, false, focus);
     document.getElementById(id + '-chips').innerHTML = legend(list, emptyMsg);
   }
 
@@ -1035,13 +1146,145 @@
         `<button type="button" class="play" data-chord="${chords.indexOf(c)}" aria-label="Play ${c.name}">\u25b6 Play</button>` +
         `<h2 class="single-title"><span class="dot" style="background:${c.color}"></span>${prefix}${c.roman}: ${c.name}</h2>` +
         `<p class="chord-sub">${c.notes.map(n => n.name).join(' ')} (${c.formula})</p>` +
-        board([c], boardContext(c).bands, boardContext(c).dim);
+        board([c], boardContext(c).bands, boardContext(c).dim, true);
       wrap.appendChild(sec);
     });
   }
 
+  // What the Scale board shows. steps are semitones from the root; degs are the scale-degree
+  // letters used to spell each note.
+  //   full    : the seven notes of the mode
+  //   pent    : the pentatonic that fits the mode's third (major third -> major pentatonic,
+  //             minor third -> minor pentatonic), so every note is inside the mode
+  //   majp/minp/blues : root-based scales that can bring in notes the mode does not contain
+  const PENT = {
+    majp:  { label: 'Major pentatonic', steps: [0, 2, 4, 7, 9],     degs: [0, 1, 2, 4, 5],    word: 'major pentatonic', formula: '1 2 3 5 6',   note: 'Bright and open, the classic country, rock and pop lead sound.' },
+    minp:  { label: 'Minor pentatonic', steps: [0, 3, 5, 7, 10],    degs: [0, 2, 3, 4, 6],    word: 'minor pentatonic', formula: '1 b3 4 5 b7', note: 'The go-to rock and blues solo scale.' },
+    blues: { label: 'Blues',            steps: [0, 3, 5, 6, 7, 10], degs: [0, 2, 3, 4, 4, 6], word: 'blues',            formula: '1 b3 4 b5 5 b7', note: 'Minor pentatonic plus the b5 blue note.' },
+  };
+  let scaleType = 'full';
+
+  const modeThird = () => ((MODES.find(m => m.id === currentMode) || MODES[0]).steps[2]);   // 3 or 4
+  // Locrian has a minor third and a flat 5th: neither pentatonic fits it
+  const pentFits = () => currentMode !== 'locrian';
+  const pentKey = () => (modeThird() === 4 ? 'majp' : 'minp');
+
+  function spellFrom(def) {
+    const startIdx = LETTERS.indexOf(currentKey[0]);
+    return def.steps.map((st, i) => {
+      const letter = LETTERS[(startIdx + def.degs[i]) % 7];
+      const pc = (currentRoot + st) % 12;
+      let diff = pc - LETTER_PC[letter];
+      if (diff > 6) diff -= 12;
+      if (diff < -6) diff += 12;
+      const acc = diff === 0 ? '' : diff === 1 ? '#' : diff === -1 ? 'b' : diff === 2 ? '##' : 'bb';
+      return { name: letter + acc, pc };
+    });
+  }
+  const outsideOf = notes => notes.filter(n => !currentPcSet().has(n.pc));
+  const currentPcSet = () => new Set(scaleNotes.map(n => n.pc));
+
+  // Which root-based scales leave the mode (and are not simply the in-mode pentatonic)
+  function outsideChoices() {
+    if (!scaleNotes.length) return [];
+    return ['minp', 'majp', 'blues'].filter(id =>
+      !(pentFits() && id === pentKey()) && outsideOf(spellFrom(PENT[id])).length > 0);
+  }
+
+  function scaleBoardNotes() {
+    if (scaleType === 'full') return { id: 'full', notes: scaleNotes, out: [] };
+    const id = scaleType === 'pent' ? pentKey() : scaleType;
+    const notes = spellFrom(PENT[id]);
+    return { id: scaleType, def: PENT[id], notes, out: outsideOf(notes) };
+  }
+
+  function drawScaleButtons() {
+    // Fall back if the chosen option does not exist for this mode
+    const outs = outsideChoices();
+    if (scaleType === 'pent' && !pentFits()) scaleType = 'full';
+    if (!['full', 'pent'].includes(scaleType) && !outs.includes(scaleType)) scaleType = pentFits() ? 'pent' : 'full';
+
+    const wrap = document.getElementById('scaletype');
+    const wrap2 = document.getElementById('scaleoutside');
+    wrap.innerHTML = '';
+    wrap2.innerHTML = '';
+    const mk = (parent, id, label, cls, disabled, title) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'key' + (cls ? ' ' + cls : '');
+      b.textContent = label;
+      b.dataset.type = id;
+      b.disabled = !!disabled;
+      if (title) b.title = title;
+      b.setAttribute('aria-pressed', String(id === scaleType));
+      b.addEventListener('click', () => { scaleType = id; drawScaleButtons(); renderScale(); });
+      parent.appendChild(b);
+    };
+    mk(wrap, 'full', 'Full scale');
+    mk(wrap, 'pent', 'Pentatonic', '', !pentFits(),
+       pentFits() ? 'Five notes that all belong to the mode' : 'Locrian has a minor third and a flat 5th, so neither pentatonic fits it');
+    outs.forEach(id => mk(wrap2, id, PENT[id].label, 'outside'));
+    document.getElementById('outside-label').hidden = !outs.length;
+    wrap2.hidden = !outs.length;
+  }
+
+  function renderScale() {
+    if (!scaleNotes.length) return;
+    const sel = scaleBoardNotes();
+    const { notes, out } = sel;
+    const outPcs = new Set(out.map(n => n.pc));
+    const inner = notes.slice(1).filter(n => !outPcs.has(n.pc));
+    const names = {};            // dot labels follow this board's own spelling
+    if (labelMode === 'intervals') {
+      const degs = sel.def ? sel.def.degs : notes.map((n, i) => i);
+      const stp = sel.def ? sel.def.steps : modeSteps();
+      notes.forEach((n, i) => { names[n.pc] = degLabel(degs[i], stp[i]); });
+    } else {
+      notes.forEach(n => names[n.pc] = n.name);
+    }
+    const parts = [
+      { pcs: [notes[0].pc], color: '#b4532a' },
+      { pcs: inner.map(n => n.pc), color: '#5a4d3c' },
+    ];
+    if (out.length) parts.push({ pcs: out.map(n => n.pc), color: '#1f7a8c' });
+    const modeWord = currentScale.slice(currentKey.length + 1);
+    document.getElementById('scale-title').textContent = sel.def
+      ? `Scale: ${currentKey} ${sel.def.word}` + (out.length ? ` (outside ${currentScale})` : ` (in ${currentScale})`)
+      : `Scale: ${currentKey} ${modeWord}`;
+    document.getElementById('scale').innerHTML =
+      fretboard(parts, parts.map(() => true), names, [], [], false, { rootPcs: new Set([notes[0].pc]) });
+    const tag = (c, t) => `<span class="tag"><span class="dot" style="background:${c}"></span><span>${t}</span></span>`;
+    document.getElementById('scale-chips').innerHTML =
+      tag('#b4532a', `Root ${notes[0].name}`) +
+      (inner.length ? tag('#5a4d3c', inner.map(n => n.name).join(' ')) : '') +
+      (out.length ? tag('#1f7a8c', `Outside the mode: ${out.map(n => n.name).join(' ')}`) : '');
+
+    const hint = document.getElementById('scaletype-hint');
+    const warn = document.getElementById('scaletype-warn');
+    warn.hidden = true;
+    if (!sel.def) {
+      hint.textContent = `${notes.map(n => n.name).join(' ')}. All seven notes of ${currentScale}.` +
+        (pentFits() ? '' : ' Pentatonic is unavailable for Locrian: its minor third and flat 5th mean neither the major nor the minor pentatonic fits.');
+    } else {
+      const isMajP = sel.def === PENT.majp, isMinP = sel.def === PENT.minp;
+      let rel = '';
+      if (isMajP) rel = ` Same five notes as ${notes[4].name} minor pentatonic (its relative minor).`;
+      if (isMinP) rel = ` Same five notes as ${notes[1].name} major pentatonic (its relative major).`;
+      hint.textContent = `${notes.map(n => n.name).join(' ')} (${sel.def.formula}). ${sel.def.note}` + rel +
+        (out.length ? '' : ` Every note is in ${currentScale}, so it lines up with the chord boards below.`);
+      if (out.length) {
+        warn.hidden = false;
+        const many = out.length > 1;
+        warn.textContent = `Includes notes not in the chord scale: ${out.map(n => n.name).join(' ')} (teal) ` +
+          `${many ? 'are' : 'is'} not in ${currentScale}, so ${many ? 'they' : 'it'} can clash with chords below.` +
+          (pentFits() ? ' The Pentatonic button stays inside the mode.' : '');
+      }
+    }
+  }
+
   function renderAll() {
     const selected = chords.filter((c, i) => active[i]);
+    renderScale();
     renderGroup('combined', selected, 'No chords selected. Turn on a chord above.');
     renderGroup('major', selected.filter(c => c.type === 'major'), 'No major chords selected.');
     renderGroup('minor', selected.filter(c => c.type === 'minor'), 'No minor chords selected.');
@@ -1079,6 +1322,7 @@
     currentKey = spelled.name;
     currentScale = `${spelled.name} ${mode.word}`;
     const scale = spelled.notes;
+    scaleNotes = scale;
     pcNames = {};
     scale.forEach(n => pcNames[n.pc] = n.name);
 
@@ -1122,9 +1366,12 @@
     updateShapeText();
     document.getElementById('singles-title').textContent = `Individual chords in ${currentScale}`;
 
+    focusDeg = null;
     drawChordChips();
     drawSeq();
+    drawScaleButtons();
     renderAll();
+    if (typeof quizNew === 'function') quizNew();
 
     document.querySelectorAll('#keys .key').forEach(b => {
       b.setAttribute('aria-pressed', String(Number(b.dataset.pc) === rootPc));
@@ -1502,6 +1749,206 @@
       });
     });
     sizeWrap.appendChild(b);
+  });
+
+  // Dot labels: note names or intervals
+  const LABEL_OPTIONS = [['Note names', 'names'], ['Intervals', 'intervals']];
+  const LABEL_HINTS = {
+    names: 'Dots show note names.',
+    intervals: 'Dots show each note’s job. The scale and chord-group boards count from the key’s root: 1 is the tonic, b3 a flat third, 5 the fifth, and so on. Each individual chord board counts from that chord’s own root: R, 3 or b3, 5. The root of the scale board and of each individual chord has a dark ring.',
+  };
+  const labelWrap = document.getElementById('labelmode');
+  function syncLabelMode() {
+    labelWrap.querySelectorAll('.key').forEach((btn, i) => btn.setAttribute('aria-pressed', String(LABEL_OPTIONS[i][1] === labelMode)));
+    document.getElementById('labelmode-hint').textContent = LABEL_HINTS[labelMode];
+  }
+  LABEL_OPTIONS.forEach(([label, value]) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'key';
+    b.textContent = label;
+    b.addEventListener('click', () => { labelMode = value; syncLabelMode(); renderAll(); });
+    labelWrap.appendChild(b);
+  });
+  syncLabelMode();
+
+  // Focus: tap a chord in a legend to fade the others on the group boards
+  document.addEventListener('click', e => {
+    const t = e.target.closest && e.target.closest('button.tag[data-focus]');
+    if (!t) return;
+    const idx = Number(t.getAttribute('data-focus'));
+    focusDeg = focusDeg === idx ? null : idx;
+    renderAll();
+  });
+
+  // ---- Quiz: name a note, or find every one of a note on a string ----
+  const QUIZ_STRINGS = ['low E', 'A', 'D', 'G', 'B', 'high E'];
+  const quiz = { type: 'name', right: 0, total: 0, q: null, marks: new Set(), checked: false, answered: false };
+  const rnd = n => Math.floor(Math.random() * n);
+
+  function quizPlay(si, f) {
+    if (typeof soundOn !== 'undefined' && soundOn && ensureAudio()) playNote(midiOf(si, f), ac.currentTime + 0.02, 0.4);
+  }
+
+  function quizSvg() {
+    const q = quiz.q;
+    const L = 56, SS = 34, T = 44, FW = 44, R = 15;
+    const W = L + FRETS * FW + 20 + 16, H = T + 5 * SS + 56;
+    const xFret = f => L + (f - 1 + 0.5) * FW;
+    const xNote = f => f === 0 ? L - 24 : xFret(f);
+    const yStr = i => T + (5 - i) * SS;
+    let g = `<div class="fbwrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Quiz fretboard">`;
+    g += `<rect x="${L}" y="${T - 14}" width="${FRETS * FW + 20}" height="${5 * SS + 28}" rx="4" fill="var(--wood)"/>`;
+    [3, 5, 7, 9, 15, 17, 19, 21].forEach(f => { g += `<circle cx="${xFret(f)}" cy="${T + 2.5 * SS}" r="5" fill="#cbbb9c"/>`; });
+    g += `<circle cx="${xFret(12)}" cy="${T + 1.5 * SS}" r="5" fill="#cbbb9c"/><circle cx="${xFret(12)}" cy="${T + 3.5 * SS}" r="5" fill="#cbbb9c"/>`;
+    for (let f = 1; f <= FRETS; f++) g += `<line x1="${L + f * FW}" y1="${T - 14}" x2="${L + f * FW}" y2="${T + 5 * SS + 14}" stroke="#a89a80" stroke-width="2"/>`;
+    g += `<rect x="${L - 5}" y="${T - 14}" width="6" height="${5 * SS + 28}" fill="#f6f1e7" stroke="#a89a80"/>`;
+    for (let i = 0; i < 6; i++) {
+      const hot = q.kind === 'find' && q.s === i;
+      g += `<line x1="${L}" y1="${yStr(i)}" x2="${L + FRETS * FW + 20}" y2="${yStr(i)}" stroke="${hot ? '#b4532a' : 'var(--line)'}" stroke-width="${hot ? 3.2 : (2.6 - i * 0.35).toFixed(2)}"/>`;
+    }
+    for (let f = 1; f <= FRETS; f++) g += `<text x="${xFret(f)}" y="${T + 5 * SS + 36}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" fill="#7a7466">${f}</text>`;
+    const nameOf = pc => (scaleNotes.find(n => n.pc === pc) || {}).name || '';
+    const tx = (cx, cy, t, fill = '#fff') => `<text x="${cx}" y="${cy + 4.5}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="${fill}" stroke="#2b2a27" stroke-width="2.6" stroke-opacity="0.55" paint-order="stroke">${t}</text>`;
+    if (q.kind === 'name') {
+      const cx = xNote(q.f), cy = yStr(q.s);
+      g += `<circle cx="${cx}" cy="${cy}" r="${R}" fill="${quiz.answered ? '#5a4d3c' : '#b4532a'}" stroke="#fffdf8" stroke-width="1.5"/>`;
+      g += tx(cx, cy, quiz.answered ? nameOf(q.pc) : '?');
+    } else {
+      const target = [];
+      for (let f = 0; f <= FRETS; f++) if ((TUNING[q.s] + f) % 12 === q.note.pc) target.push(f);
+      q.target = target;
+      for (let f = 0; f <= FRETS; f++) {
+        const cx = xNote(f), cy = yStr(q.s);
+        const marked = quiz.marks.has(f), isT = target.includes(f);
+        g += `<g class="qcell" data-f="${f}" tabindex="0" role="button" aria-label="Fret ${f}">`;
+        g += `<circle class="hit" cx="${cx}" cy="${cy}" r="${R}" fill="rgba(255,253,248,0.35)" stroke="#8a7d63" stroke-width="1.2" stroke-dasharray="3 3"/>`;
+        if (!quiz.checked && marked) {
+          g += `<circle cx="${cx}" cy="${cy}" r="${R}" fill="#5a4d3c" stroke="#fffdf8" stroke-width="1.5"/>`;
+        } else if (quiz.checked) {
+          if (marked && isT) { g += `<circle cx="${cx}" cy="${cy}" r="${R}" fill="#2e7d32" stroke="#fffdf8" stroke-width="1.5"/>` + tx(cx, cy, q.note.name); }
+          else if (!marked && isT) { g += `<circle cx="${cx}" cy="${cy}" r="${R}" fill="#fffdf8" stroke="#b4532a" stroke-width="3"/><text x="${cx}" y="${cy + 4.5}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#2b2a27">${q.note.name}</text>`; }
+          else if (marked && !isT) { g += `<circle cx="${cx}" cy="${cy}" r="${R}" fill="#b3261e" stroke="#fffdf8" stroke-width="1.5"/>` + tx(cx, cy, '×'); }
+        }
+        g += '</g>';
+      }
+    }
+    return g + '</svg></div>';
+  }
+
+  function quizDraw() {
+    const q = quiz.q;
+    if (!q) return;
+    document.getElementById('quiz-score').textContent = quiz.total ? `Score: ${quiz.right} of ${quiz.total}` : '';
+    document.getElementById('quiz-board').innerHTML = quizSvg();
+    const ans = document.getElementById('quiz-answers');
+    const act = document.getElementById('quiz-actions');
+    ans.innerHTML = '';
+    act.innerHTML = '';
+    const mkBtn = (parent, label, fn, disabled) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'key';
+      b.textContent = label;
+      b.disabled = !!disabled;
+      b.addEventListener('click', fn);
+      parent.appendChild(b);
+      return b;
+    };
+    if (q.kind === 'name') {
+      document.getElementById('quiz-q').textContent = `Which note is this? (Notes of ${currentScale} only.)`;
+      scaleNotes.forEach(n => mkBtn(ans, n.name, () => quizAnswer(n), quiz.answered));
+      if (quiz.answered) mkBtn(act, 'Next note', quizNew);
+    } else {
+      document.getElementById('quiz-q').textContent = `Find every ${q.note.name} on the ${QUIZ_STRINGS[q.s]} string. Tap each fret, then Check.`;
+      if (!quiz.checked) {
+        mkBtn(act, 'Check', quizCheck);
+        mkBtn(act, 'Clear', () => { quiz.marks.clear(); quizDraw(); }, quiz.marks.size === 0);
+        mkBtn(act, 'Skip', quizNew);
+      } else {
+        mkBtn(act, 'Next note', quizNew);
+      }
+    }
+  }
+
+  function degreeText(pc) {
+    const i = scaleNotes.findIndex(n => n.pc === pc);
+    return i < 0 ? '' : `scale degree ${degLabel(i, modeSteps()[i])} of ${currentScale}`;
+  }
+
+  function quizAnswer(n) {
+    if (quiz.answered) return;
+    const q = quiz.q;
+    quiz.answered = true;
+    quiz.total++;
+    const ok = n.pc === q.pc;
+    if (ok) quiz.right++;
+    const real = scaleNotes.find(x => x.pc === q.pc);
+    document.getElementById('quiz-feedback').textContent = (ok ? 'Correct. ' : 'Not quite. ') + `It is ${real.name} (${degreeText(q.pc)}).`;
+    quizPlay(q.s, q.f);
+    quizDraw();
+  }
+
+  function quizCheck() {
+    const q = quiz.q;
+    if (quiz.checked) return;
+    quiz.checked = true;
+    quiz.total++;
+    const target = new Set(q.target);
+    const hit = [...quiz.marks].filter(f => target.has(f)).length;
+    const wrong = quiz.marks.size - hit;
+    const missed = target.size - hit;
+    const ok = wrong === 0 && missed === 0;
+    if (ok) quiz.right++;
+    document.getElementById('quiz-feedback').textContent = ok
+      ? `All ${target.size} found. ${q.note.name} is ${degreeText(q.note.pc)}.`
+      : `You found ${hit} of ${target.size}` + (wrong ? `, with ${wrong} wrong` : '') + (missed ? `, and missed ${missed} (ringed in orange)` : '') + '.';
+    quizDraw();
+  }
+
+  function quizNew() {
+    if (!scaleNotes.length) return;
+    quiz.marks = new Set();
+    quiz.checked = false;
+    quiz.answered = false;
+    document.getElementById('quiz-feedback').textContent = '';
+    if (quiz.type === 'name') {
+      let si, f;
+      do { si = rnd(6); f = rnd(13); } while (!scaleNotes.some(n => n.pc === (TUNING[si] + f) % 12));
+      quiz.q = { kind: 'name', s: si, f, pc: (TUNING[si] + f) % 12 };
+    } else {
+      quiz.q = { kind: 'find', s: rnd(6), note: scaleNotes[rnd(scaleNotes.length)] };
+    }
+    quizDraw();
+  }
+
+  document.getElementById('quiz-board').addEventListener('click', e => {
+    const cell = e.target.closest('.qcell');
+    if (!cell || quiz.checked || !quiz.q || quiz.q.kind !== 'find') return;
+    const f = Number(cell.getAttribute('data-f'));
+    if (quiz.marks.has(f)) quiz.marks.delete(f); else { quiz.marks.add(f); quizPlay(quiz.q.s, f); }
+    quizDraw();
+  });
+  document.getElementById('quiz-board').addEventListener('keydown', e => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const cell = e.target.closest && e.target.closest('.qcell');
+    if (cell) { e.preventDefault(); cell.dispatchEvent(new MouseEvent('click', { bubbles: true })); }
+  });
+
+  const quizTypeWrap = document.getElementById('quiz-type');
+  [['Name the note', 'name'], ['Find the note', 'find']].forEach(([label, value]) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'key';
+    b.textContent = label;
+    b.dataset.type = value;
+    b.setAttribute('aria-pressed', String(value === quiz.type));
+    b.addEventListener('click', () => {
+      quiz.type = value;
+      quizTypeWrap.querySelectorAll('.key').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.type === value)));
+      quizNew();
+    });
+    quizTypeWrap.appendChild(b);
   });
 
   // ---- Audio: a plucked-string synth built into the page (no files or libraries needed) ----
