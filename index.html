@@ -411,8 +411,11 @@
 
     <p class="ctl-label">Progression order for the individual fretboards</p>
     <div class="chips" id="seq-pick" role="group" aria-label="Add a chord to the progression"></div>
+    <p class="ctl-label">Common progressions (each tap adds to the end)</p>
+    <div class="chips" id="seq-presets" role="group" aria-label="Common progressions"></div>
+    <p class="hint" id="seq-note" aria-live="polite"></p>
     <div class="chips" id="seq-list" aria-live="polite"></div>
-    <p class="hint">Only chords switched on above appear here. Tap them in the order you want, such as 1, 3, 4, 6. The individual fretboards then show those chords in that order, repeats included. Tap a step to remove it, or Clear to return to the normal order.</p>
+    <p class="hint">Only chords switched on above appear here. Tap chords one at a time, or tap common progressions to stack them into a song, such as a verse then a chorus. Adding a progression switches on any chord it needs. The individual fretboards then show every step in order, repeats included, and Play progression plays them. Tap a step to remove it. Undo steps back, Repeat all doubles the song, and Clear returns to the normal order.</p>
 
     <p class="ctl-label">CAGED shapes on the individual chord fretboards</p>
     <div class="keys" id="caged" role="group" aria-label="CAGED shapes"></div>
@@ -1056,7 +1059,54 @@
   // Progression order: scale-degree indexes (0-6) in the order tapped, repeats allowed.
   // When set, the individual fretboards show exactly these chords in this order.
   let progSeq = [];
-  const SEQ_MAX = 16;
+  const SEQ_MAX = 48;
+  const progUndo = [];          // earlier versions of progSeq, for Undo
+  function snapProg() { progUndo.push(progSeq.slice()); if (progUndo.length > 60) progUndo.shift(); }
+
+  // Common rock and pop progressions, as scale degrees (0 = I). The buttons show the Roman numerals
+  // and chord names of the selected key and mode, so they stay right in every key.
+  // q is the quality each chord must have in the current mode (M major, m minor) for the progression
+  // to be the one people actually play. In modes where a step lands on another quality, it is left out.
+  const PRESETS_MAJOR = [
+    { d: [0, 4, 5, 3], q: 'MMmM', note: 'The pop-rock staple, as in "Let It Be".' },
+    { d: [5, 3, 0, 4], q: 'mMMM', note: 'The same four chords, starting on the minor chord. Moodier.' },
+    { d: [0, 5, 3, 4], q: 'MmMM', note: 'The 50s doo-wop progression, as in "Stand By Me".' },
+    { d: [0, 3, 4], q: 'MMM', note: 'Three-chord rock and roll.' },
+    { d: [0, 3, 4, 3], q: 'MMMM', note: 'Three-chord rock with the IV on the way back.' },
+    { d: [0, 3, 5, 4], q: 'MMmM', note: 'Rises through the IV and vi before the V sets up home.' },
+    { d: [1, 4, 0], q: 'mMM', note: 'The jazz turnaround, common in pop bridges.' },
+    { d: [0, 0, 0, 0, 3, 3, 0, 0, 4, 3, 0, 4], q: 'MMMMMMMMMMMM', note: 'Twelve-bar blues, the form behind countless rock songs.' },
+  ];
+  const PRESETS_MINOR = [
+    { d: [0, 5, 2, 6], q: 'mMMM', note: 'The minor-key pop and rock staple.' },
+    { d: [0, 6, 5, 6], q: 'mMMM', note: 'A rocking minor vamp that steps down to the VI and back up.' },
+    { d: [0, 3, 4], q: 'mmm', note: 'Minor i, iv and v: the basic minor three-chord song.' },
+    { d: [0, 5, 6], q: 'mMM', note: 'Climbs from the i up through the VI and VII.' },
+    { d: [0, 3, 6, 2], q: 'mmMM', note: 'Moves from the i to the iv, then VII to III.' },
+    { d: [5, 6, 0], q: 'MMm', note: 'A strong lift into the tonic.' },
+    { d: [0, 0, 0, 0, 3, 3, 0, 0, 5, 4, 0, 0], q: 'mmmmmmmmMmmm', note: 'Twelve-bar minor blues, using only the notes of this scale.' },
+  ];
+  const PRESETS_EXTRA = {
+    mixolydian: [
+      { d: [0, 6, 3], q: 'MMM', note: 'The classic rock vamp with the flat VII.' },
+      { d: [0, 6, 3, 0], q: 'MMMM', note: 'The flat VII vamp, returning home.' },
+      { d: [0, 6], q: 'MM', note: 'Two-chord vamp with the flat VII.' },
+    ],
+    dorian: [
+      { d: [0, 3], q: 'mM', note: 'The Dorian vamp: a minor chord and its major IV.' },
+      { d: [0, 6, 3], q: 'mMM', note: 'i, VII, IV: a funky, open-sounding Dorian loop.' },
+      { d: [0, 6, 3, 0], q: 'mMMm', note: 'The same loop, returning to the i.' },
+    ],
+    lydian: [
+      { d: [0, 1], q: 'MM', note: 'The Lydian vamp: I and the major II.' },
+      { d: [0, 1, 0, 4], q: 'MMMM', note: 'I, II, I, V: dreamy and floating.' },
+      { d: [0, 4, 5, 1], q: 'MMmM', note: 'I, V, vi, II: a pop-style loop with the bright II.' },
+    ],
+    phrygian: [
+      { d: [0, 1], q: 'mM', note: 'The Spanish-flavored vamp: i and the major II.' },
+      { d: [0, 1, 2, 1], q: 'mMMM', note: 'i, II, III, II: a dark, flamenco-style loop.' },
+    ],
+  };
 
   // Steps whose chord is switched on above. Steps for switched-off chords stay stored
   // (so toggling a chord back on restores them) but are left out of the boards and list.
@@ -1081,6 +1131,7 @@
       b.setAttribute('aria-label', `Add ${c.name}, degree ${i + 1}, to the progression`);
       b.addEventListener('click', () => {
         if (progSeq.length >= SEQ_MAX) return;
+        snapProg();
         progSeq.push(i);
         drawSeq();
         renderAll();
@@ -1103,6 +1154,7 @@
       b.innerHTML = `<span class="dot" style="background:${c.color}"></span><span>${pos + 1}. ${st.deg + 1} ${c.name} \u00d7</span>`;
       b.setAttribute('aria-label', `Remove step ${pos + 1}, ${c.name}`);
       b.addEventListener('click', () => {
+        snapProg();
         progSeq.splice(st.idx, 1);
         drawSeq();
         renderAll();
@@ -1115,12 +1167,91 @@
       clear.className = 'key';
       clear.textContent = 'Clear';
       clear.addEventListener('click', () => {
+        snapProg();
         progSeq = [];
         drawSeq();
         renderAll();
       });
       list.appendChild(clear);
     }
+    if (progSeq.length) {
+      const rep2 = document.createElement('button');
+      rep2.type = 'button';
+      rep2.className = 'key';
+      rep2.textContent = 'Repeat all';
+      rep2.disabled = progSeq.length * 2 > SEQ_MAX;
+      rep2.addEventListener('click', () => {
+        if (progSeq.length * 2 > SEQ_MAX) return;
+        snapProg();
+        progSeq = progSeq.concat(progSeq);
+        drawSeq();
+        renderAll();
+      });
+      list.appendChild(rep2);
+    }
+    if (progUndo.length) {
+      const undo = document.createElement('button');
+      undo.type = 'button';
+      undo.className = 'key';
+      undo.textContent = 'Undo';
+      undo.addEventListener('click', () => {
+        progSeq = progUndo.pop();
+        drawSeq();
+        renderAll();
+      });
+      list.appendChild(undo);
+    }
+    drawPresets();
+  }
+
+  function presetList() {
+    if (!chords.length || chords[0].dim) return [];
+    const base = modeThird() === 4 ? PRESETS_MAJOR : PRESETS_MINOR;
+    const qual = c => c.dim ? 'd' : (c.type === 'major' ? 'M' : 'm');
+    return base.concat(PRESETS_EXTRA[currentMode] || [])
+      .filter(pr => pr.d.every((deg, k) => qual(chords[deg]) === pr.q[k]));
+  }
+
+  function addPreset(pr) {
+    const room = SEQ_MAX - progSeq.length;
+    const note = document.getElementById('seq-note');
+    const label = pr.d.map(i => chords[i].roman).join('\u2013');
+    if (pr.d.length > room) {
+      note.textContent = `That would pass the ${SEQ_MAX}-step limit. Remove some steps or tap Clear first.`;
+      return;
+    }
+    snapProg();
+    progSeq = progSeq.concat(pr.d);
+    const switched = [];
+    pr.d.forEach(i => { if (!active[i]) { active[i] = true; switched.push(chords[i].name); } });
+    if (switched.length) drawChordChips();
+    note.textContent = `Added ${label}: ${pr.note}` + (switched.length ? ` Switched on ${[...new Set(switched)].join(', ')}.` : '') +
+      ` The song now has ${progSeq.length} steps.`;
+    drawSeq();
+    renderAll();
+  }
+
+  function drawPresets() {
+    const wrap = document.getElementById('seq-presets');
+    wrap.innerHTML = '';
+    const list = presetList();
+    if (!list.length) {
+      wrap.innerHTML = '<span class="empty">The tonic chord of this mode is diminished, so common rock and pop progressions do not apply. Try another mode.</span>';
+      return;
+    }
+    list.forEach(pr => {
+      const roman = pr.d.map(i => chords[i].roman).join('\u2013');
+      const names = pr.d.length > 6 ? '12 bars' : pr.d.map(i => chords[i].name).join(' ');
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'chip';
+      b.innerHTML = `<span>${pr.d.length > 6 ? '12-bar blues' : roman}</span><span class="nt">${names}</span>`;
+      b.title = pr.note;
+      b.setAttribute('aria-label', `Add ${roman} (${pr.d.map(i => chords[i].name).join(', ')}) to the progression. ${pr.note}`);
+      b.disabled = pr.d.length > SEQ_MAX - progSeq.length;
+      b.addEventListener('click', () => addPreset(pr));
+      wrap.appendChild(b);
+    });
   }
 
   function renderSingles(selected) {
