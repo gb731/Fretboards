@@ -368,12 +368,25 @@
   .stepper .val.wide { min-width: 58px; }
   .stepper label { cursor: default; }
   .key.hit { box-shadow: inset 0 0 0 2px #b4532a; }
-  .follow { position: fixed; left: 50%; bottom: 10px; transform: translateX(-50%); z-index: 40;
-    width: min(760px, calc(100vw - 16px)); display: grid; grid-template-columns: 1fr 1.35fr 1fr; gap: 8px; align-items: end;
-    background: #fffdf8; border: 1px solid #cfc8b8; border-radius: 14px; padding: 8px 10px 6px;
-    box-shadow: 0 6px 24px rgba(43,42,39,.25); }
+  .follow { position: fixed; z-index: 40; left: auto; right: auto; top: auto; bottom: auto;
+    transform: translate(var(--tx, 0), var(--ty, 0));
+    width: min(760px, calc(100vw - 16px)); display: grid; grid-template-columns: 1fr 1.35fr 1fr; gap: 4px 8px; align-items: end;
+    background: #fffdf8; border: 1px solid #cfc8b8; border-radius: 14px; padding: 4px 10px 6px;
+    box-shadow: 0 6px 24px rgba(43,42,39,.25); pointer-events: none; }
+  .follow button { pointer-events: auto; }
   .follow[hidden] { display: none; }
-  .follow-close { position: absolute; top: 2px; right: 6px; border: 0; background: transparent; font-size: 22px; line-height: 1; cursor: pointer; color: #2b2a27; padding: 2px 6px; }
+  .follow[data-size="small"] { width: min(460px, max(250px, 62vw)); }
+  .follow[data-size="large"] { width: min(1000px, calc(100vw - 16px)); }
+  .follow[data-h="left"] { left: 8px; }
+  .follow[data-h="center"] { left: 50%; --tx: -50%; }
+  .follow[data-h="right"] { right: 8px; }
+  .follow[data-v="top"] { top: 10px; }
+  .follow[data-v="middle"] { top: 50%; --ty: -50%; }
+  .follow[data-v="bottom"] { bottom: 10px; }
+  .follow-tools { grid-column: 1 / -1; display: flex; align-items: center; gap: 6px; }
+  .follow-tools .sp { flex: 1; }
+  .follow-tools button { border: 1px solid #cfc8b8; background: #fff; border-radius: 999px; font-size: 12px; padding: 2px 10px; cursor: pointer; color: #2b2a27; }
+  .follow-close { border: 0 !important; background: transparent !important; font-size: 22px !important; line-height: 1; padding: 0 6px !important; }
   .fcell { min-width: 0; text-align: center; }
   .fcell.prev, .fcell.next { opacity: .55; }
   .fcell.cur { border-radius: 10px; box-shadow: 0 0 0 2px #b4532a; background: #fff; padding: 2px 4px 4px; }
@@ -383,8 +396,13 @@
   .fcell .fsub { font-size: 11px; color: #6b665c; margin: 0; }
   .fcell svg { width: 100%; height: auto; display: block; }
   .fcell .fnone { font-size: 12px; color: #6b665c; padding: 24px 0; }
-  @media (max-width: 999px) { .follow { bottom: 66px; } }
-  @media (max-width: 600px) { .follow { grid-template-columns: .8fr 1.5fr .8fr; gap: 4px; padding: 6px 6px 4px; } .fcell .fsub { display: none; } }
+  @media (max-width: 999px) { .follow[data-v="bottom"] { bottom: 66px; } .follow[data-h="right"][data-v="bottom"] { bottom: 66px; } }
+  .follow[data-size="small"] .fcell .fsub { display: none; }
+  .follow[data-size="small"] .fcell.cur .ft { font-size: 13px; }
+  .follow[data-size="small"] .fcell.prev .ft, .follow[data-size="small"] .fcell.next .ft { font-size: 11px; }
+  .follow[data-size="large"] .fcell.cur .ft { font-size: 18px; }
+  .follow[data-size="large"] .fcell .fsub { font-size: 13px; }
+  @media (max-width: 600px) { .follow { grid-template-columns: .8fr 1.5fr .8fr; gap: 4px; padding: 4px 6px 4px; } .fcell .fsub { display: none; } }
   .shape-list { margin: 4px 0 8px; font-size: 13px; }
   .shape-list summary { cursor: pointer; color: #6b665c; padding: 4px 0; }
   .shape-list .chips { margin-top: 6px; }
@@ -554,6 +572,15 @@
     <div class="metro-dots" id="metro-dots" aria-hidden="true"></div>
     <p class="hint" id="metro-note"></p>
 
+    <h3 class="ctl-group" id="follow-heading">Follow panel</h3>
+    <p class="ctl-label">Size</p>
+    <div class="keys" id="follow-size" role="group" aria-label="Follow panel size"></div>
+    <p class="ctl-label">Across the screen</p>
+    <div class="keys" id="follow-h" role="group" aria-label="Follow panel horizontal position"></div>
+    <p class="ctl-label">Up and down</p>
+    <div class="keys" id="follow-v" role="group" aria-label="Follow panel vertical position"></div>
+    <p class="hint">The panel shows the previous, current and next chord while Play chords runs. Turn it on or off with Follow at the top of Sound. Pick a size and a spot that keeps the fretboard you are watching clear. You can also change both with the buttons on the panel itself, and your choices are remembered on this device.</p>
+
     <h3 class="ctl-group" id="mix-heading">Mix</h3>
     <div class="zoom-row" id="mix-row" role="group" aria-label="Volume mix">
       <div class="stepper">
@@ -645,8 +672,13 @@
   <button type="button" class="fab" id="fab" aria-expanded="true" aria-controls="panel">Hide controls</button>
 </main>
 
-<div class="follow" id="follow" hidden aria-label="Now playing">
-  <button type="button" class="follow-close" id="follow-close" aria-label="Close the now playing panel">&times;</button>
+<div class="follow" id="follow" data-size="medium" data-h="center" data-v="bottom" hidden aria-label="Now playing">
+  <div class="follow-tools">
+    <button type="button" id="follow-size-btn" aria-label="Change the size of this panel">Size: Medium</button>
+    <button type="button" id="follow-move-btn" aria-label="Move this panel to the next spot">Move</button>
+    <span class="sp"></span>
+    <button type="button" class="follow-close" id="follow-close" aria-label="Close the now playing panel">&times;</button>
+  </div>
   <div class="fcell prev" id="follow-prev"></div>
   <div class="fcell cur" id="follow-cur"></div>
   <div class="fcell next" id="follow-next"></div>
@@ -2432,7 +2464,8 @@
   const pad = { on: true };
   const loop = { on: false };
   // Metronome state (the click itself is below, with the drums)
-  const follow = { on: true };
+  const follow = { on: true, size: 'medium', h: 'center', v: 'bottom' };
+  let followPreviewTimer = null;
   const metro = { on: false, run: false, accent: true, count: false, sub: 'none', sound: 'click', timer: null, next: 0, idx: 0 };
 
   // iPhone: Web Audio is "ambient" by default, so the ring/silent switch mutes it (video and music
@@ -2501,6 +2534,8 @@
 
   function stopAll() {
     stopMetroRun();
+    clearTimeout(followPreviewTimer);
+    followPreviewTimer = null;
     hideFollow();
     timers.forEach(t => clearTimeout(t));
     timers = [];
@@ -3074,6 +3109,8 @@
   }
   function showFollow(prev, cur, next) {
     if (!follow.on) return;
+    clearTimeout(followPreviewTimer);
+    followPreviewTimer = null;
     followCell('follow-prev', prev, false);
     followCell('follow-cur', cur, true);
     followCell('follow-next', next, false);
@@ -3433,6 +3470,73 @@
     loopBtn.setAttribute('aria-pressed', String(loop.on));
   });
   const followBtn = document.getElementById('follow-toggle');
+  // Size and position of the panel. Remembered on this device (if the browser allows storage).
+  const FOLLOW_SIZES = [['small', 'Small'], ['medium', 'Medium'], ['large', 'Large']];
+  const FOLLOW_H = [['left', 'Left'], ['center', 'Center'], ['right', 'Right']];
+  const FOLLOW_V = [['top', 'Top'], ['middle', 'Middle'], ['bottom', 'Bottom']];
+  const FOLLOW_SPOTS = ['bottom center', 'bottom right', 'middle right', 'top right', 'top center', 'top left', 'middle left', 'bottom left', 'middle center'];
+  try {
+    const saved = JSON.parse(localStorage.getItem('follow-panel') || 'null');
+    if (saved) {
+      if (FOLLOW_SIZES.some(x => x[0] === saved.size)) follow.size = saved.size;
+      if (FOLLOW_H.some(x => x[0] === saved.h)) follow.h = saved.h;
+      if (FOLLOW_V.some(x => x[0] === saved.v)) follow.v = saved.v;
+    }
+  } catch (e) { /* storage unavailable: keep the defaults */ }
+  const followChoices = [['follow-size', FOLLOW_SIZES, 'size'], ['follow-h', FOLLOW_H, 'h'], ['follow-v', FOLLOW_V, 'v']];
+  function applyFollow() {
+    const el = document.getElementById('follow');
+    el.dataset.size = follow.size; el.dataset.h = follow.h; el.dataset.v = follow.v;
+    followChoices.forEach(([id, list, key]) => {
+      document.querySelectorAll('#' + id + ' .key').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.id === follow[key])));
+    });
+    document.getElementById('follow-size-btn').textContent = 'Size: ' + FOLLOW_SIZES.find(x => x[0] === follow.size)[1];
+    try { localStorage.setItem('follow-panel', JSON.stringify({ size: follow.size, h: follow.h, v: follow.v })); } catch (e) { /* ignore */ }
+  }
+  // While nothing is playing, show the panel for a few seconds so a change can be seen
+  function previewFollow() {
+    if (!follow.on) return;
+    const el = document.getElementById('follow');
+    if (!el.hidden && !followPreviewTimer) return; // playing right now: the live panel already shows the change
+    const eff = effectiveSeq();
+    const steps = (eff.length ? eff.map(x => stepChord(x)) : chords.filter((c, i) => active[i])).slice(0, 3);
+    if (!steps.length) return;
+    let t = zoom.anchor;
+    const items = steps.map((c, i) => {
+      const ci = boardContext(c);
+      const v = pickVoicing(c, t, ci.bands, ci.dim);
+      if (v) t = v.mean;
+      return { chord: c, v, step: i + 1, total: steps.length };
+    });
+    const at = items.length > 1 ? 1 : 0;
+    showFollow(items[at - 1] || null, items[at], items[at + 1] || null);
+    clearTimeout(followPreviewTimer);
+    followPreviewTimer = setTimeout(() => { followPreviewTimer = null; hideFollow(); }, 3000);
+  }
+  followChoices.forEach(([id, list, key]) => {
+    const wrap = document.getElementById(id);
+    list.forEach(([val, label]) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'key';
+      b.textContent = label;
+      b.dataset.id = val;
+      b.addEventListener('click', () => { follow[key] = val; applyFollow(); previewFollow(); });
+      wrap.appendChild(b);
+    });
+  });
+  document.getElementById('follow-size-btn').addEventListener('click', () => {
+    const i = FOLLOW_SIZES.findIndex(x => x[0] === follow.size);
+    follow.size = FOLLOW_SIZES[(i + 1) % FOLLOW_SIZES.length][0];
+    applyFollow();
+  });
+  document.getElementById('follow-move-btn').addEventListener('click', () => {
+    const i = FOLLOW_SPOTS.indexOf(follow.v + ' ' + follow.h);
+    const [v, h] = FOLLOW_SPOTS[(i + 1) % FOLLOW_SPOTS.length].split(' ');
+    follow.v = v; follow.h = h;
+    applyFollow();
+  });
+  applyFollow();
   function setFollow(on) {
     follow.on = on;
     followBtn.textContent = on ? 'Follow on' : 'Follow off';
