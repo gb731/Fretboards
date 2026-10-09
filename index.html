@@ -134,6 +134,15 @@
   button.tag { font-family: inherit; color: var(--ink); cursor: pointer; }
   button.tag[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); font-weight: 600; }
   .focus-hint { margin: 8px 0 0; }
+  .shape-pick { font-size: 13px; color: var(--muted); margin: -4px 0 8px; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .shape-pick strong { color: var(--ink); letter-spacing: 0.04em; }
+  .boards.cols-2 .shape-pick { font-size: 12px; }
+  .boards.cols-3 .shape-pick { font-size: 11px; }
+  .boards.cols-4 .shape-pick { font-size: 10px; }
+  .chip.sel { border-color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink); font-weight: 600; }
+  .seq-edit { margin: 10px 0 4px; padding: 8px 10px 10px; background: #f6f1e7; border-radius: 10px; }
+  .seq-edit[hidden] { display: none; }
+  .seq-edit .ctl-label { margin-top: 0; }
   details.quiz > summary { cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   details.quiz > summary::-webkit-details-marker { display: none; }
   details.quiz > summary h2 { margin: 0; }
@@ -409,14 +418,6 @@
     <div class="chips" id="chord-minor" role="group" aria-label="Minor-type chords"></div>
     <p class="hint" id="chord-hint"></p>
 
-    <p class="ctl-label">Progression order for the individual fretboards</p>
-    <div class="chips" id="seq-pick" role="group" aria-label="Add a chord to the progression"></div>
-    <p class="ctl-label">Common progressions (each tap adds to the end)</p>
-    <div class="chips" id="seq-presets" role="group" aria-label="Common progressions"></div>
-    <p class="hint" id="seq-note" aria-live="polite"></p>
-    <div class="chips" id="seq-list" aria-live="polite"></div>
-    <p class="hint">Only chords switched on above appear here. Tap chords one at a time, or tap common progressions to stack them into a song, such as a verse then a chorus. Adding a progression switches on any chord it needs. The individual fretboards then show every step in order, repeats included, and Play progression plays them. Tap a step to remove it. Undo steps back, Repeat all doubles the song, and Clear returns to the normal order.</p>
-
     <p class="ctl-label">CAGED shapes on the individual chord fretboards</p>
     <div class="keys" id="caged" role="group" aria-label="CAGED shapes"></div>
     <p class="hint">Dashed bands mark where each open-chord shape lands for that chord. Tap any combination of letters, such as C, A and D, to see the forms above and below each other. Notes outside the chosen shapes fade. Minor chords use the minor form (labeled like "Am shape") in the same positions. Of the minor forms, Am, Em and Dm are the ones guitarists really play. The Cm and Gm shapes are awkward and rarely used, but they are shown so the five-shape pattern stays complete. Diminished chords are left out.</p>
@@ -439,6 +440,21 @@
     <div id="prog-start" hidden><div class="zoom-row" id="prog-start-row"></div></div>
     <p class="hint">Pick a progression to step through it chord by chord. Each chord uses the CAGED shape nearest the previous one, so you can see the smallest hand move. The progression fretboard sets its own zoom.</p>
     -->
+
+    <h3 class="ctl-group" id="progression-heading">Progression builder</h3>
+    <p class="ctl-label">Add chords one at a time</p>
+    <div class="chips" id="seq-pick" role="group" aria-label="Add a chord to the progression"></div>
+    <p class="ctl-label">Common progressions (each tap adds to the end)</p>
+    <div class="chips" id="seq-presets" role="group" aria-label="Common progressions"></div>
+    <p class="hint" id="seq-note" aria-live="polite"></p>
+    <p class="ctl-label">Your song (tap a step to change it)</p>
+    <div class="chips" id="seq-list" aria-live="polite"></div>
+    <div class="seq-edit" id="seq-edit" hidden>
+      <p class="ctl-label" id="seq-edit-label"></p>
+      <div class="keys" id="seq-edit-opts" role="group" aria-label="Change this step"></div>
+    </div>
+    <p class="hint">Only chords switched on above appear here. Tap chords one at a time, or tap common progressions to stack them into a song, such as a verse then a chorus. Adding a progression switches on any chord it needs. Tap a step in your song to change that chord to sus2, sus4, a 7th or a 9th (or back to plain), or to remove it. Sevenths and ninths are outlined as four-string shapes. The individual fretboards then show every step in order, and Play progression plays them. Undo steps back, Repeat all doubles the song, and Clear returns to the normal order.</p>
+
 
     <h3 class="ctl-group" id="sound-heading">Sound</h3>
     <div class="keys" id="sound-row" role="group" aria-label="Sound">
@@ -702,6 +718,12 @@
     if (low > 2) return [];
     const strings = 6 - low;
     const rootPc = chord.pcs[0];
+    // Every chord tone is needed, except that a 7th or 9th chord may leave out its 5th (as in the open
+    // C7, x32310). A diminished or half-diminished chord keeps its flat 5th: it defines the chord.
+    const n = chord.pcs.length;
+    const required = n === 3 || chord.dim ? chord.pcs
+      : n === 4 ? [chord.pcs[0], chord.pcs[1], chord.pcs[3]]
+      : [chord.pcs[0], chord.pcs[1], chord.pcs[3], chord.pcs[4]];
     const opts = [];
     for (let k = 0; k < strings; k++) {
       const list = [];
@@ -715,7 +737,7 @@
     const pick = (k, frets) => {
       if (k === strings) {
         const pcs = new Set(frets.map((f, j) => (TUNING[low + j] + f) % 12));
-        if (!chord.pcs.every(pc => pcs.has(pc))) return;
+        if (!required.every(pc => pcs.has(pc))) return;
         if (fingerCount(frets) > 4) return;
         shapes.push({ low, frets });
         return;
@@ -734,7 +756,7 @@
   let shapeType = 'triad';
   const shapeCache = new Map();
   function playableShapes(chord, low) {
-    const key = shapeType + '|' + chord.pcs.join(',') + '|' + low;
+    const key = shapeType + '|' + chord.pcs.join(',') + '|' + (chord.dim ? 'd' : '') + '|' + low;
     if (!shapeCache.has(key)) shapeCache.set(key, shapeType === 'full' ? fullShapes(chord, low) : triadShapes(chord, low));
     return shapeCache.get(key);
   }
@@ -876,23 +898,59 @@
     s += '</g>';
 
     // Playable shape outlines (only shapes that fit entirely in view)
-    const shapeKeys = new Set();
+    const items = [];
     chords.forEach((c, k) => {
       if (!active[k]) return;
       if (extras.focus && c !== extras.focus) return;
       shapeSets.forEach(low => {
         playableShapes(c, low).forEach(sh => {
           if (!sh.frets.every(inView)) return;
-          sh.frets.forEach((f, j) => shapeKeys.add((low + j) + ',' + f));
           const xs = sh.frets.map(xNote);
           const x0 = Math.min(...xs) - R - 5;
           const x1 = Math.max(...xs) + R + 5;
           const y0 = yStr(low + sh.frets.length - 1) - R - 5;
           const y1 = yStr(low) + R + 5;
-          s += `<rect x="${x0}" y="${y0}" width="${x1 - x0}" height="${y1 - y0}" rx="16" fill="${c.color}" fill-opacity="0.12" stroke="${c.color}" stroke-width="2.5" class="shape" data-low="${low}" data-frets="${sh.frets.join(',')}" style="cursor:pointer"/>`;
+          const faded = dimOutside && bands.length > 0 && !sh.frets.every(f => bands.some(bd => f >= bd.lo && f <= bd.hi));
+          items.push({ c, low, sh, skey: low + ':' + sh.frets.join(','), x0, x1, y0, y1, faded });
         });
       });
     });
+    // On a single chord's board, shapes that share the same box are drawn as one outline that can be
+    // tapped to step through them; tapping picks one shape and fades everything else.
+    const single = !!extras.chordKey;
+    let badgeSvg = '';   // drawn after the notes so the count badge sits on top
+    const pickItem = single ? items.find(it => !it.faded && it.skey === extras.pick) : null;
+    const shapeKeys = new Set();
+    (pickItem ? [pickItem] : items).forEach(it => it.sh.frets.forEach((f, j) => shapeKeys.add((it.low + j) + ',' + f)));
+    const outlineLegacy = it => {
+      s += `<rect x="${it.x0}" y="${it.y0}" width="${it.x1 - it.x0}" height="${it.y1 - it.y0}" rx="16" fill="${it.c.color}" fill-opacity="0.12" stroke="${it.c.color}" stroke-width="2.5" class="shape" data-low="${it.low}" data-frets="${it.sh.frets.join(',')}" style="cursor:pointer"/>`;
+    };
+    if (!single) {
+      items.forEach(outlineLegacy);
+    } else {
+      const groups = new Map();
+      items.forEach(it => {
+        if (it.faded) { outlineLegacy(it); return; }
+        const gk = [it.x0, it.x1, it.y0, it.y1].join(',');
+        if (!groups.has(gk)) groups.set(gk, []);
+        groups.get(gk).push(it);
+      });
+      groups.forEach(list => {
+        list.sort((a, b) => toneCount(b.sh) - toneCount(a.sh));   // complete shapes first (stable otherwise)
+        const rep = list.find(it => it === pickItem) || list[0];
+        const isPicked = !!pickItem && list.includes(pickItem);
+        const dimmed = !!pickItem && !isPicked;
+        const keys = list.map(it => it.skey).join(' ');
+        s += `<rect x="${rep.x0}" y="${rep.y0}" width="${rep.x1 - rep.x0}" height="${rep.y1 - rep.y0}" rx="16" fill="${rep.c.color}" fill-opacity="${isPicked ? 0.22 : dimmed ? 0 : 0.12}" stroke="${rep.c.color}" stroke-opacity="${dimmed ? 0.3 : 1}" stroke-width="${isPicked ? 4 : 2.5}" class="shape" data-low="${rep.low}" data-frets="${rep.sh.frets.join(',')}" data-keys="${keys}" data-chordkey="${extras.chordKey}" style="cursor:pointer"/>`;
+        if (list.length > 1) {
+          const label = isPicked ? `${list.indexOf(pickItem) + 1}/${list.length}` : String(list.length);
+          const w = isPicked ? 30 : 18;
+          const bx = Math.min(rep.x1 + 4, W - w / 2 - 2), by = (rep.y0 + rep.y1) / 2;
+          badgeSvg += `<g pointer-events="none"><rect x="${bx - w / 2}" y="${by - 9}" width="${w}" height="18" rx="9" fill="${rep.c.color}" stroke="#fffdf8" stroke-width="1.5"/>` +
+            `<text x="${bx}" y="${by + 4}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="700" fill="#fff">${label}</text></g>`;
+        }
+      });
+    }
 
     // Previous chord's shape as hollow rings, so the hand move is visible
     if (extras.ghost) {
@@ -919,7 +977,7 @@
         const cx = xNote(f);
         const cy = yStr(i);
         const bandFaded = dimOutside && bands.length > 0 && !bands.some(b => f >= b.lo && f <= b.hi);
-        const shapeFaded = fadeOthers && shapeSets.length > 0 && !shapeKeys.has(i + ',' + f);
+        const shapeFaded = (pickItem || (fadeOthers && shapeSets.length > 0)) && !shapeKeys.has(i + ',' + f);
         const focusFaded = extras.focus && !owners.includes(extras.focus);
         const faded = bandFaded || shapeFaded || focusFaded;
         s += `<g class="note" data-s="${i}" data-f="${f}"${faded ? ' opacity="0.2"' : ''} style="cursor:pointer">`;
@@ -944,6 +1002,7 @@
         s += '</g>';
       }
     }
+    s += badgeSvg;
     s += `</svg></div>`;
     return s;
   }
@@ -964,6 +1023,12 @@
   // root (1, b3, 5 ...). An individual chord board counts from that chord's own root (R, b3, 5).
   let labelMode = 'names';
   let focusDeg = null;          // degree index of the chord the group boards focus on, or null
+  let picks = {};               // chordKey -> key ("low:frets") of the shape picked on that chord's board
+  const chordKeyOf = c => c.deg + ':' + (c.mod || '');
+  const tabOf = sh => { const a = Array(6).fill('x'); sh.frets.forEach((f, j) => { a[sh.low + j] = String(f); }); return a.join(' '); };
+  // How many different notes a shape sounds: shapes with every chord tone come before ones that skip the 5th
+  const toneCount = sh => new Set(sh.frets.map((f, j) => (TUNING[sh.low + j] + f) % 12)).size;
+  const boxKeyOf = sh => [sh.low, sh.low + sh.frets.length - 1, Math.min(...sh.frets), Math.max(...sh.frets)].join();
   const MAJOR_STEPS = [0, 2, 4, 5, 7, 9, 11];
   const degLabel = (deg, semis) => {
     const d = semis - MAJOR_STEPS[deg];
@@ -971,7 +1036,14 @@
   };
   const modeSteps = () => (MODES.find(m => m.id === currentMode) || MODES[0]).steps;
   function dotNames(single) {
-    if (labelMode === 'names') return pcNames;
+    if (labelMode === 'names') {
+      if (single) {
+        const nm = {};
+        single.notes.forEach(n => { nm[n.pc] = n.name; });
+        return nm;
+      }
+      return pcNames;
+    }
     const m = {};
     if (single) {
       const parts = single.formula.split(' ');
@@ -994,10 +1066,14 @@
   const shapeModeByType = { triad: 3, full: 0 }; // remembers each type's string choice when you switch
   let fadeOthers = true; // fade notes that are not part of an outlined shape
   // Fewest strings in a shape; string sets run from each possible lowest string up to the high e
-  function voiceCount() { return shapeType === 'full' ? 4 : (stackSize === 3 ? 3 : 4); }
-  function currentShapeSets() {
+  // A chord with four or more tones (a 7th or 9th) uses four-string shapes even in the triad view
+  function voiceCount(chord) {
+    if (shapeType === 'full') return 4;
+    return chord ? (chord.pcs.length === 3 ? 3 : 4) : (stackSize === 3 ? 3 : 4);
+  }
+  function currentShapeSets(chord) {
     if (shapeMode === 'off') return [];
-    const maxLow = 6 - voiceCount();
+    const maxLow = 6 - voiceCount(chord);
     if (shapeType === 'full') {
       // The buttons name the strings you may play. A shape can skip low strings it does not use,
       // so choosing E A D G B e allows every shape, and fewer strings allow only the shapes that fit.
@@ -1025,7 +1101,7 @@
     5: ['9th chord shapes', 'An outline marks four neighboring strings holding the 3rd, 7th and 9th plus the root or 5th, all within a 4-fret stretch. An open string counts as fret 0. This is a common way to voice a 9th chord on guitar.'],
   };
 
-  const FULL_TEXT = ['full chord shapes', 'An outline marks a complete chord shape: it starts on the root in the bass, covers every string from there up to the high e, includes every chord tone, fits a 4-fret stretch, and needs four fingers or fewer (a barre counts as one). An open string counts as fret 0. The buttons name the strings you can play. A shape may skip low strings it does not use, so with E A D G B e selected you get every shape: open forms at the nut and the barred C, A, G, E and D forms up the neck. Diminished chords only form 4-string shapes (D G B e), which are included whenever those strings are available.'];
+  const FULL_TEXT = ['full chord shapes', 'An outline marks a complete chord shape: it starts on the root in the bass, covers every string from there up to the high e, includes every chord tone (a 7th or 9th chord may leave out its 5th), fits a 4-fret stretch, and needs four fingers or fewer (a barre counts as one). An open string counts as fret 0. The buttons name the strings you can play. A shape may skip low strings it does not use, so with E A D G B e selected you get every shape: open forms at the nut and the barred C, A, G, E and D forms up the neck. Diminished chords only form 4-string shapes (D G B e), which are included whenever those strings are available.'];
   function updateShapeText() {
     const t = shapeType === 'full' ? FULL_TEXT : SHAPE_TEXT[stackSize];
     document.getElementById('lbl-shapes').textContent = `Outline playable ${t[0]} on these strings`;
@@ -1034,10 +1110,14 @@
 
   function board(list, bands = [], dimOutside = false, single = false, focus = null) {
     const extras = {};
-    if (single && list.length === 1) extras.rootPcs = new Set([list[0].pcs[0]]);
+    if (single && list.length === 1) {
+      extras.rootPcs = new Set([list[0].pcs[0]]);
+      extras.chordKey = chordKeyOf(list[0]);
+      extras.pick = picks[extras.chordKey] || null;
+    }
     if (focus) extras.focus = focus;
     return fretboard(list, list.map(() => true), dotNames(single && list.length === 1 ? list[0] : null),
-      currentShapeSets(), bands, dimOutside, extras);
+      currentShapeSets(list.length === 1 ? list[0] : null), bands, dimOutside, extras);
   }
 
   // Legend entries are buttons: tap one to focus the group boards on that chord
@@ -1061,7 +1141,58 @@
   let progSeq = [];
   const SEQ_MAX = 48;
   const progUndo = [];          // earlier versions of progSeq, for Undo
-  function snapProg() { progUndo.push(progSeq.slice()); if (progUndo.length > 60) progUndo.shift(); }
+  function snapProg() { progUndo.push(progSeq.map(st => ({ ...st }))); if (progUndo.length > 60) progUndo.shift(); }
+  let selStep = null;           // index in progSeq of the step open in the editor, or null
+
+  // Spell a note a given number of letters above the root, so sus and added tones are named correctly
+  function spellNote(root, letterSteps, pc) {
+    const letter = LETTERS[(LETTERS.indexOf(root.name[0]) + letterSteps) % 7];
+    let diff = pc - LETTER_PC[letter];
+    if (diff > 6) diff -= 12;
+    if (diff < -6) diff += 12;
+    const acc = diff === 0 ? '' : diff === 1 ? '#' : diff === -1 ? 'b' : diff === 2 ? '##' : diff === -2 ? 'bb' : '';
+    return { name: letter + acc, pc };
+  }
+
+  // Variants of a scale chord that a progression step can use. 7 and 9 follow the key (Imaj7, ii m7,
+  // V7 ...); dom7 and dom9 are the dominant versions rock and blues put on a major I or IV.
+  const MOD_ORDER = ['sus2', 'sus4', '7', 'dom7', '9', 'dom9'];
+  function buildVariant(base, mod) {
+    const root = base.notes[0], r = root.pc, d = base.deg;
+    const label = v => INTERVAL_LABEL[v] || String(v);
+    let notes, name, formula, type = base.type, dim = base.dim;
+    if (mod === 'sus2') {
+      notes = [root, spellNote(root, 1, (r + 2) % 12), spellNote(root, 4, (r + 7) % 12)];
+      name = root.name + 'sus2'; formula = 'R 2 5'; type = 'major'; dim = false;
+    } else if (mod === 'sus4') {
+      notes = [root, spellNote(root, 3, (r + 5) % 12), spellNote(root, 4, (r + 7) % 12)];
+      name = root.name + 'sus4'; formula = 'R 4 5'; type = 'major'; dim = false;
+    } else if (mod === '7' || mod === '9') {
+      notes = stack(scaleNotes, d, mod === '7' ? 4 : 5);
+      const iv = notes.map(n => (n.pc - r + 12) % 12);
+      const q = QUALITY[iv.join(',')];
+      if (q === undefined) return null;
+      name = root.name + q; formula = iv.map(label).join(' ');
+    } else if (mod === 'dom7' || mod === 'dom9') {
+      const dia = buildVariant(base, '7');
+      if (base.type !== 'major' || base.dim || !dia || !/maj7$/.test(dia.name)) return null;
+      notes = [root, spellNote(root, 2, (r + 4) % 12), spellNote(root, 4, (r + 7) % 12), spellNote(root, 6, (r + 10) % 12)];
+      if (mod === 'dom9') notes.push(spellNote(root, 1, (r + 2) % 12));
+      name = root.name + (mod === 'dom7' ? '7' : '9'); formula = mod === 'dom7' ? 'R 3 5 b7' : 'R 3 5 b7 9';
+    } else return null;
+    // Leave out spellings that would need a double sharp or flat (Bbb, F##): theoretically right, but unreadable
+    if (/##|bb/.test(notes.map(n => n.name).join(''))) return null;
+    return { ...base, name, notes, pcs: notes.map(n => n.pc), type, dim, formula, mod, variant: true, base };
+  }
+  function chordFor(deg, mod) {
+    const base = chords[deg];
+    if (!base || !mod) return base || null;
+    base._v = base._v || {};
+    if (!(mod in base._v)) base._v[mod] = buildVariant(base, mod);
+    return base._v[mod];
+  }
+  const modsFor = deg => MOD_ORDER.filter(m => chordFor(deg, m));
+  const stepChord = st => chordFor(st.deg, st.mod || null) || chords[st.deg];
 
   // Common rock and pop progressions, as scale degrees (0 = I). The buttons show the Roman numerals
   // and chord names of the selected key and mode, so they stay right in every key.
@@ -1111,7 +1242,7 @@
   // Steps whose chord is switched on above. Steps for switched-off chords stay stored
   // (so toggling a chord back on restores them) but are left out of the boards and list.
   function effectiveSeq() {
-    return progSeq.map((deg, idx) => ({ deg, idx })).filter(st => active[st.deg]);
+    return progSeq.map((st, idx) => ({ deg: st.deg, mod: st.mod || null, idx })).filter(st => active[st.deg]);
   }
 
   function drawSeq() {
@@ -1132,7 +1263,7 @@
       b.addEventListener('click', () => {
         if (progSeq.length >= SEQ_MAX) return;
         snapProg();
-        progSeq.push(i);
+        progSeq.push({ deg: i, mod: null });
         drawSeq();
         renderAll();
       });
@@ -1146,18 +1277,18 @@
         ? '<span class="empty">Your steps use chords that are switched off, so the boards use the normal order.</span>'
         : '<span class="empty">No progression set, so the boards use the normal order.</span>';
     }
+    if (selStep !== null && !eff.some(st => st.idx === selStep)) selStep = null;
     eff.forEach((st, pos) => {
-      const c = chords[st.deg];
+      const c = stepChord(st);
       const b = document.createElement('button');
       b.type = 'button';
-      b.className = 'chip';
-      b.innerHTML = `<span class="dot" style="background:${c.color}"></span><span>${pos + 1}. ${st.deg + 1} ${c.name} \u00d7</span>`;
-      b.setAttribute('aria-label', `Remove step ${pos + 1}, ${c.name}`);
+      b.className = 'chip' + (st.idx === selStep ? ' sel' : '');
+      b.innerHTML = `<span class="dot" style="background:${c.color}"></span><span>${pos + 1}. ${st.deg + 1} ${c.name}</span>`;
+      b.setAttribute('aria-label', `Step ${pos + 1}, ${c.name}. Tap to change or remove it.`);
+      if (st.idx === selStep) b.setAttribute('aria-current', 'true');
       b.addEventListener('click', () => {
-        snapProg();
-        progSeq.splice(st.idx, 1);
+        selStep = selStep === st.idx ? null : st.idx;
         drawSeq();
-        renderAll();
       });
       list.appendChild(b);
     });
@@ -1169,6 +1300,7 @@
       clear.addEventListener('click', () => {
         snapProg();
         progSeq = [];
+        selStep = null;
         drawSeq();
         renderAll();
       });
@@ -1183,7 +1315,7 @@
       rep2.addEventListener('click', () => {
         if (progSeq.length * 2 > SEQ_MAX) return;
         snapProg();
-        progSeq = progSeq.concat(progSeq);
+        progSeq = progSeq.concat(progSeq.map(st => ({ ...st })));
         drawSeq();
         renderAll();
       });
@@ -1196,12 +1328,62 @@
       undo.textContent = 'Undo';
       undo.addEventListener('click', () => {
         progSeq = progUndo.pop();
+        selStep = null;
         drawSeq();
         renderAll();
       });
       list.appendChild(undo);
     }
     drawPresets();
+    drawStepEditor();
+  }
+
+  // The row under the song: change the selected step to a sus, 7th or 9th chord, or remove it
+  function drawStepEditor() {
+    const box = document.getElementById('seq-edit');
+    const opts = document.getElementById('seq-edit-opts');
+    opts.innerHTML = '';
+    const eff = effectiveSeq();
+    const pos = eff.findIndex(st => st.idx === selStep);
+    if (selStep === null || pos < 0) { box.hidden = true; return; }
+    box.hidden = false;
+    const st = progSeq[selStep];
+    const base = chords[st.deg];
+    document.getElementById('seq-edit-label').textContent = `Step ${pos + 1}: change the ${base.roman} chord`;
+    const choices = [{ mod: null, chord: base }].concat(modsFor(st.deg).map(m => ({ mod: m, chord: chordFor(st.deg, m) })));
+    choices.forEach(({ mod, chord }) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'key';
+      b.textContent = chord.name;
+      b.setAttribute('aria-pressed', String((st.mod || null) === mod));
+      b.addEventListener('click', () => {
+        if ((st.mod || null) === mod) return;
+        snapProg();
+        progSeq[selStep] = { deg: st.deg, mod };
+        drawSeq();
+        renderAll();
+        // Let the learner hear the change
+        if (typeof soundOn !== 'undefined' && soundOn && ensureAudio()) {
+          stopAll();
+          const card = document.querySelectorAll('#singles .board')[pos];
+          playChord(chord, card, ac.currentTime + 0.02, zoom.anchor);
+        }
+      });
+      opts.appendChild(b);
+    });
+    const rm = document.createElement('button');
+    rm.type = 'button';
+    rm.className = 'key';
+    rm.textContent = 'Remove step';
+    rm.addEventListener('click', () => {
+      snapProg();
+      progSeq.splice(selStep, 1);
+      selStep = null;
+      drawSeq();
+      renderAll();
+    });
+    opts.appendChild(rm);
   }
 
   function presetList() {
@@ -1221,7 +1403,7 @@
       return;
     }
     snapProg();
-    progSeq = progSeq.concat(pr.d);
+    progSeq = progSeq.concat(pr.d.map(deg => ({ deg, mod: null })));
     const switched = [];
     pr.d.forEach(i => { if (!active[i]) { active[i] = true; switched.push(chords[i].name); } });
     if (switched.length) drawChordChips();
@@ -1254,12 +1436,31 @@
     });
   }
 
+  // The line that says which shape is picked (with its fingering), or that outlines hold several shapes
+  function shapeCaption(c) {
+    const ctx = boardContext(c);
+    const shapes = highlightedShapes(c, ctx.bands, ctx.dim);
+    const key = chordKeyOf(c);
+    const picked = shapes.find(sh => sh.low + ':' + sh.frets.join(',') === picks[key]);
+    if (picked) {
+      const same = shapes.filter(sh => boxKeyOf(sh) === boxKeyOf(picked)).sort((a, b) => toneCount(b) - toneCount(a));
+      const idx = same.indexOf(picked);
+      return `<p class="shape-pick">Shape${same.length > 1 ? ` ${idx + 1} of ${same.length}` : ''}: <strong>${tabOf(picked)}</strong> (x = not played, strings low to high). ` +
+        `Tap its outline ${same.length > 1 ? 'for the next one' : 'again to clear'}. Play strums this shape.</p>`;
+    }
+    const counts = {};
+    shapes.forEach(sh => { const k = boxKeyOf(sh); counts[k] = (counts[k] || 0) + 1; });
+    return Object.values(counts).some(n => n > 1)
+      ? '<p class="shape-pick">A number on an outline means that many shapes share it. Tap the outline to pick one.</p>'
+      : '';
+  }
+
   function renderSingles(selected) {
     const wrap = document.getElementById('singles');
     wrap.innerHTML = '';
     const eff = effectiveSeq();
     const seqMode = eff.length > 0;
-    const list = seqMode ? eff.map(st => chords[st.deg]) : selected;
+    const list = seqMode ? eff.map(st => stepChord(st)) : selected;
     document.getElementById('singles-title').textContent = seqMode
       ? `Individual chords in ${currentScale}: ${eff.map(st => st.deg + 1).join('\u2013')}`
       : `Individual chords in ${currentScale}`;
@@ -1274,9 +1475,10 @@
       const sec = document.createElement('section');
       sec.className = 'board';
       sec.innerHTML =
-        `<button type="button" class="play" data-chord="${chords.indexOf(c)}" aria-label="Play ${c.name}">\u25b6 Play</button>` +
+        `<button type="button" class="play" data-chord="${c.deg}" data-mod="${c.mod || ''}" aria-label="Play ${c.name}">\u25b6 Play</button>` +
         `<h2 class="single-title"><span class="dot" style="background:${c.color}"></span>${prefix}${c.roman}: ${c.name}</h2>` +
         `<p class="chord-sub">${c.notes.map(n => n.name).join(' ')} (${c.formula})</p>` +
+        shapeCaption(c) +
         board([c], boardContext(c).bands, boardContext(c).dim, true);
       wrap.appendChild(sec);
     });
@@ -1469,6 +1671,7 @@
       if (dim) roman += '\u00b0';
       if (aug) roman += '+';
       return {
+        deg,
         roman,
         name: notes[0].name + (QUALITY[intervals.join(',')] || ''),
         notes,
@@ -1498,6 +1701,7 @@
     document.getElementById('singles-title').textContent = `Individual chords in ${currentScale}`;
 
     focusDeg = null;
+    picks = {};
     drawChordChips();
     drawSeq();
     drawScaleButtons();
@@ -2217,7 +2421,8 @@
       playNote(midiOf(low + j, f), t, 0.3, dest);
       if (scope) flash(scope.querySelector(`.note[data-s="${low + j}"][data-f="${f}"]`), 'playing', t, 520);
     });
-    if (scope) flash(scope.querySelector(`.shape[data-low="${low}"][data-frets="${frets.join(',')}"]`), 'playing', startAt, 700);
+    if (scope) flash(scope.querySelector(`.shape[data-low="${low}"][data-frets="${frets.join(',')}"]`) ||
+      scope.querySelector(`.shape[data-keys~="${low}:${frets.join(',')}"]`), 'playing', startAt, 700);
   }
 
   // What an individual chord board shows for a chord: its CAGED bands, and whether notes outside
@@ -2239,7 +2444,7 @@
     const inView = f => f === 0 ? hasOpen : (f >= start && f <= win.hi);
     const inBand = f => bands.some(b => f >= b.lo && f <= b.hi);
     const count = shapeType === 'full' ? 4 : (chord.pcs.length === 3 ? 3 : 4);
-    let sets = currentShapeSets();
+    let sets = currentShapeSets(chord);
     const outlinesOn = sets.length > 0;
     if (!outlinesOn) sets = Array.from({ length: 6 - count + 1 }, (_, i) => i);
     const out = [];
@@ -2255,11 +2460,16 @@
 
   // Choose one highlighted shape, nearest `target` fret (and a little toward the middle strings)
   function pickVoicing(chord, target, bands, dim) {
+    const pk = picks[chordKeyOf(chord)];
+    if (pk) {
+      const sh = highlightedShapes(chord, bands, dim).find(x => x.low + ':' + x.frets.join(',') === pk);
+      if (sh) return { low: sh.low, frets: sh.frets, score: 0, mean: sh.frets.reduce((a, f) => a + f, 0) / sh.frets.length };
+    }
     const prefLow = shapeType === 'full' ? 0 : (chord.pcs.length === 3 ? 2 : 1); // full chords: fullest first
     let best = null;
     highlightedShapes(chord, bands, dim).forEach(sh => {
       const mean = sh.frets.reduce((a, f) => a + f, 0) / sh.frets.length;
-      const score = Math.abs(mean - target) + 0.6 * Math.abs(sh.low - prefLow);
+      const score = Math.abs(mean - target) + 0.6 * Math.abs(sh.low - prefLow) + 1.5 * (chord.pcs.length - toneCount(sh));
       if (!best || score < best.score) best = { low: sh.low, frets: sh.frets, score, mean };
     });
     return best;
@@ -2452,7 +2662,7 @@
   // Schedule one pass through the progression starting at t0. Returns its length in seconds.
   function schedulePass(t0, st, first) {
     const eff = effectiveSeq();
-    const steps = eff.length ? eff.map(x => chords[x.deg]) : chords.filter((c, i) => active[i]);
+    const steps = eff.length ? eff.map(x => stepChord(x)) : chords.filter((c, i) => active[i]);
     if (!steps.length) return 0;
     const cards = Array.from(document.querySelectorAll('#singles .board'));
     const beat = chordSeconds();
@@ -2502,6 +2712,8 @@
   }
 
   document.getElementById('boards').addEventListener('click', e => {
+    const pickEl = e.target.closest('.shape[data-chordkey]');
+    if (pickEl) { tapShape(pickEl); return; }
     const btn = e.target.closest('[data-chord]');
     const noteEl = e.target.closest('.note');
     const shapeEl = e.target.closest('.shape');
@@ -2510,7 +2722,7 @@
     const now = ac.currentTime + 0.02;
     if (btn) {
       stopAll();
-      const chord = chords[Number(btn.getAttribute('data-chord'))];
+      const chord = chordFor(Number(btn.getAttribute('data-chord')), btn.getAttribute('data-mod') || null);
       if (chord && !playChord(chord, btn.closest('section.board'), now, zoom.anchor)) {
         say(`No highlighted shape to play for ${chord.name} in this view. Try another string set, a wider zoom, or more CAGED shapes.`);
       }
@@ -2525,6 +2737,23 @@
       strum(low, frets, now, scope);
     }
   });
+
+  // Tap an outline on a single chord's board: pick its first shape, then each next shape that shares
+  // the outline, then clear. The board is redrawn with only that shape bright, and it is strummed.
+  function tapShape(el) {
+    const ck = el.getAttribute('data-chordkey');
+    const keys = el.getAttribute('data-keys').split(' ');
+    const at = keys.indexOf(picks[ck]);
+    const next = at >= 0 ? (at + 1 < keys.length ? keys[at + 1] : null) : keys[0];
+    if (next) picks[ck] = next; else delete picks[ck];
+    const idx = Array.from(document.querySelectorAll('#singles .board')).indexOf(el.closest('section.board'));
+    renderAll();
+    if (next && soundOn && ensureAudio()) {
+      const [low, fr] = next.split(':');
+      stopAll();
+      strum(Number(low), fr.split(',').map(Number), ac.currentTime + 0.02, document.querySelectorAll('#singles .board')[idx] || null);
+    }
+  }
 
   const soundToggle = document.getElementById('sound-toggle');
   soundToggle.addEventListener('click', () => {
