@@ -368,6 +368,34 @@
   .stepper .val.wide { min-width: 58px; }
   .stepper label { cursor: default; }
   .key.hit { box-shadow: inset 0 0 0 2px #b4532a; }
+  .follow { position: fixed; left: 50%; bottom: 10px; transform: translateX(-50%); z-index: 40;
+    width: min(760px, calc(100vw - 16px)); display: grid; grid-template-columns: 1fr 1.35fr 1fr; gap: 8px; align-items: end;
+    background: #fffdf8; border: 1px solid #cfc8b8; border-radius: 14px; padding: 8px 10px 6px;
+    box-shadow: 0 6px 24px rgba(43,42,39,.25); }
+  .follow[hidden] { display: none; }
+  .follow-close { position: absolute; top: 2px; right: 6px; border: 0; background: transparent; font-size: 22px; line-height: 1; cursor: pointer; color: #2b2a27; padding: 2px 6px; }
+  .fcell { min-width: 0; text-align: center; }
+  .fcell.prev, .fcell.next { opacity: .55; }
+  .fcell.cur { border-radius: 10px; box-shadow: 0 0 0 2px #b4532a; background: #fff; padding: 2px 4px 4px; }
+  .fcell .ft { font-size: 12px; font-weight: 600; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fcell.cur .ft { font-size: 15px; }
+  .fcell .fstep { font-weight: 400; color: #6b665c; font-size: .8em; }
+  .fcell .fsub { font-size: 11px; color: #6b665c; margin: 0; }
+  .fcell svg { width: 100%; height: auto; display: block; }
+  .fcell .fnone { font-size: 12px; color: #6b665c; padding: 24px 0; }
+  @media (max-width: 999px) { .follow { bottom: 66px; } }
+  @media (max-width: 600px) { .follow { grid-template-columns: .8fr 1.5fr .8fr; gap: 4px; padding: 6px 6px 4px; } .fcell .fsub { display: none; } }
+  .shape-list { margin: 4px 0 8px; font-size: 13px; }
+  .shape-list summary { cursor: pointer; color: #6b665c; padding: 4px 0; }
+  .shape-list .chips { margin-top: 6px; }
+  .shape-chip { font-variant-numeric: tabular-nums; letter-spacing: .03em; }
+  .shape-chip[aria-pressed="true"] { background: #2b2a27; color: #fffdf8; }
+  .shape-chip[aria-pressed="true"] .nt { color: #d8d2c4; }
+  #metro-opts.off .key { opacity: 0.55; }
+  .metro-dots { display: flex; gap: 10px; margin: 8px 0 2px; }
+  .metro-dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #2b2a27; background: transparent; transition: background .05s; }
+  .metro-dot.first { border-width: 3px; }
+  .metro-dot.on { background: #b4532a; border-color: #b4532a; }
   section.board.now-playing { box-shadow: 0 0 0 3px #b4532a; }
   @media (prefers-reduced-motion: reduce) { .note.playing, .shape.playing { animation: none; } }
 </style>
@@ -457,12 +485,17 @@
 
 
     <h3 class="ctl-group" id="sound-heading">Sound</h3>
-    <div class="keys" id="sound-row" role="group" aria-label="Sound">
+    <div class="keys" id="sound-row" role="group" aria-label="On and off switches">
       <button type="button" class="key" id="sound-toggle" aria-pressed="true">Sound on</button>
+      <button type="button" class="key" id="loop-toggle" aria-pressed="false">Loop off</button>
+      <button type="button" class="key" id="pad-toggle" aria-pressed="true">Synth on</button>
+      <button type="button" class="key" id="drums-toggle" aria-pressed="true">Drums on</button>
+      <button type="button" class="key" id="metro-toggle" aria-pressed="false">Metronome off</button>
+      <button type="button" class="key" id="follow-toggle" aria-pressed="true">Follow on</button>
+    </div>
+    <div class="keys" id="play-row" role="group" aria-label="Play">
       <button type="button" class="key" id="play-prog">Play chords</button>
       <button type="button" class="key" id="stop-audio">Stop</button>
-      <button type="button" class="key" id="loop-toggle" aria-pressed="false">Loop</button>
-      <button type="button" class="key" id="pad-toggle" aria-pressed="true">Pad</button>
     </div>
     <div class="zoom-row" id="tempo-row" role="group" aria-label="Tempo">
       <div class="stepper">
@@ -477,9 +510,27 @@
         <button type="button" id="beats-plus" aria-label="More beats per chord">+</button>
       </div>
     </div>
+    <p class="ctl-label">Time signature</p>
+    <div class="keys" id="meter-row" role="group" aria-label="Time signature">
+      <button type="button" class="key" data-meter="4/4" aria-pressed="true">4/4</button>
+      <button type="button" class="key" data-meter="3/4" aria-pressed="false">3/4</button>
+      <button type="button" class="key" data-meter="6/8" aria-pressed="false">6/8</button>
+      <button type="button" class="key" data-meter="2/4" aria-pressed="false">2/4</button>
+    </div>
     <p class="hint" id="tempo-note"></p>
 
-    <p class="ctl-label">Drums (they play along with Play progression)</p>
+    <p class="ctl-label">Guitar strumming</p>
+    <div class="zoom-row" id="strum-row" role="group" aria-label="Strum speed">
+      <div class="stepper">
+        <label for="strum-speed">Strum speed</label>
+        <input type="range" id="strum-speed" min="0" max="100" step="1" value="29" aria-label="Strum speed, slow to fast">
+        <span class="val wide" id="strum-speed-val">50 ms</span>
+      </div>
+    </div>
+    <div class="keys" id="strum-patterns" role="group" aria-label="Strumming pattern"></div>
+    <p class="hint" id="strum-note"></p>
+
+    <h3 class="ctl-group" id="drums-heading">Drums</h3>
     <div class="keys" id="drum-row" role="group" aria-label="Drums">
       <button type="button" class="key" id="drum-kick" aria-pressed="true">Bass drum</button>
       <button type="button" class="key" id="drum-snare" aria-pressed="true">Snare</button>
@@ -487,7 +538,23 @@
     <div class="keys" id="drum-patterns" role="group" aria-label="Drum pattern"></div>
     <p class="hint" id="drum-note"></p>
 
-    <p class="ctl-label">Mix</p>
+    <h3 class="ctl-group" id="metro-heading">Metronome</h3>
+    <div class="keys" id="metro-row" role="group" aria-label="Metronome">
+      <button type="button" class="key" id="metro-run" aria-pressed="false">Start metronome</button>
+      <button type="button" class="key" id="metro-tap">Tap tempo</button>
+    </div>
+    <div class="keys" id="metro-opts" role="group" aria-label="Metronome options">
+      <button type="button" class="key" id="metro-accent" aria-pressed="true">Accent beat 1</button>
+      <button type="button" class="key" id="metro-count" aria-pressed="false">Count-in bar</button>
+    </div>
+    <p class="ctl-label">Subdivision</p>
+    <div class="keys" id="metro-sub" role="group" aria-label="Metronome subdivision"></div>
+    <p class="ctl-label">Sound</p>
+    <div class="keys" id="metro-sound" role="group" aria-label="Metronome sound"></div>
+    <div class="metro-dots" id="metro-dots" aria-hidden="true"></div>
+    <p class="hint" id="metro-note"></p>
+
+    <h3 class="ctl-group" id="mix-heading">Mix</h3>
     <div class="zoom-row" id="mix-row" role="group" aria-label="Volume mix">
       <div class="stepper">
         <label for="mix-guitar">Guitar</label>
@@ -495,7 +562,7 @@
         <span class="val wide" id="mix-guitar-val">100%</span>
       </div>
       <div class="stepper">
-        <label for="mix-pad">Pad</label>
+        <label for="mix-pad">Synth</label>
         <input type="range" id="mix-pad" min="0" max="100" step="1" value="70">
         <span class="val wide" id="mix-pad-val">70%</span>
       </div>
@@ -504,9 +571,14 @@
         <input type="range" id="mix-drums" min="0" max="100" step="1" value="100">
         <span class="val wide" id="mix-drums-val">100%</span>
       </div>
+      <div class="stepper">
+        <label for="mix-metro">Metronome</label>
+        <input type="range" id="mix-metro" min="0" max="100" step="1" value="60">
+        <span class="val wide" id="mix-metro-val">60%</span>
+      </div>
     </div>
-    <p class="hint">Pad plays a soft synth chord under each step, voiced to move as little as possible from chord to chord. Loop repeats the progression until you press Stop. While it loops you can change the tempo, drums, mix, or chord order, and the change takes effect on the next pass.</p>
-    <p class="hint">Tap any note to hear it, or tap a shape outline to hear it strummed from the low string up. Each individual chord's Play button strums one of its outlined shapes, nearest the anchor fret, so it follows your string set, zoom, and CAGED choices. If outlines are off, it picks a shape on any strings. Play progression plays your numbered steps in order, or all switched-on chords if no progression is set, with the drums keeping time at the same tempo. On iPad, make sure the silent switch is off.</p>
+    <p class="hint">Synth plays a soft chord under each step, voiced to move as little as possible from chord to chord, changing chord with the guitar. Loop repeats the progression until you press Stop. While it loops you can change the tempo, drums, metronome, mix, or chord order, and the change takes effect on the next pass.</p>
+    <p class="hint">Tap any note to hear it, or tap a shape outline to hear it strummed from the low string up. Each individual chord's Play button strums one of its outlined shapes, nearest the anchor fret, so it follows your string set, zoom, and CAGED choices. If outlines are off, it picks a shape on any strings. Play progression plays your numbered steps in order, or all switched-on chords if no progression is set, with the drums and metronome (if switched on) keeping time at the same tempo and time signature. On iPad, make sure the silent switch is off.</p>
     <p class="hint" id="sound-status" aria-live="polite"></p>
   </div>
     </aside>
@@ -573,6 +645,12 @@
   <button type="button" class="fab" id="fab" aria-expanded="true" aria-controls="panel">Hide controls</button>
 </main>
 
+<div class="follow" id="follow" hidden aria-label="Now playing">
+  <button type="button" class="follow-close" id="follow-close" aria-label="Close the now playing panel">&times;</button>
+  <div class="fcell prev" id="follow-prev"></div>
+  <div class="fcell cur" id="follow-cur"></div>
+  <div class="fcell next" id="follow-next"></div>
+</div>
 <script>
   const LETTERS = ['C','D','E','F','G','A','B'];
   const LETTER_PC = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
@@ -919,9 +997,9 @@
     // tapped to step through them; tapping picks one shape and fades everything else.
     const single = !!extras.chordKey;
     let badgeSvg = '';   // drawn after the notes so the count badge sits on top
-    const pickItem = single ? items.find(it => !it.faded && it.skey === extras.pick) : null;
+    const pickItems = single ? items.filter(it => !it.faded && (extras.picks || []).includes(it.skey)) : [];
     const shapeKeys = new Set();
-    (pickItem ? [pickItem] : items).forEach(it => it.sh.frets.forEach((f, j) => shapeKeys.add((it.low + j) + ',' + f)));
+    (pickItems.length ? pickItems : items).forEach(it => it.sh.frets.forEach((f, j) => shapeKeys.add((it.low + j) + ',' + f)));
     const outlineLegacy = it => {
       s += `<rect x="${it.x0}" y="${it.y0}" width="${it.x1 - it.x0}" height="${it.y1 - it.y0}" rx="16" fill="${it.c.color}" fill-opacity="0.12" stroke="${it.c.color}" stroke-width="2.5" class="shape" data-low="${it.low}" data-frets="${it.sh.frets.join(',')}" style="cursor:pointer"/>`;
     };
@@ -935,15 +1013,17 @@
         if (!groups.has(gk)) groups.set(gk, []);
         groups.get(gk).push(it);
       });
-      groups.forEach(list => {
+      // Larger outlines first, so a smaller outline sitting inside one is drawn on top and can still be tapped
+      const area = l => (l[0].x1 - l[0].x0) * (l[0].y1 - l[0].y0);
+      [...groups.values()].sort((a, b) => area(b) - area(a)).forEach(list => {
         list.sort((a, b) => toneCount(b.sh) - toneCount(a.sh));   // complete shapes first (stable otherwise)
-        const rep = list.find(it => it === pickItem) || list[0];
-        const isPicked = !!pickItem && list.includes(pickItem);
-        const dimmed = !!pickItem && !isPicked;
+        const rep = list.find(it => pickItems.includes(it)) || list[0];
+        const isPicked = pickItems.includes(rep);
+        const dimmed = pickItems.length > 0 && !isPicked;
         const keys = list.map(it => it.skey).join(' ');
         s += `<rect x="${rep.x0}" y="${rep.y0}" width="${rep.x1 - rep.x0}" height="${rep.y1 - rep.y0}" rx="16" fill="${rep.c.color}" fill-opacity="${isPicked ? 0.22 : dimmed ? 0 : 0.12}" stroke="${rep.c.color}" stroke-opacity="${dimmed ? 0.3 : 1}" stroke-width="${isPicked ? 4 : 2.5}" class="shape" data-low="${rep.low}" data-frets="${rep.sh.frets.join(',')}" data-keys="${keys}" data-chordkey="${extras.chordKey}" style="cursor:pointer"/>`;
         if (list.length > 1) {
-          const label = isPicked ? `${list.indexOf(pickItem) + 1}/${list.length}` : String(list.length);
+          const label = isPicked ? `${list.indexOf(rep) + 1}/${list.length}` : String(list.length);
           const w = isPicked ? 30 : 18;
           const bx = Math.min(rep.x1 + 4, W - w / 2 - 2), by = (rep.y0 + rep.y1) / 2;
           badgeSvg += `<g pointer-events="none"><rect x="${bx - w / 2}" y="${by - 9}" width="${w}" height="18" rx="9" fill="${rep.c.color}" stroke="#fffdf8" stroke-width="1.5"/>` +
@@ -977,7 +1057,7 @@
         const cx = xNote(f);
         const cy = yStr(i);
         const bandFaded = dimOutside && bands.length > 0 && !bands.some(b => f >= b.lo && f <= b.hi);
-        const shapeFaded = (pickItem || (fadeOthers && shapeSets.length > 0)) && !shapeKeys.has(i + ',' + f);
+        const shapeFaded = (pickItems.length > 0 || (fadeOthers && shapeSets.length > 0)) && !shapeKeys.has(i + ',' + f);
         const focusFaded = extras.focus && !owners.includes(extras.focus);
         const faded = bandFaded || shapeFaded || focusFaded;
         s += `<g class="note" data-s="${i}" data-f="${f}"${faded ? ' opacity="0.2"' : ''} style="cursor:pointer">`;
@@ -1023,7 +1103,9 @@
   // root (1, b3, 5 ...). An individual chord board counts from that chord's own root (R, b3, 5).
   let labelMode = 'names';
   let focusDeg = null;          // degree index of the chord the group boards focus on, or null
-  let picks = {};               // chordKey -> key ("low:frets") of the shape picked on that chord's board
+  let picks = {};               // chordKey -> list of shape keys ("low:frets") picked on that chord's board
+  const picksOf = ck => picks[ck] || [];
+  const openShapeLists = new Set(); // chord keys whose Shapes list is expanded
   const chordKeyOf = c => c.deg + ':' + (c.mod || '');
   const tabOf = sh => { const a = Array(6).fill('x'); sh.frets.forEach((f, j) => { a[sh.low + j] = String(f); }); return a.join(' '); };
   // How many different notes a shape sounds: shapes with every chord tone come before ones that skip the 5th
@@ -1113,7 +1195,7 @@
     if (single && list.length === 1) {
       extras.rootPcs = new Set([list[0].pcs[0]]);
       extras.chordKey = chordKeyOf(list[0]);
-      extras.pick = picks[extras.chordKey] || null;
+      extras.picks = picksOf(extras.chordKey);
     }
     if (focus) extras.focus = focus;
     return fretboard(list, list.map(() => true), dotNames(single && list.length === 1 ? list[0] : null),
@@ -1436,23 +1518,45 @@
     });
   }
 
-  // The line that says which shape is picked (with its fingering), or that outlines hold several shapes
+  // A short name for a shape: the CAGED form whose box holds all of its notes, if CAGED is showing one
+  function shapeLabel(sh, bands) {
+    const bd = bands.find(x => sh.frets.every(f => f >= x.lo && f <= x.hi));
+    return bd ? `${shapeName(bd)} shape` : '';
+  }
+
+  // The line that says which shapes are picked (with their fingering), plus a collapsible list of every
+  // shape on the board. Shapes nested inside a bigger outline are easy to miss, so the list lets you pick
+  // any of them, and more than one.
   function shapeCaption(c) {
     const ctx = boardContext(c);
     const shapes = highlightedShapes(c, ctx.bands, ctx.dim);
     const key = chordKeyOf(c);
-    const picked = shapes.find(sh => sh.low + ':' + sh.frets.join(',') === picks[key]);
-    if (picked) {
-      const same = shapes.filter(sh => boxKeyOf(sh) === boxKeyOf(picked)).sort((a, b) => toneCount(b) - toneCount(a));
-      const idx = same.indexOf(picked);
-      return `<p class="shape-pick">Shape${same.length > 1 ? ` ${idx + 1} of ${same.length}` : ''}: <strong>${tabOf(picked)}</strong> (x = not played, strings low to high). ` +
-        `Tap its outline ${same.length > 1 ? 'for the next one' : 'again to clear'}. Play strums this shape.</p>`;
+    const keyOf = sh => sh.low + ':' + sh.frets.join(',');
+    const picked = shapes.filter(sh => picksOf(key).includes(keyOf(sh)));
+    let line = '';
+    if (picked.length === 1) {
+      const same = shapes.filter(sh => boxKeyOf(sh) === boxKeyOf(picked[0])).sort((x, y) => toneCount(y) - toneCount(x));
+      line = `<p class="shape-pick">Shape${same.length > 1 ? ` ${same.indexOf(picked[0]) + 1} of ${same.length}` : ''}: <strong>${tabOf(picked[0])}</strong> (x = not played, strings low to high). ` +
+        `Tap its outline ${same.length > 1 ? 'for the next one' : 'again to clear'}. Play strums this shape. Tap another outline, or use the list below, to pick more than one.</p>`;
+    } else if (picked.length > 1) {
+      line = `<p class="shape-pick">${picked.length} shapes picked: ${picked.map(sh => `<strong>${tabOf(sh)}</strong>`).join(' &middot; ')}. Play and the progression use whichever is nearest the previous chord.</p>`;
+    } else {
+      const counts = {};
+      shapes.forEach(sh => { const k = boxKeyOf(sh); counts[k] = (counts[k] || 0) + 1; });
+      if (Object.values(counts).some(n => n > 1)) line = '<p class="shape-pick">A number on an outline means that many shapes share it. Tap the outline to pick one, or open the list below.</p>';
     }
-    const counts = {};
-    shapes.forEach(sh => { const k = boxKeyOf(sh); counts[k] = (counts[k] || 0) + 1; });
-    return Object.values(counts).some(n => n > 1)
-      ? '<p class="shape-pick">A number on an outline means that many shapes share it. Tap the outline to pick one.</p>'
-      : '';
+    if (!shapes.length) return line;
+    const sorted = shapes.slice().sort((x, y) => x.low - y.low || Math.min(...x.frets) - Math.min(...y.frets) || toneCount(y) - toneCount(x));
+    const chips = sorted.map(sh => {
+      const on = picksOf(key).includes(keyOf(sh));
+      const lab = shapeLabel(sh, ctx.bands);
+      return `<button type="button" class="chip shape-chip" data-chordkey="${key}" data-skey="${keyOf(sh)}" aria-pressed="${on}">` +
+        `<span>${tabOf(sh)}</span>${lab ? `<span class="nt">${lab}</span>` : ''}</button>`;
+    }).join('');
+    const clear = picked.length ? `<button type="button" class="chip shape-chip" data-chordkey="${key}" data-clear="1">Clear picks</button>` : '';
+    return line + `<details class="shape-list" data-chordkey="${key}"${openShapeLists.has(key) ? ' open' : ''}>` +
+      `<summary>Shapes on this board (${shapes.length})${picked.length ? `, ${picked.length} picked` : ''}</summary>` +
+      `<div class="chips">${chips}${clear}</div></details>`;
   }
 
   function renderSingles(selected) {
@@ -2324,9 +2428,12 @@
   const liveSources = new Set();
   let timers = [];
   let loopTimer = null;                          // pending timer that schedules the next loop pass
-  const mix = { guitar: 1, pad: 0.7, drums: 1 }; // volume multipliers from the Mix sliders
+  const mix = { guitar: 1, pad: 0.7, drums: 1, metro: 0.6 }; // volume multipliers from the Mix sliders
   const pad = { on: true };
   const loop = { on: false };
+  // Metronome state (the click itself is below, with the drums)
+  const follow = { on: true };
+  const metro = { on: false, run: false, accent: true, count: false, sub: 'none', sound: 'click', timer: null, next: 0, idx: 0 };
 
   // iPhone: Web Audio is "ambient" by default, so the ring/silent switch mutes it (video and music
   // are not affected). Declaring a playback audio session (iOS 17 and later) lets it play regardless.
@@ -2393,6 +2500,8 @@
   }
 
   function stopAll() {
+    stopMetroRun();
+    hideFollow();
     timers.forEach(t => clearTimeout(t));
     timers = [];
     loopTimer = null;
@@ -2414,14 +2523,33 @@
     }, delay));
   }
 
-  // Strum frets (one per string, from string index `low` upward) low string first
-  function strum(low, frets, startAt, scope, dest) {
-    frets.forEach((f, j) => {
-      const t = startAt + j * 0.05;
-      playNote(midiOf(low + j, f), t, 0.3, dest);
+  // Strum speed: the delay between strings, set by the Strum speed slider (slow 120 ms to fast 6 ms)
+  const strumCfg = { speed: 29 };
+  const strumGap = () => 0.12 * Math.pow(6 / 120, strumCfg.speed / 100);
+
+  // Strum frets (one per string, from string index `low` upward). Default is a down-strum, low string
+  // first. opts: dir 'D' | 'U' (up-strum: top three strings, high to low, lighter), gain (volume
+  // multiplier), gap (seconds between strings), release (seconds after startAt to damp the sound).
+  function strum(low, frets, startAt, scope, dest, opts) {
+    const o = opts || {};
+    const up = o.dir === 'U';
+    const gain = o.gain === undefined ? 1 : o.gain;
+    const gap = o.gap === undefined ? strumGap() : o.gap;
+    if (o.release !== undefined && o.release !== null) {
+      const gate = ac.createGain();
+      gate.connect(dest || master);
+      gate.gain.setTargetAtTime(0.0001, startAt + o.release, 0.025);
+      dest = gate;
+    }
+    let order = frets.map((f, j) => j);
+    if (up) order = order.slice(-3).reverse();
+    order.forEach((j, n) => {
+      const f = frets[j];
+      const t = startAt + n * (up ? gap * 0.8 : gap);
+      playNote(midiOf(low + j, f), t, 0.3 * gain * (up ? 0.75 : 1), dest);
       if (scope) flash(scope.querySelector(`.note[data-s="${low + j}"][data-f="${f}"]`), 'playing', t, 520);
     });
-    if (scope) flash(scope.querySelector(`.shape[data-low="${low}"][data-frets="${frets.join(',')}"]`) ||
+    if (scope && !o.noShape) flash(scope.querySelector(`.shape[data-low="${low}"][data-frets="${frets.join(',')}"]`) ||
       scope.querySelector(`.shape[data-keys~="${low}:${frets.join(',')}"]`), 'playing', startAt, 700);
   }
 
@@ -2460,10 +2588,16 @@
 
   // Choose one highlighted shape, nearest `target` fret (and a little toward the middle strings)
   function pickVoicing(chord, target, bands, dim) {
-    const pk = picks[chordKeyOf(chord)];
-    if (pk) {
-      const sh = highlightedShapes(chord, bands, dim).find(x => x.low + ':' + x.frets.join(',') === pk);
-      if (sh) return { low: sh.low, frets: sh.frets, score: 0, mean: sh.frets.reduce((a, f) => a + f, 0) / sh.frets.length };
+    const pk = picksOf(chordKeyOf(chord));
+    if (pk.length) { // use the picked shape, or the picked one nearest `target` if several
+      let hit = null;
+      highlightedShapes(chord, bands, dim).forEach(x => {
+        if (!pk.includes(x.low + ':' + x.frets.join(','))) return;
+        const mean = x.frets.reduce((a, f) => a + f, 0) / x.frets.length;
+        const score = Math.abs(mean - target);
+        if (!hit || score < hit.score) hit = { low: x.low, frets: x.frets, score, mean };
+      });
+      if (hit) return hit;
     }
     const prefLow = shapeType === 'full' ? 0 : (chord.pcs.length === 3 ? 2 : 1); // full chords: fullest first
     let best = null;
@@ -2491,13 +2625,126 @@
     return v;
   }
 
+  // ---- Strumming patterns ----
+  // Each bar is a string of eighth-note slots (eight in 4/4, six in 3/4 and 6/8, four in 2/4). D = down-strum, U = up-strum, B = bass note,
+  // b = alternate bass note, - = rest. 'arp' picks the strings one at a time. `release` damps each
+  // strum so it stays short (a chop); otherwise it rings until the next strum.
+  const STRUM_BY_METER = {
+    '4/4': [
+      { id: 'one', label: 'One strum', slots: null, note: 'One down-strum as each chord starts, then it rings.' },
+      { id: 'quarter', label: 'Quarter downs', slots: 'D-D-D-D-', note: 'Down on every beat. Steady and simple.' },
+      { id: 'eighths', label: 'Down-up eighths', slots: 'DUDUDUDU', note: 'Constant down-up, the engine behind most rock and pop.' },
+      { id: 'folk', label: 'Folk / pop', slots: 'D-DU-UDU', note: 'The classic: down, down-up, up-down-up.' },
+      { id: 'ballad', label: 'Ballad', slots: 'D--U-UDU', note: 'Like the folk pattern with the second down left out, so it breathes.' },
+      { id: 'country', label: 'Country boom-chick', slots: 'B-D-b-D-', note: 'Bass note, strum, a different bass note, strum.' },
+      { id: 'reggae', label: 'Reggae chop', slots: '-U-U-U-U', release: 0.11, note: 'Short up-strums on the off-beats.' },
+      { id: 'arp', label: 'Arpeggio', slots: 'arp', note: 'Picked one string at a time, up and back down, in eighth notes.' },
+    ],
+    '3/4': [
+      { id: 'one', label: 'One strum', slots: null, note: 'One down-strum as each chord starts, then it rings.' },
+      { id: 'quarter', label: 'Quarter downs', slots: 'D-D-D-', note: 'Down on every beat: one, two, three.' },
+      { id: 'eighths', label: 'Down-up eighths', slots: 'DUDUDU', note: 'Constant down-up through the bar.' },
+      { id: 'waltz', label: 'Waltz', slots: 'D-DUDU', note: 'A strong down on one, then down-up, down-up for two and three.' },
+      { id: 'oom', label: 'Oom-pah-pah', slots: 'B-D-D-', note: 'Bass note on one, then a strum on two and three.' },
+      { id: 'arp', label: 'Arpeggio', slots: 'arp', note: 'Picked one string at a time, up and back down, in eighth notes.' },
+    ],
+    '6/8': [
+      { id: 'one', label: 'One strum', slots: null, note: 'One down-strum as each chord starts, then it rings.' },
+      { id: 'two', label: 'Two downs', slots: 'D--D--', note: 'A down on each big beat, one and four.' },
+      { id: 'eighths', label: 'Down-up eighths', slots: 'DUDUDU', note: 'Constant down-up, six to the bar.' },
+      { id: 'rock68', label: 'Rocking', slots: 'D-UD-U', note: 'Down, rest, up, down, rest, up: the usual 6/8 rock feel.' },
+      { id: 'ballad68', label: 'Ballad', slots: 'D--D-U', note: 'Down on one and four, with an up before the bar ends.' },
+      { id: 'arp', label: 'Arpeggio', slots: 'arp', note: 'Picked one string at a time, up and back down, in eighth notes. Six to the bar.' },
+    ],
+    '2/4': [
+      { id: 'one', label: 'One strum', slots: null, note: 'One down-strum as each chord starts, then it rings.' },
+      { id: 'quarter', label: 'Quarter downs', slots: 'D-D-', note: 'Down on every beat.' },
+      { id: 'eighths', label: 'Down-up eighths', slots: 'DUDU', note: 'Constant down-up.' },
+      { id: 'polka', label: 'Boom-chick', slots: 'B-D-', note: 'Bass note on one, strum on two.' },
+      { id: 'reggae', label: 'Chop', slots: '-U-U', release: 0.11, note: 'Short up-strums on the off-beats.' },
+      { id: 'arp', label: 'Arpeggio', slots: 'arp', note: 'Picked one string at a time, up and back down, in eighth notes.' },
+    ],
+  };
+  const strumList = () => STRUM_BY_METER[tempo.meter] || STRUM_BY_METER['4/4'];
+  const strumPat = { id: 'one' };
+  const curStrumPat = () => strumList().find(p => p.id === strumPat.id) || strumList()[0];
+
+  // Schedule the guitar for one chord that lasts from t0 to t0+len. `v` is its voicing. Slot times are
+  // relative to the pass start (`passT0`) so the pattern keeps its bar position across chord changes.
+  function scheduleGuitarChord(v, chord, card, t0, len, passT0, dest) {
+    const pat = curStrumPat();
+    const mt = curMeter();
+    const eighth = beatSeconds() / mt.sub;
+    const barLen = mt.beats * mt.sub;
+    if (!pat.slots) { strum(v.low, v.frets, t0, card, dest); return; }
+    const n = v.frets.length;
+    const gap = Math.min(strumGap(), eighth * 0.8 / Math.max(1, n - 1)); // never longer than the slot
+    const ev = [];
+    const first = Math.ceil((t0 - passT0) / eighth - 1e-6);
+    let count = 0;
+    for (let k = first; passT0 + k * eighth < t0 + len - 1e-6; k++, count++) {
+      const when = passT0 + k * eighth;
+      if (pat.slots === 'arp') {
+        const seq = [];
+        for (let i = 0; i < n; i++) seq.push(i);
+        for (let i = n - 2; i >= 1; i--) seq.push(i);
+        ev.push({ when, kind: 'N', idx: seq[count % seq.length], accent: k % mt.sub === 0 ? 1 : 0.8 });
+      } else {
+        const ch = pat.slots[((k % barLen) + barLen) % barLen];
+        if (ch === '-') continue;
+        ev.push({ when, kind: ch, accent: (k % mt.sub === 0) ? 1 : 0.8 });
+      }
+    }
+    ev.forEach((e, i) => {
+      const nextAt = i + 1 < ev.length ? ev[i + 1].when : null;
+      const release = pat.release !== undefined ? pat.release : (nextAt !== null && pat.slots !== 'arp' ? nextAt - e.when + 0.03 : null);
+      if (e.kind === 'D' || e.kind === 'U') {
+        strum(v.low, v.frets, e.when, card, dest, { dir: e.kind, gain: e.accent, gap, release, noShape: true });
+      } else {
+        const j = e.kind === 'B' ? 0 : e.kind === 'b' ? Math.min(1, n - 1) : e.idx;
+        playNote(midiOf(v.low + j, v.frets[j]), e.when, 0.3 * e.accent, dest);
+        if (card) flash(card.querySelector(`.note[data-s="${v.low + j}"][data-f="${v.frets[j]}"]`), 'playing', e.when, 420);
+      }
+    });
+    if (ev.length) flash(card && (card.querySelector(`.shape[data-low="${v.low}"][data-frets="${v.frets.join(',')}"]`) ||
+      card.querySelector(`.shape[data-keys~="${v.low}:${v.frets.join(',')}"]`)), 'playing', ev[0].when, 700);
+  }
+
   // ---- Drums: a synthesized bass drum and snare, scheduled on the beat ----
-  const DRUM_PATTERNS = [
-    { id: 'rock', label: 'Rock', kick: [1, 0, 1, 0], snare: [0, 1, 0, 1], note: 'Bass drum on beats 1 and 3, snare on 2 and 4.' },
-    { id: 'four', label: 'Four on the floor', kick: [1, 1, 1, 1], snare: [0, 1, 0, 1], note: 'Bass drum on every beat, snare on 2 and 4.' },
-    { id: 'half', label: 'Half time', kick: [1, 0, 0, 0], snare: [0, 0, 1, 0], note: 'Bass drum on beat 1, snare on 3, for a slow, heavy feel.' },
-  ];
-  const drums = { kick: true, snare: true, pattern: 'rock' };
+  // Time signatures. A "beat" is the counting pulse: a quarter note, except in 6/8 where it is a
+  // dotted quarter (three eighths). `sub` is eighth notes per beat.
+  const METERS = {
+    '4/4': { beats: 4, sub: 2 },
+    '3/4': { beats: 3, sub: 2 },
+    '6/8': { beats: 2, sub: 3 },
+    '2/4': { beats: 2, sub: 2 },
+  };
+  // Drum patterns for each time signature: one entry per beat of the bar
+  const DRUM_BY_METER = {
+    '4/4': [
+      { id: 'rock', label: 'Rock', kick: [1, 0, 1, 0], snare: [0, 1, 0, 1], note: 'Bass drum on beats 1 and 3, snare on 2 and 4.' },
+      { id: 'four', label: 'Four on the floor', kick: [1, 1, 1, 1], snare: [0, 1, 0, 1], note: 'Bass drum on every beat, snare on 2 and 4.' },
+      { id: 'half', label: 'Half time', kick: [1, 0, 0, 0], snare: [0, 0, 1, 0], note: 'Bass drum on beat 1, snare on 3, for a slow, heavy feel.' },
+    ],
+    '3/4': [
+      { id: 'waltz', label: 'Waltz', kick: [1, 0, 0], snare: [0, 1, 1], note: 'Bass drum on 1, snare on 2 and 3.' },
+      { id: 'slow3', label: 'Slow three', kick: [1, 0, 0], snare: [0, 0, 1], note: 'Bass drum on 1, snare on 3, for a slow ballad.' },
+      { id: 'rock3', label: 'Rock three', kick: [1, 0, 1], snare: [0, 1, 0], note: 'Bass drum on 1 and 3, snare on 2.' },
+    ],
+    '6/8': [
+      { id: 'rock68', label: '6/8 rock', kick: [1, 0], snare: [0, 1], note: 'Bass drum on 1, snare on 4: two big beats, each split in three.' },
+      { id: 'drive68', label: 'Driving', kick: [1, 1], snare: [0, 1], note: 'Bass drum on both big beats, snare on the second.' },
+      { id: 'sparse68', label: 'Sparse', kick: [1, 0], snare: [0, 0], note: 'Just a bass drum on 1 to mark the bar.' },
+    ],
+    '2/4': [
+      { id: 'polka', label: 'Polka', kick: [1, 0], snare: [0, 1], note: 'Bass drum on 1, snare on 2.' },
+      { id: 'both24', label: 'Bass drum on both', kick: [1, 1], snare: [0, 1], note: 'Bass drum on both beats, snare on 2.' },
+      { id: 'sparse24', label: 'Sparse', kick: [1, 0], snare: [0, 0], note: 'Just a bass drum on 1 to mark the bar.' },
+    ],
+  };
+  const curMeter = () => METERS[tempo.meter] || METERS['4/4'];
+  const drumList = () => DRUM_BY_METER[tempo.meter] || DRUM_BY_METER['4/4'];
+  const drums = { on: true, kick: true, snare: true, pattern: 'rock' };
 
   let noiseBuf = null;
   function noiseBuffer() {
@@ -2570,12 +2817,13 @@
   }
 
   function scheduleDrums(t0, totalBeats) {
-    if (!drums.kick && !drums.snare) return;
-    const pat = DRUM_PATTERNS.find(p => p.id === drums.pattern) || DRUM_PATTERNS[0];
-    const beatSec = 60 / tempo.bpm;
+    if (!drums.on || (!drums.kick && !drums.snare)) return;
+    const pat = drumList().find(p => p.id === drums.pattern) || drumList()[0];
+    const beatSec = beatSeconds();
+    const per = curMeter().beats;
     for (let b = 0; b < totalBeats; b++) {
       const when = t0 + b * beatSec;
-      const pos = b % 4; // bars of four beats, continuing across chord changes
+      const pos = b % per; // bars of the chosen time signature, continuing across chord changes
       if (drums.kick && pat.kick[pos]) {
         playKick(when);
         flash(document.getElementById('drum-kick'), 'hit', when, 110);
@@ -2587,15 +2835,130 @@
     }
   }
 
+  // ---- Metronome ----
+  const METRO_SUBS = [
+    { id: 'none', label: 'Beats only', n: 1 },
+    { id: 'eighth', label: 'Eighths', n: 2 },
+    { id: 'triplet', label: 'Triplets', n: 3 },
+    { id: 'sixteenth', label: 'Sixteenths', n: 4 },
+  ];
+  const METRO_SOUNDS = [
+    { id: 'click', label: 'Click' },
+    { id: 'wood', label: 'Wood block' },
+    { id: 'beep', label: 'Beep' },
+    { id: 'hat', label: 'Hi-hat' },
+  ];
+  function metroTone(when, f0, f1, type, dur, level) {
+    level *= mix.metro;
+    if (level < 0.001) return;
+    const o = ac.createOscillator();
+    o.type = type;
+    o.frequency.setValueAtTime(f0, when);
+    if (f1 !== f0) o.frequency.exponentialRampToValueAtTime(f1, when + dur);
+    const g = ac.createGain();
+    g.gain.setValueAtTime(0.0001, when);
+    g.gain.linearRampToValueAtTime(level, when + 0.002);
+    g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+    o.connect(g);
+    g.connect(master);
+    o.start(when);
+    o.stop(when + dur + 0.03);
+    track(o);
+  }
+  function metroNoise(when, freq, level, dur) {
+    level *= mix.metro;
+    if (level < 0.001) return;
+    const n = ac.createBufferSource();
+    n.buffer = noiseBuffer();
+    const f = ac.createBiquadFilter();
+    f.type = 'highpass';
+    f.frequency.value = freq;
+    const g = ac.createGain();
+    g.gain.setValueAtTime(0.0001, when);
+    g.gain.linearRampToValueAtTime(level, when + 0.001);
+    g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+    n.connect(f);
+    f.connect(g);
+    g.connect(master);
+    n.start(when);
+    n.stop(when + dur + 0.02);
+    track(n);
+  }
+  // kind: 'accent' (beat 1), 'beat', or 'sub' (a subdivision click, quieter)
+  function metroClick(when, kind) {
+    const lv = kind === 'accent' ? 1 : kind === 'beat' ? 0.7 : 0.35;
+    const hi = kind === 'accent';
+    switch (metro.sound) {
+      case 'wood': metroTone(when, hi ? 1500 : 1000, hi ? 1100 : 760, 'sine', 0.06, 0.9 * lv); break;
+      case 'beep': metroTone(when, hi ? 1320 : 880, hi ? 1320 : 880, 'sine', 0.09, 0.6 * lv); break;
+      case 'hat': metroNoise(when, 7000, 0.7 * lv, hi ? 0.07 : 0.04); break;
+      default: metroTone(when, hi ? 2200 : 1600, hi ? 2200 : 1600, 'square', 0.025, 0.4 * lv);
+    }
+  }
+  // Clicks for `totalBeats` beats from t0: the accent on beat 1 of each bar (if on), and any subdivision
+  // clicks between beats. `forceAccent` is for a count-in. The beat dots light in time.
+  function scheduleMetro(t0, totalBeats, forceAccent) {
+    const m = curMeter();
+    const beat = beatSeconds();
+    const subN = (METRO_SUBS.find(x => x.id === metro.sub) || METRO_SUBS[0]).n;
+    const dots = document.querySelectorAll('#metro-dots .metro-dot');
+    for (let b = 0; b < totalBeats; b++) {
+      const pos = b % m.beats;
+      const when = t0 + b * beat;
+      metroClick(when, pos === 0 && (metro.accent || forceAccent) ? 'accent' : 'beat');
+      flash(dots[pos], 'on', when, 110);
+      for (let k = 1; k < subN; k++) metroClick(when + k * beat / subN, 'sub');
+    }
+  }
+  // Stand-alone metronome: schedules a little ahead of the clock, reading the tempo each beat
+  function metroTick() {
+    const m = curMeter();
+    const subs = (METRO_SUBS.find(x => x.id === metro.sub) || METRO_SUBS[0]).n;
+    const dots = document.querySelectorAll('#metro-dots .metro-dot');
+    while (metro.next < ac.currentTime + 0.15) {
+      const pos = metro.idx % m.beats;
+      const beat = beatSeconds();
+      metroClick(metro.next, pos === 0 && metro.accent ? 'accent' : 'beat');
+      flash(dots[pos], 'on', metro.next, 110);
+      for (let k = 1; k < subs; k++) metroClick(metro.next + k * beat / subs, 'sub');
+      metro.next += beat;
+      metro.idx++;
+    }
+  }
+  function stopMetroRun() {
+    if (metro.timer) clearInterval(metro.timer);
+    metro.timer = null;
+    metro.run = false;
+    const b = document.getElementById('metro-run');
+    if (b) { b.textContent = 'Start metronome'; b.setAttribute('aria-pressed', 'false'); }
+  }
+  function startMetroRun() {
+    if (!soundOn || !ensureAudio()) return;
+    stopAll();
+    metro.run = true;
+    metro.idx = 0;
+    metro.next = ac.currentTime + 0.06;
+    metro.timer = setInterval(metroTick, 25);
+    metroTick();
+    const b = document.getElementById('metro-run');
+    b.textContent = 'Stop metronome';
+    b.setAttribute('aria-pressed', 'true');
+  }
+
   // Tempo: each chord lasts `beats` beats at `bpm` beats per minute
-  const tempo = { bpm: 80, beats: 2 };
-  const chordSeconds = () => tempo.beats * 60 / tempo.bpm;
+  // Each chord lasts `beats` beats at `bpm` beats per minute, for the guitar and synth together.
+  const tempo = { bpm: 80, beats: 2, meter: '4/4' };
+  const beatSeconds = () => 60 / tempo.bpm;
+  const chordSeconds = () => tempo.beats * beatSeconds();
+  const plural = n => `${n} beat${n === 1 ? '' : 's'}`;
 
   function syncTempo() {
     document.getElementById('tempo-val').textContent = `${tempo.bpm} BPM`;
     document.getElementById('beats-val').textContent = String(tempo.beats);
+    const bars = Number((tempo.beats / curMeter().beats).toFixed(2));
     document.getElementById('tempo-note').textContent =
-      `Each chord lasts ${chordSeconds().toFixed(1)} seconds (${tempo.beats} beat${tempo.beats === 1 ? '' : 's'} at ${tempo.bpm} BPM). Each chord is cut off as the next one starts.`;
+      `Each chord lasts ${chordSeconds().toFixed(1)} seconds (${plural(tempo.beats)} = ${bars} bar${bars === 1 ? '' : 's'} of ${tempo.meter} at ${tempo.bpm} BPM). Each chord is cut off as the next one starts.` +
+      (tempo.meter === '6/8' ? ' In 6/8 a beat is a dotted quarter note, so there are two beats in a bar.' : '');
   }
 
   // ---- Pad: a soft synth chord under each step ----
@@ -2659,33 +3022,110 @@
     return v;
   }
 
+  // ---- Now-playing panel: the previous, current and next chord, as the exact voicing being played ----
+  function hideFollow() {
+    const el = document.getElementById('follow');
+    if (el) el.hidden = true;
+  }
+  const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  // A small horizontal fretboard (low string at the bottom, like the main boards) showing only this voicing
+  function miniBoard(chord, v) {
+    const names = dotNames(chord);
+    const played = {};
+    v.frets.forEach((f, j) => { played[v.low + j] = f; });
+    const fretted = v.frets.filter(f => f > 0);
+    const lo = fretted.length ? Math.min(...fretted) : 1, hi = fretted.length ? Math.max(...fretted) : 1;
+    const start = hi <= 4 ? 1 : lo;
+    const W = Math.max(4, hi - start + 1);
+    const x0 = 34, xEnd = 292, fw = (xEnd - x0) / W, y0 = 14, sp = 17;
+    const rowY = si => y0 + (5 - si) * sp; // string 5 (high e) on top
+    let g = `<rect x="${x0}" y="${y0 - 6}" width="${xEnd - x0}" height="${5 * sp + 12}" fill="#e8d5a8" rx="2"/>`;
+    for (let i = 0; i <= W; i++) {
+      const x = x0 + i * fw;
+      g += `<line x1="${x}" y1="${y0 - 6}" x2="${x}" y2="${y0 + 5 * sp + 6}" stroke="${i === 0 && start === 1 ? '#2b2a27' : '#8a7f66'}" stroke-width="${i === 0 && start === 1 ? 4 : 1.2}"/>`;
+    }
+    for (let si = 0; si < 6; si++) g += `<line x1="${x0}" y1="${rowY(si)}" x2="${xEnd}" y2="${rowY(si)}" stroke="#5a4d3c" stroke-width="${1 + (5 - si) * 0.22}"/>`;
+    for (let si = 0; si < 6; si++) {
+      const f = played[si];
+      const y = rowY(si);
+      if (f === undefined) { g += `<text x="${x0 - 14}" y="${y + 4}" text-anchor="middle" font-size="12" fill="#8a7f66">\u00d7</text>`; continue; }
+      const pc = (TUNING[si] + f) % 12;
+      const lab = esc(names[pc] !== undefined ? names[pc] : '');
+      const isRoot = pc === chord.pcs[0];
+      if (f === 0) {
+        g += `<circle cx="${x0 - 14}" cy="${y}" r="7.5" fill="${chord.color}" stroke="#2b2a27" stroke-width="${isRoot ? 2.2 : 0.8}"/>` +
+          `<text x="${x0 - 14}" y="${y + 3.2}" text-anchor="middle" font-size="8" font-weight="700" fill="#fff">${lab}</text>`;
+      } else {
+        const cx = x0 + (f - start + 0.5) * fw;
+        g += `<circle cx="${cx}" cy="${y}" r="7.5" fill="${chord.color}" stroke="#2b2a27" stroke-width="${isRoot ? 2.2 : 0.8}"/>` +
+          `<text x="${cx}" y="${y + 3.2}" text-anchor="middle" font-size="8" font-weight="700" fill="#fff">${lab}</text>`;
+      }
+    }
+    if (start > 1) g += `<text x="${x0 + fw / 2}" y="${y0 + 5 * sp + 19}" text-anchor="middle" font-size="9" fill="#6b665c">fret ${start}</text>`;
+    return `<svg viewBox="0 0 300 ${y0 + 5 * sp + 24}" role="img" aria-label="${esc(chord.name)} voicing ${tabOf(v)}">${g}</svg>`;
+  }
+  function followCell(id, item, big) {
+    const el = document.getElementById(id);
+    if (!item) { el.innerHTML = '<p class="fnone">\u2014</p>'; return; }
+    const c = item.chord;
+    el.innerHTML = `<p class="ft" style="color:${c.color}">${esc(c.roman)} ${esc(c.name)}${big ? ` <span class="fstep">${item.step}/${item.total}</span>` : ''}</p>` +
+      (item.v ? miniBoard(c, item.v) + `<p class="fsub">${esc(tabOf(item.v))}</p>`
+              : '<p class="fnone">no highlighted shape</p>');
+  }
+  function showFollow(prev, cur, next) {
+    if (!follow.on) return;
+    followCell('follow-prev', prev, false);
+    followCell('follow-cur', cur, true);
+    followCell('follow-next', next, false);
+    document.getElementById('follow').hidden = false;
+  }
+  function hideFollowAt(whenSec) {
+    timers.push(setTimeout(hideFollow, Math.max(0, (whenSec - ac.currentTime) * 1000)));
+  }
+
   // Schedule one pass through the progression starting at t0. Returns its length in seconds.
   function schedulePass(t0, st, first) {
     const eff = effectiveSeq();
     const steps = eff.length ? eff.map(x => stepChord(x)) : chords.filter((c, i) => active[i]);
     if (!steps.length) return 0;
+    const n = steps.length;
     const cards = Array.from(document.querySelectorAll('#singles .board'));
-    const beat = chordSeconds();
+    const beat = beatSeconds();
+    const B = tempo.beats;
     const skipped = [];
+    // Choose every voicing first (each stays near the last), so the panel can show the next one too
+    const vs = steps.map(c => {
+      const ctxInfo = boardContext(c);
+      const v = pickVoicing(c, st.target, ctxInfo.bands, ctxInfo.dim);
+      if (v) st.target = v.mean;
+      return v;
+    });
+    const item = k => ({ chord: steps[k], v: vs[k], step: k + 1, total: n });
     steps.forEach((c, k) => {
-      const when = t0 + k * beat;
+      const when = t0 + k * B * beat;
+      const len = B * beat;
       // Each chord gets its own volume gate so it can be damped when the next chord arrives
       const choke = ac.createGain();
       choke.connect(master);
       if (st.prevChoke) st.prevChoke.gain.setTargetAtTime(0.0001, when, 0.04);
       st.prevChoke = choke;
-      const v = playChord(c, cards[k], when, st.target, choke);
-      if (v) st.target = v.mean; // keep the hand close to where the last chord was
+      const v = vs[k];
+      if (v) scheduleGuitarChord(v, c, cards[k], when, len, t0, choke);
       else skipped.push(`${k + 1}. ${c.name}`);
       if (pad.on) {
-        const pv = playPad(c, when, beat, st.padMean);
+        const pv = playPad(c, when, len, st.padMean);
         if (pv) st.padMean = pv.mean;
       }
-      if (cards[k]) flash(cards[k], 'now-playing', when, beat * 1000 - 80);
+      if (cards[k]) flash(cards[k], 'now-playing', when, len * 1000 - 80);
+      const prev = k > 0 ? item(k - 1) : st.last || null;
+      const next = k < n - 1 ? item(k + 1) : (loop.on ? item(0) : null);
+      timers.push(setTimeout(() => showFollow(prev, item(k), next), Math.max(0, (when - ac.currentTime) * 1000)));
     });
-    scheduleDrums(t0, steps.length * tempo.beats);
+    st.last = item(n - 1);
+    scheduleDrums(t0, n * B);
+    if (metro.on) scheduleMetro(t0, n * B, false);
     if (first && skipped.length) say(`No highlighted shape for ${skipped.join(', ')} in this view, so ${skipped.length === 1 ? 'that step was' : 'those steps were'} skipped.`);
-    return steps.length * beat;
+    return n * B * beat;
   }
 
   // Play the progression once, or keep repeating it while Loop is on. Each pass is scheduled just
@@ -2695,13 +3135,18 @@
     stopAll();
     const st = { target: zoom.anchor, prevChoke: null, padMean: null };
     let start = ac.currentTime + 0.05;
+    if (metro.on && metro.count && (effectiveSeq().length || active.some(Boolean))) { // one bar of clicks first
+      const bar = curMeter().beats;
+      scheduleMetro(start, bar, true);
+      start += bar * beatSeconds();
+    }
     let first = true;
     const next = () => {
       loopTimer = null;
-      if (!first && !loop.on) return; // Loop was switched off, so the last pass was the final one
+      if (!first && !loop.on) { hideFollowAt(start); return; } // Loop was switched off, so the last pass was the final one
       const len = schedulePass(start, st, first);
       first = false;
-      if (!len || !loop.on) return;
+      if (!len || !loop.on) { if (len) hideFollowAt(start + len); return; }
       const nextStart = start + len;
       const delay = Math.max(0, (nextStart - ac.currentTime - 0.6) * 1000);
       start = nextStart;
@@ -2712,6 +3157,8 @@
   }
 
   document.getElementById('boards').addEventListener('click', e => {
+    const chipEl = e.target.closest('.shape-chip');
+    if (chipEl) { tapShapeChip(chipEl); return; }
     const pickEl = e.target.closest('.shape[data-chordkey]');
     if (pickEl) { tapShape(pickEl); return; }
     const btn = e.target.closest('[data-chord]');
@@ -2738,22 +3185,53 @@
     }
   });
 
-  // Tap an outline on a single chord's board: pick its first shape, then each next shape that shares
-  // the outline, then clear. The board is redrawn with only that shape bright, and it is strummed.
+  // Tap an outline on a single chord's board. If none of its shapes is picked, the first is added to the
+  // picks; if one is picked, the next shape sharing that outline takes its place, and after the last the
+  // pick is cleared. Picks on other outlines stay, so several shapes can be picked.
   function tapShape(el) {
     const ck = el.getAttribute('data-chordkey');
     const keys = el.getAttribute('data-keys').split(' ');
-    const at = keys.indexOf(picks[ck]);
-    const next = at >= 0 ? (at + 1 < keys.length ? keys[at + 1] : null) : keys[0];
-    if (next) picks[ck] = next; else delete picks[ck];
-    const idx = Array.from(document.querySelectorAll('#singles .board')).indexOf(el.closest('section.board'));
+    const cur = picksOf(ck).slice();
+    const at = keys.findIndex(k => cur.includes(k));
+    let added = null;
+    if (at < 0) { cur.push(keys[0]); added = keys[0]; }
+    else {
+      cur.splice(cur.indexOf(keys[at]), 1);
+      if (at + 1 < keys.length) { cur.push(keys[at + 1]); added = keys[at + 1]; }
+    }
+    if (cur.length) picks[ck] = cur; else delete picks[ck];
+    previewPick(el.closest('section.board'), added);
+  }
+  function previewPick(sectionEl, key) {
+    const idx = Array.from(document.querySelectorAll('#singles .board')).indexOf(sectionEl);
     renderAll();
-    if (next && soundOn && ensureAudio()) {
-      const [low, fr] = next.split(':');
+    if (key && soundOn && ensureAudio()) {
+      const [low, fr] = key.split(':');
       stopAll();
       strum(Number(low), fr.split(',').map(Number), ac.currentTime + 0.02, document.querySelectorAll('#singles .board')[idx] || null);
     }
   }
+  // The Shapes list under each board: tap a shape to add it to the picks, tap again to remove it
+  function tapShapeChip(el) {
+    const ck = el.getAttribute('data-chordkey');
+    const cur = picksOf(ck).slice();
+    let added = null;
+    if (el.hasAttribute('data-clear')) cur.length = 0;
+    else {
+      const k = el.getAttribute('data-skey');
+      const i = cur.indexOf(k);
+      if (i >= 0) cur.splice(i, 1); else { cur.push(k); added = k; }
+    }
+    if (cur.length) picks[ck] = cur; else delete picks[ck];
+    openShapeLists.add(ck);
+    previewPick(el.closest('section.board'), added);
+  }
+  document.getElementById('singles').addEventListener('toggle', e => {
+    const d = e.target;
+    if (!d.classList || !d.classList.contains('shape-list')) return;
+    const ck = d.getAttribute('data-chordkey');
+    if (d.open) openShapeLists.add(ck); else openShapeLists.delete(ck);
+  }, true);
 
   const soundToggle = document.getElementById('sound-toggle');
   soundToggle.addEventListener('click', () => {
@@ -2773,54 +3251,207 @@
   document.getElementById('beats-plus').addEventListener('click', () => { tempo.beats = Math.min(8, tempo.beats + 1); syncTempo(); });
   syncTempo();
 
-  function syncDrumNote() {
-    const pat = DRUM_PATTERNS.find(p => p.id === drums.pattern) || DRUM_PATTERNS[0];
-    document.getElementById('drum-note').textContent =
-      `${pat.label}: ${pat.note} Bars are four beats long and keep going across chord changes.`;
+  const strumEl = document.getElementById('strum-speed');
+  function syncStrum() {
+    document.getElementById('strum-speed-val').textContent = `${Math.round(strumGap() * 1000)} ms`;
   }
+  strumEl.addEventListener('input', () => {
+    const n = Number(strumEl.value);
+    strumCfg.speed = Number.isFinite(n) ? Math.min(100, Math.max(0, n)) : 29;
+    syncStrum();
+  });
+  // Releasing the slider previews the strum on the first chord that is switched on
+  strumEl.addEventListener('change', () => {
+    if (!soundOn || !ensureAudio()) return;
+    const c = chords.find((x, i) => active[i]) || chords[0];
+    stopAll();
+    const ci = boardContext(c);
+    const v = pickVoicing(c, zoom.anchor, ci.bands, ci.dim);
+    if (v) strum(v.low, v.frets, ac.currentTime + 0.02, null);
+  });
+  syncStrum();
+  function syncStrumNote() {
+    const pat = curStrumPat();
+    const shown = pat.slots && pat.slots !== 'arp' ? ' ' + pat.slots.replace(/D/g, '\u2193').replace(/U/g, '\u2191').replace(/-/g, '\u00b7').split('').join(' ') + '.' : '';
+    document.getElementById('strum-note').textContent =
+      `${pat.label}: ${pat.note}${shown} Plays when you press Play chords; a single chord's Play button still gives one strum. Strum speed sets the gap between strings (it shortens itself at fast tempos).`;
+  }
+  const strumWrap = document.getElementById('strum-patterns');
+  function renderStrumButtons() {
+    if (!strumList().some(p => p.id === strumPat.id)) strumPat.id = 'one';
+    strumWrap.textContent = '';
+    strumList().forEach(pat => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'key';
+      b.textContent = pat.label;
+      b.dataset.strum = pat.id;
+      b.setAttribute('aria-pressed', String(pat.id === strumPat.id));
+      b.addEventListener('click', () => {
+        strumPat.id = pat.id;
+        strumWrap.querySelectorAll('.key').forEach(btn => btn.setAttribute('aria-pressed', String(btn.dataset.strum === strumPat.id)));
+        syncStrumNote();
+      });
+      strumWrap.appendChild(b);
+    });
+    syncStrumNote();
+  }
+  renderStrumButtons();
+
+  function syncDrumNote() {
+    const pat = drumList().find(p => p.id === drums.pattern) || drumList()[0];
+    document.getElementById('drum-note').textContent =
+      `${pat.label}: ${pat.note} Bars are ${curMeter().beats} beats long (${tempo.meter}) and keep going across chord changes. The Drums switch at the top of Sound turns them all on or off.`;
+  }
+  const drumsBtn = document.getElementById('drums-toggle');
+  drumsBtn.addEventListener('click', () => {
+    drums.on = !drums.on;
+    drumsBtn.textContent = drums.on ? 'Drums on' : 'Drums off';
+    drumsBtn.setAttribute('aria-pressed', String(drums.on));
+  });
   [['drum-kick', 'kick', playKick], ['drum-snare', 'snare', playSnare]].forEach(([id, which, hit]) => {
     const btn = document.getElementById(id);
     btn.addEventListener('click', () => {
       drums[which] = !drums[which];
       btn.setAttribute('aria-pressed', String(drums[which]));
-      if (drums[which] && soundOn && ensureAudio()) hit(ac.currentTime + 0.02); // preview the drum
+      if (drums[which] && drums.on && soundOn && ensureAudio()) hit(ac.currentTime + 0.02); // preview the drum
     });
   });
   const patternWrap = document.getElementById('drum-patterns');
-  DRUM_PATTERNS.forEach(pat => {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'key';
-    b.textContent = pat.label;
-    b.dataset.pattern = pat.id;
-    b.setAttribute('aria-pressed', String(pat.id === drums.pattern));
-    b.addEventListener('click', () => {
-      drums.pattern = pat.id;
-      patternWrap.querySelectorAll('.key').forEach(btn => {
-        btn.setAttribute('aria-pressed', String(btn.dataset.pattern === drums.pattern));
+  function renderDrumButtons() {
+    if (!drumList().some(p => p.id === drums.pattern)) drums.pattern = drumList()[0].id;
+    patternWrap.textContent = '';
+    drumList().forEach(pat => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'key';
+      b.textContent = pat.label;
+      b.dataset.pattern = pat.id;
+      b.setAttribute('aria-pressed', String(pat.id === drums.pattern));
+      b.addEventListener('click', () => {
+        drums.pattern = pat.id;
+        patternWrap.querySelectorAll('.key').forEach(btn => {
+          btn.setAttribute('aria-pressed', String(btn.dataset.pattern === drums.pattern));
+        });
+        syncDrumNote();
       });
-      syncDrumNote();
+      patternWrap.appendChild(b);
     });
-    patternWrap.appendChild(b);
+    syncDrumNote();
+  }
+  renderDrumButtons();
+
+  // ---- Time signature, metronome controls ----
+  function renderDots() {
+    const wrap = document.getElementById('metro-dots');
+    wrap.textContent = '';
+    for (let i = 0; i < curMeter().beats; i++) {
+      const d = document.createElement('span');
+      d.className = 'metro-dot' + (i === 0 ? ' first' : '');
+      wrap.appendChild(d);
+    }
+  }
+  function syncMetroNote() {
+    const sub = METRO_SUBS.find(x => x.id === metro.sub) || METRO_SUBS[0];
+    document.getElementById('metro-note').textContent =
+      `Uses the tempo and time signature above (${tempo.meter}, ${tempo.bpm} BPM). The Metronome switch at the top of Sound makes it click along with Play chords; Start metronome clicks on its own for practice. ` +
+      `${metro.accent ? 'Beat 1 is accented. ' : ''}${sub.n > 1 ? `Each beat is split into ${sub.n} clicks. ` : ''}` +
+      `${metro.count ? 'A one-bar count-in plays before the chords. ' : ''}Tap tempo sets the tempo from your taps. Volume is in Mix.`;
+  }
+  document.querySelectorAll('#meter-row [data-meter]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      tempo.meter = btn.dataset.meter;
+      document.querySelectorAll('#meter-row [data-meter]').forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
+      renderDrumButtons();
+      renderStrumButtons();
+      renderDots();
+      syncTempo();
+      syncMetroNote();
+    });
   });
-  syncDrumNote();
+  const metroBtn = document.getElementById('metro-toggle');
+  metroBtn.addEventListener('click', () => {
+    metro.on = !metro.on;
+    metroBtn.textContent = metro.on ? 'Metronome on' : 'Metronome off';
+    metroBtn.setAttribute('aria-pressed', String(metro.on));
+    document.getElementById('metro-opts').classList.toggle('off', !metro.on);
+  });
+  document.getElementById('metro-run').addEventListener('click', () => { if (metro.run) stopMetroRun(); else startMetroRun(); });
+  [['metro-accent', 'accent'], ['metro-count', 'count']].forEach(([id, key]) => {
+    const b = document.getElementById(id);
+    b.addEventListener('click', () => {
+      metro[key] = !metro[key];
+      b.setAttribute('aria-pressed', String(metro[key]));
+      syncMetroNote();
+    });
+  });
+  function choiceButtons(wrapId, list, key) {
+    const wrap = document.getElementById(wrapId);
+    list.forEach(item => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'key';
+      b.textContent = item.label;
+      b.dataset.id = item.id;
+      b.setAttribute('aria-pressed', String(item.id === metro[key]));
+      b.addEventListener('click', () => {
+        metro[key] = item.id;
+        wrap.querySelectorAll('.key').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.id === metro[key])));
+        syncMetroNote();
+        if (key === 'sound' && soundOn && ensureAudio()) metroClick(ac.currentTime + 0.02, 'accent'); // preview
+      });
+      wrap.appendChild(b);
+    });
+  }
+  choiceButtons('metro-sub', METRO_SUBS, 'sub');
+  choiceButtons('metro-sound', METRO_SOUNDS, 'sound');
+  let taps = [];
+  document.getElementById('metro-tap').addEventListener('click', () => {
+    const now = performance.now();
+    if (taps.length && now - taps[taps.length - 1] > 2000) taps = [];
+    taps.push(now);
+    taps = taps.slice(-6);
+    if (taps.length >= 2) {
+      const avg = (taps[taps.length - 1] - taps[0]) / (taps.length - 1);
+      tempo.bpm = Math.min(200, Math.max(40, Math.round(60000 / avg)));
+      tempoEl.value = String(tempo.bpm);
+      syncTempo();
+      syncMetroNote();
+    }
+    if (soundOn && ensureAudio()) metroClick(ac.currentTime + 0.01, 'beat');
+  });
+  tempoEl.addEventListener('input', syncMetroNote);
+  renderDots();
+  document.getElementById('metro-opts').classList.add('off');
+  syncMetroNote();
   document.getElementById('stop-audio').addEventListener('click', stopAll);
 
   const loopBtn = document.getElementById('loop-toggle');
   loopBtn.addEventListener('click', () => {
     loop.on = !loop.on;
+    loopBtn.textContent = loop.on ? 'Loop on' : 'Loop off';
     loopBtn.setAttribute('aria-pressed', String(loop.on));
   });
+  const followBtn = document.getElementById('follow-toggle');
+  function setFollow(on) {
+    follow.on = on;
+    followBtn.textContent = on ? 'Follow on' : 'Follow off';
+    followBtn.setAttribute('aria-pressed', String(on));
+    if (!on) hideFollow();
+  }
+  followBtn.addEventListener('click', () => setFollow(!follow.on));
+  document.getElementById('follow-close').addEventListener('click', () => setFollow(false));
   const padBtn = document.getElementById('pad-toggle');
   padBtn.addEventListener('click', () => {
     pad.on = !pad.on;
+    padBtn.textContent = pad.on ? 'Synth on' : 'Synth off';
     padBtn.setAttribute('aria-pressed', String(pad.on));
     if (pad.on && soundOn && ensureAudio()) { // preview the pad on the first chord that is switched on
       const c = chords.find((x, i) => active[i]) || chords[0];
       playPad(c, ac.currentTime + 0.02, 1.4, null);
     }
   });
-  ['guitar', 'pad', 'drums'].forEach(k => {
+  ['guitar', 'pad', 'drums', 'metro'].forEach(k => {
     const el = document.getElementById('mix-' + k);
     const val = document.getElementById('mix-' + k + '-val');
     el.addEventListener('input', () => {
