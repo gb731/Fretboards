@@ -381,6 +381,8 @@
   .boards.cols-4 .single-title { padding-right: 46px; }
   .note.playing { animation: notepulse 0.5s ease-out; transform-box: fill-box; transform-origin: center; }
   @keyframes notepulse { 0% { transform: scale(1.4); } 100% { transform: scale(1); } }
+  .pn.playing { animation: notepulse 0.5s ease-out; transform-box: fill-box; transform-origin: center; }
+  .pn.playing circle { stroke-width: 3.2; }
   .shape.playing { animation: shapeflash 0.7s ease-out; }
   @keyframes shapeflash { 0% { fill-opacity: 0.5; stroke-width: 4.5; } 100% { fill-opacity: 0.12; stroke-width: 2.5; } }
   .stepper input[type="range"] { width: 130px; accent-color: #2b2a27; }
@@ -448,6 +450,8 @@
   .fcell .fstep { font-weight: 400; color: #6b665c; font-size: .8em; }
   .fcell .fsub { font-size: 11px; color: #6b665c; margin: 0; }
   .fcell svg { width: 100%; height: auto; display: block; }
+  svg.piano { width: 100%; height: auto; display: block; user-select: none; -webkit-user-select: none; }
+  svg.piano .pn { cursor: pointer; }
   .fcell .fnone { font-size: 12px; color: #6b665c; padding: 24px 0; }
   @media (max-width: 999px) { .follow[data-v="bottom"] { bottom: 66px; } .follow[data-h="right"][data-v="bottom"] { bottom: 66px; } }
   .follow[data-size="small"] .fcell .fsub { display: none; }
@@ -468,7 +472,7 @@
   .metro-dot.first { border-width: 3px; }
   .metro-dot.on { background: #b4532a; border-color: #b4532a; }
   section.board.now-playing { box-shadow: 0 0 0 3px #b4532a; }
-  @media (prefers-reduced-motion: reduce) { .note.playing, .shape.playing { animation: none; } }
+  @media (prefers-reduced-motion: reduce) { .note.playing, .shape.playing, .pn.playing { animation: none; } }
 </style>
 </head>
 <body>
@@ -608,7 +612,11 @@
     </div>
     <p class="hint" id="tempo-note"></p>
 
-    <p class="ctl-label">Guitar strumming</p>
+    <p class="ctl-label">Chord sound</p>
+    <div class="keys" id="chordsound-row" role="group" aria-label="Chord sound"></div>
+    <p class="hint" id="chordsound-note"></p>
+
+    <p class="ctl-label">Strumming and rhythm</p>
     <div class="zoom-row" id="strum-row" role="group" aria-label="Strum speed">
       <div class="stepper">
         <label for="strum-speed">Strum speed</label>
@@ -644,7 +652,9 @@
     <p class="hint" id="metro-note"></p>
 
     <h3 class="ctl-group" id="focus-heading">Focus view</h3>
-    <p class="hint">Tap Focus on any fretboard to enlarge it in a panel, even while a progression plays. Tap a note or outline in the panel to hear it. Tap Focus again, or the &times;, to close.</p>
+    <p class="hint">Tap Focus on any fretboard to enlarge it in a panel, even while a progression plays. Choose Piano below to see the same notes on a keyboard (the sound stays guitar). Tap a note or outline in the panel to hear it. Tap Focus again, or the &times;, to close.</p>
+    <p class="ctl-label">Instrument</p>
+    <div class="keys" id="focus-inst" role="group" aria-label="Focus view instrument"></div>
     <p class="ctl-label">Size</p>
     <div class="keys" id="focus-size" role="group" aria-label="Focus view size"></div>
     <p class="ctl-label">Across the screen</p>
@@ -653,18 +663,20 @@
     <div class="keys" id="focus-v" role="group" aria-label="Focus view vertical position"></div>
 
     <h3 class="ctl-group" id="follow-heading">Follow panel</h3>
+    <p class="ctl-label">Instrument</p>
+    <div class="keys" id="follow-inst" role="group" aria-label="Follow panel instrument"></div>
     <p class="ctl-label">Size</p>
     <div class="keys" id="follow-size" role="group" aria-label="Follow panel size"></div>
     <p class="ctl-label">Across the screen</p>
     <div class="keys" id="follow-h" role="group" aria-label="Follow panel horizontal position"></div>
     <p class="ctl-label">Up and down</p>
     <div class="keys" id="follow-v" role="group" aria-label="Follow panel vertical position"></div>
-    <p class="hint">The panel shows the previous, current and next chord while Play chords runs. Turn it on or off with Follow at the top of Sound. Pick a size and a spot that keeps the fretboard you are watching clear. You can also change both with the buttons on the panel itself, and your choices are remembered on this device.</p>
+    <p class="hint">The panel shows the previous, current and next chord while Play chords runs. Turn it on or off with Follow at the top of Sound. Pick a size and a spot that keeps the fretboard you are watching clear. Choose Piano to see each chord as keys instead (the sound stays guitar). You can also change both with the buttons on the panel itself, and your choices are remembered on this device.</p>
 
     <h3 class="ctl-group" id="mix-heading">Mix</h3>
     <div class="zoom-row" id="mix-row" role="group" aria-label="Volume mix">
       <div class="stepper">
-        <label for="mix-guitar">Guitar</label>
+        <label for="mix-guitar">Chords</label>
         <input type="range" id="mix-guitar" min="0" max="100" step="1" value="100">
         <span class="val wide" id="mix-guitar-val">100%</span>
       </div>
@@ -760,6 +772,7 @@
   <div class="focus-tools">
     <strong class="focus-title" id="focus-title"></strong>
     <span class="sp"></span>
+    <button type="button" id="focus-inst-btn" aria-label="Switch this panel between guitar and piano">Piano view</button>
     <button type="button" id="focus-size-btn" aria-label="Change the size of this panel">Size: Large</button>
     <button type="button" id="focus-move-btn" aria-label="Move this panel to the next spot">Move</button>
     <button type="button" class="focus-close" id="focus-close" aria-label="Close the focus view">&times;</button>
@@ -768,6 +781,7 @@
 </div>
 <div class="follow" id="follow" data-size="medium" data-h="center" data-v="bottom" hidden aria-label="Now playing">
   <div class="follow-tools">
+    <button type="button" id="follow-inst-btn" aria-label="Switch this panel between guitar and piano">Piano view</button>
     <button type="button" id="follow-size-btn" aria-label="Change the size of this panel">Size: Medium</button>
     <button type="button" id="follow-move-btn" aria-label="Move this panel to the next spot">Move</button>
     <span class="sp"></span>
@@ -2943,7 +2957,7 @@
   const pad = { on: true };
   const loop = { on: false };
   // Metronome state (the click itself is below, with the drums)
-  const follow = { on: true, size: 'medium', h: 'center', v: 'bottom' };
+  const follow = { on: true, size: 'medium', h: 'center', v: 'bottom', inst: 'guitar' };
   let followPreviewTimer = null;
   const metro = { on: false, run: false, accent: true, count: false, sub: 'none', sound: 'click', timer: null, next: 0, idx: 0 };
 
@@ -3152,6 +3166,11 @@
   }
 
   function playChord(chord, card, startAt, target, dest) {
+    if (chordSound.inst === 'piano') {
+      const pv = pianoVoicing(chord, 62);
+      if (pv) pianoHit(pv.notes, startAt, { dest, ring: 2.4 });
+      return pv;
+    }
     const ctxInfo = boardContext(chord);
     const v = pickVoicing(chord, target, ctxInfo.bands, ctxInfo.dim);
     if (v) strum(v.low, v.frets, startAt, card, dest);
@@ -3241,6 +3260,145 @@
     });
     if (ev.length) flash(card && (card.querySelector(`.shape[data-low="${v.low}"][data-frets="${v.frets.join(',')}"]`) ||
       card.querySelector(`.shape[data-keys~="${v.low}:${v.frets.join(',')}"]`)), 'playing', ev[0].when, 700);
+  }
+
+
+  // ---- Piano sound: a small additive synth (a few harmonics that die away at different rates, a hammer
+  // tick, and a low-pass that darkens high notes). It is a synthetic imitation, not a sampled piano. ----
+  const chordSound = { inst: 'guitar' };
+  try { const cs = localStorage.getItem('chord-sound'); if (cs === 'piano' || cs === 'guitar') chordSound.inst = cs; } catch (e) { /* storage unavailable */ }
+  let pianoNoise = null;
+  function playPianoNote(midi, when, level = 0.3, dest = null, maxRing = null) {
+    const lv = level * mix.guitar;
+    if (lv < 0.001) return;
+    const f = freqOf(midi);
+    let ring = Math.max(1.1, 3.6 - (midi - 36) * 0.05);   // low notes ring longer
+    if (maxRing !== null) ring = Math.max(0.18, Math.min(ring, maxRing));
+    const out = ac.createGain();
+    const lp = ac.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = Math.min(9000, 900 + f * 7);
+    lp.Q.value = 0.4;
+    out.connect(lp);
+    lp.connect(dest || master);
+    const peak = lv * 0.5;
+    out.gain.setValueAtTime(0.0001, when);
+    out.gain.linearRampToValueAtTime(peak, when + 0.004);
+    out.gain.exponentialRampToValueAtTime(peak * 0.4, when + Math.min(0.4, ring * 0.3));
+    out.gain.exponentialRampToValueAtTime(0.0001, when + ring);
+    const parts = [[1, 1], [2, 0.5], [3, 0.3], [4, 0.16]];
+    const oscs = [];   // [oscillator, seconds until it has died away]
+    parts.forEach(([n, a]) => {
+      const o = ac.createOscillator();
+      o.type = 'sine';
+      o.frequency.value = f * n * Math.sqrt(1 + 0.0004 * n * n);   // slight stretch, as real strings have
+      const g = ac.createGain();
+      g.gain.setValueAtTime(a, when);
+      const life = ring / (1 + 0.7 * (n - 1));
+      g.gain.exponentialRampToValueAtTime(0.0001, when + life);
+      o.connect(g); g.connect(out);
+      oscs.push([o, life]);
+    });
+    const o2 = ac.createOscillator();                              // a second, slightly detuned fundamental for warmth
+    o2.type = 'sine';
+    o2.frequency.value = f * 1.0012;
+    const g2 = ac.createGain();
+    g2.gain.setValueAtTime(0.45, when);
+    g2.gain.exponentialRampToValueAtTime(0.0001, when + ring * 0.8);
+    o2.connect(g2); g2.connect(out);
+    oscs.push([o2, ring * 0.8]);
+    oscs.forEach(([o, life]) => {
+      o.start(when);
+      o.stop(when + life + 0.05);   // each harmonic is stopped as soon as it has faded, to keep the voice count down
+      liveSources.add(o);
+      o.onended = () => liveSources.delete(o);
+    });
+    // the hammer: a very short burst of filtered noise
+    if (!pianoNoise) {
+      pianoNoise = ac.createBuffer(1, Math.floor(ac.sampleRate * 0.05), ac.sampleRate);
+      const d = pianoNoise.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length);
+    }
+    const nz = ac.createBufferSource();
+    nz.buffer = pianoNoise;
+    const bp = ac.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.value = Math.min(4000, 1200 + f);
+    bp.Q.value = 0.8;
+    const ng = ac.createGain();
+    ng.gain.value = peak * 0.35;
+    nz.connect(bp); bp.connect(ng); ng.connect(dest || master);
+    nz.start(when);
+    liveSources.add(nz);
+    nz.onended = () => liveSources.delete(nz);
+  }
+
+  // Light the key in the Focus piano and in the Follow panel's current chord when the note sounds
+  const pianoKeyIn = (root, m) => () => document.querySelector(`${root} svg.piano .pn[data-midi="${m}"]`);
+  const pianoPcIn = (root, pc) => () => document.querySelector(`${root} svg.piano .pn[data-pc="${pc}"]`);
+  function pianoFlash(m, when, byPc) {
+    const t = when + 0.02;   // just after the Follow panel redraws for a new chord
+    if (byPc !== undefined) {
+      flashLazy(pianoPcIn('#focus-body', byPc), 'playing', t, 520);
+      flashLazy(pianoPcIn('#follow-cur', byPc), 'playing', t, 520);
+    } else {
+      flashLazy(pianoKeyIn('#focus-body', m), 'playing', t, 520);
+      flashLazy(pianoKeyIn('#follow-cur', m), 'playing', t, 520);
+    }
+  }
+  // Several keys at once, with a very slight roll (low to high, or high to low for an up-stroke)
+  function pianoHit(notes, when, o) {
+    const gain = o.gain === undefined ? 1 : o.gain;
+    const gap = o.gap === undefined ? 0.011 : o.gap;
+    const list = o.dir === 'U' ? notes.slice().reverse() : notes;
+    list.forEach((m, i) => {
+      const t = when + i * gap;
+      playPianoNote(m, t, 0.3 * gain, o.dest, o.ring === undefined ? null : o.ring);
+      pianoFlash(m, t);
+    });
+  }
+  // The piano version of scheduleGuitarChord: the same rhythm patterns, played as chords, bass notes or a rolled arpeggio
+  function schedulePianoChord(pv, chord, t0, len, passT0, dest) {
+    const pat = curStrumPat();
+    const mt = curMeter();
+    const eighth = beatSeconds() / mt.sub;
+    const barLen = mt.beats * mt.sub;
+    const notes = pv.notes, n = notes.length;
+    if (!pat.slots) { pianoHit(notes, t0, { dest, ring: len + 0.5 }); return; }
+    const rootPc = chord.pcs[0];
+    const bassOf = pc => 36 + ((pc - 36) % 12 + 12) % 12;       // in the octave below the chord
+    const ev = [];
+    const first = Math.ceil((t0 - passT0) / eighth - 1e-6);
+    let count = 0;
+    for (let k = first; passT0 + k * eighth < t0 + len - 1e-6; k++, count++) {
+      const when = passT0 + k * eighth;
+      if (pat.slots === 'arp') {
+        const seq = [];
+        for (let i = 0; i < n; i++) seq.push(i);
+        for (let i = n - 2; i >= 1; i--) seq.push(i);
+        ev.push({ when, kind: 'N', idx: seq[count % seq.length], accent: k % mt.sub === 0 ? 1 : 0.8 });
+      } else {
+        const ch = pat.slots[((k % barLen) + barLen) % barLen];
+        if (ch === '-') continue;
+        ev.push({ when, kind: ch, accent: (k % mt.sub === 0) ? 1 : 0.8 });
+      }
+    }
+    ev.forEach((e, i) => {
+      const nextAt = i + 1 < ev.length ? ev[i + 1].when : t0 + len;
+      const room = nextAt - e.when;
+      const ring = pat.release !== undefined ? pat.release + 0.06 : (pat.slots === 'arp' ? Math.max(1.2, room * 4) : room + 0.3);
+      if (e.kind === 'D') pianoHit(notes, e.when, { dest, gain: e.accent, ring });
+      else if (e.kind === 'U') pianoHit(notes.slice(-3), e.when, { dest, gain: e.accent * 0.75, dir: 'U', gap: 0.008, ring });
+      else if (e.kind === 'B' || e.kind === 'b') {
+        const pc = e.kind === 'B' ? rootPc : (rootPc + 7) % 12;
+        playPianoNote(bassOf(pc), e.when, 0.36 * e.accent, dest, Math.max(0.5, room + 0.6));
+        pianoFlash(0, e.when, pc);
+      } else {
+        const m = notes[e.idx];
+        playPianoNote(m, e.when, 0.3 * e.accent, dest, ring);
+        pianoFlash(m, e.when);
+      }
+    });
   }
 
   // ---- Drums: a synthesized bass drum and snare, scheduled on the beat ----
@@ -3561,6 +3719,106 @@
     if (el) el.hidden = true;
   }
   const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+
+  // ---- Piano view: the same chords and notes drawn as keys, for the Focus and Follow panels ----
+  const PIANO_BLACK = [1, 3, 6, 8, 10];
+  const OCT_NAMES = ['Root position', '1st inversion', '2nd inversion', '3rd inversion', '4th inversion'];
+  // marks: { midi: { colors: [..], label, root } }. lo and hi are the first and last key (both white).
+  function pianoSvg(lo, hi, marks, o) {
+    const kw = o.kw, H = o.h, bh = H * 0.62, bw = kw * 0.6, r = o.r, fs = o.fs;
+    const wi = {};
+    let n = 0;
+    for (let m = lo; m <= hi; m++) if (!PIANO_BLACK.includes(m % 12)) wi[m] = n++;
+    const W = n * kw, extra = o.octLabels ? 14 : 2;
+    let g = '';
+    for (let m = lo; m <= hi; m++) {
+      if (PIANO_BLACK.includes(m % 12)) continue;
+      g += `<rect class="pkey" x="${wi[m] * kw}" y="0" width="${kw}" height="${H}" fill="#fffdf8" stroke="#2b2a27" stroke-width="1" rx="2"/>`;
+      if (o.octLabels && m % 12 === 0) g += `<text x="${wi[m] * kw + kw / 2}" y="${H + 11}" text-anchor="middle" font-size="9" fill="#6b665c">C${Math.floor(m / 12) - 1}</text>`;
+    }
+    for (let m = lo; m <= hi; m++) {
+      if (!PIANO_BLACK.includes(m % 12)) continue;
+      g += `<rect class="pkey black" x="${(wi[m - 1] + 1) * kw - bw / 2}" y="0" width="${bw}" height="${bh}" fill="#2b2a27" stroke="#2b2a27" rx="2"/>`;
+    }
+    Object.keys(marks).map(Number).sort((a, b) => a - b).forEach(m => {
+      if (m < lo || m > hi) return;
+      const mk = marks[m], black = PIANO_BLACK.includes(m % 12);
+      const cx = black ? (wi[m - 1] + 1) * kw : wi[m] * kw + kw / 2;
+      const cy = black ? bh - r - 4 : H - r - 5;
+      let d = '';
+      if (mk.colors.length === 1) d += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${mk.colors[0]}"/>`;
+      else mk.colors.forEach((c, i) => { d += slice(cx, cy, r, -Math.PI / 2 + i * 2 * Math.PI / mk.colors.length, -Math.PI / 2 + (i + 1) * 2 * Math.PI / mk.colors.length, c); });
+      d += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#2b2a27" stroke-width="${mk.root ? 2.4 : 0.9}"/>`;
+      if (mk.label) d += `<text x="${cx}" y="${cy + fs * 0.36}" text-anchor="middle" font-size="${fs}" font-weight="700" fill="#fff" stroke="#2b2a27" stroke-width="0.35" paint-order="stroke" pointer-events="none">${esc(mk.label)}</text>`;
+      g += `<g class="pn" data-midi="${m}" data-pc="${m % 12}"${mk.faded ? ' opacity="0.2"' : ''}>${d}</g>`;
+    });
+    return `<svg class="piano" viewBox="0 0 ${W} ${H + extra}" role="img" aria-label="${esc(o.aria || 'Piano keyboard')}">${g}</svg>`;
+  }
+
+  // One voicing of a chord on the keys: its notes stacked upward, in whichever inversion sits nearest
+  // the previous chord, so the hand moves as little as possible. Kept inside C3 to C5.
+  const PIANO_LO = 48, PIANO_HI = 72;
+  function pianoVoicing(chord, target) {
+    const pcs = chord.pcs;
+    let best = null;
+    for (let r = 0; r < pcs.length; r++) {
+      const rot = pcs.slice(r).concat(pcs.slice(0, r));
+      for (let base = PIANO_LO; base <= PIANO_HI; base++) {
+        if (base % 12 !== rot[0]) continue;
+        const notes = [base];
+        for (let i = 1; i < rot.length; i++) {
+          let m = notes[i - 1] + 1;
+          while (m % 12 !== rot[i]) m++;
+          notes.push(m);
+        }
+        if (notes[notes.length - 1] > PIANO_HI) continue;
+        const mean = notes.reduce((a, b) => a + b, 0) / notes.length;
+        const score = Math.abs(mean - target) + (r > 0 ? 0.01 : 0);
+        if (!best || score < best.score) best = { notes, mean, score, inv: r };
+      }
+    }
+    return best;
+  }
+  function pianoCell(chord, pv) {
+    if (!pv) return '<p class="fnone">no voicing</p>';
+    const names = dotNames(chord);
+    const marks = {};
+    pv.notes.forEach(m => {
+      const pc = m % 12;
+      marks[m] = { colors: [chord.color], label: names[pc] !== undefined ? names[pc] : '', root: pc === chord.pcs[0] };
+    });
+    const svg = pianoSvg(PIANO_LO, PIANO_HI, marks, { kw: 20, h: 64, r: 7.5, fs: 8, aria: `${chord.name} on the piano` });
+    const spelled = pv.notes.map(m => { const nm = (chord.notes.find(n => n.pc === m % 12) || {}).name || ''; return nm + (Math.floor(m / 12) - 1); }).join(' ');
+    return svg + `<p class="fsub">${esc(OCT_NAMES[pv.inv] || '')} · ${esc(spelled)}</p>`;
+  }
+  // Marks for the enlarged piano: every key whose note belongs to the chords (or scale) on that board
+  function pianoFocusMarks(target, src) {
+    const marks = {};
+    let set = null;
+    if (target.startsWith('single:')) {
+      const btn = src.sec.querySelector('.play');
+      const c = btn ? chordFor(Number(btn.dataset.chord), btn.dataset.mod || null) : null;
+      set = c ? [c] : [];
+    } else if (target === 'combined') set = chords.filter((c, i) => active[i]);
+    else if (target === 'major' || target === 'minor') set = chords.filter((c, i) => active[i] && c.type === target);
+    // Tapping a chord in the legend focuses on it: its notes stay, notes only other chords use fade (as on the guitar boards)
+    const focusC = set && focusDeg !== null && set.includes(chords[focusDeg]) ? chords[focusDeg] : null;
+    for (let m = 48; m <= 84; m++) {
+      const pc = m % 12;
+      if (!set) {
+        const i = scaleNotes.findIndex(nn => nn.pc === pc);
+        if (i >= 0) marks[m] = { colors: [DEG_COLORS[i]], label: dotNames(null)[pc] || '', root: pc === currentRoot };
+      } else {
+        const hit = set.filter(c => c.pcs.includes(pc));
+        if (!hit.length) continue;
+        const nm = set.length === 1 ? dotNames(set[0]) : dotNames(null);
+        const own = (hit[0].notes.find(nn => nn.pc === pc) || {}).name;
+        marks[m] = { colors: hit.map(c => c.color), label: nm[pc] !== undefined ? nm[pc] : (own || ''), root: hit.some(c => c.pcs[0] === pc), faded: !!focusC && !hit.includes(focusC) };
+      }
+    }
+    return marks;
+  }
+
   // A small horizontal fretboard (low string at the bottom, like the main boards) showing only this voicing
   function miniBoard(chord, v) {
     const names = dotNames(chord);
@@ -3601,12 +3859,18 @@
     const el = document.getElementById(id);
     if (!item) { el.innerHTML = '<p class="fnone">\u2014</p>'; return; }
     const c = item.chord;
+    if (follow.inst === 'piano') {
+      el.innerHTML = `<p class="ft" style="color:${c.color}">${esc(c.roman)} ${esc(c.name)}${big ? ` <span class="fstep">${item.step}/${item.total}</span>` : ''}</p>` + pianoCell(c, item.p);
+      return;
+    }
     el.innerHTML = `<p class="ft" style="color:${c.color}">${esc(c.roman)} ${esc(c.name)}${big ? ` <span class="fstep">${item.step}/${item.total}</span>` : ''}</p>` +
       (item.v ? miniBoard(c, item.v) + `<p class="fsub">${esc(tabOf(item.v))}</p>`
               : '<p class="fnone">no highlighted shape</p>');
   }
+  let followLast = null;
   function showFollow(prev, cur, next) {
     if (!follow.on) return;
+    followLast = [prev, cur, next];
     clearTimeout(followPreviewTimer);
     followPreviewTimer = null;
     followCell('follow-prev', prev, false);
@@ -3635,7 +3899,8 @@
       if (v) st.target = v.mean;
       return v;
     });
-    const item = k => ({ chord: steps[k], v: vs[k], step: k + 1, total: n });
+    const pvs = steps.map(c => { const pv = pianoVoicing(c, st.pTarget === undefined ? 62 : st.pTarget); if (pv) st.pTarget = pv.mean; return pv; });
+    const item = k => ({ chord: steps[k], v: vs[k], p: pvs[k], step: k + 1, total: n });
     steps.forEach((c, k) => {
       const when = t0 + k * B * beat;
       const len = B * beat;
@@ -3645,7 +3910,8 @@
       if (st.prevChoke) st.prevChoke.gain.setTargetAtTime(0.0001, when, 0.04);
       st.prevChoke = choke;
       const v = vs[k];
-      if (v) scheduleGuitarChord(v, c, cards[k], when, len, t0, choke);
+      if (chordSound.inst === 'piano') { if (pvs[k]) schedulePianoChord(pvs[k], c, when, len, t0, choke); }
+      else if (v) scheduleGuitarChord(v, c, cards[k], when, len, t0, choke);
       else skipped.push(`${k + 1}. ${c.name}`);
       if (pad.on) {
         const pv = playPad(c, when, len, st.padMean);
@@ -3809,7 +4075,7 @@
     const pat = curStrumPat();
     const shown = pat.slots && pat.slots !== 'arp' ? ' ' + pat.slots.replace(/D/g, '\u2193').replace(/U/g, '\u2191').replace(/-/g, '\u00b7').split('').join(' ') + '.' : '';
     document.getElementById('strum-note').textContent =
-      `${pat.label}: ${pat.note}${shown} Plays when you press Play chords; a single chord's Play button still gives one strum. Strum speed sets the gap between strings (it shortens itself at fast tempos).`;
+      `${pat.label}: ${pat.note}${shown} Plays when you press Play chords; a single chord's Play button still gives one strum. With the piano sound the same pattern is played as chords, bass notes or a rolled arpeggio, and Strum speed does not apply. Strum speed sets the gap between strings (it shortens itself at fast tempos).`;
   }
   const strumWrap = document.getElementById('strum-patterns');
   function renderStrumButtons() {
@@ -3979,9 +4245,11 @@
       if (FOLLOW_SIZES.some(x => x[0] === saved.size)) follow.size = saved.size;
       if (FOLLOW_H.some(x => x[0] === saved.h)) follow.h = saved.h;
       if (FOLLOW_V.some(x => x[0] === saved.v)) follow.v = saved.v;
+      if (saved.inst === 'guitar' || saved.inst === 'piano') follow.inst = saved.inst;
     }
   } catch (e) { /* storage unavailable: keep the defaults */ }
-  const followChoices = [['follow-size', FOLLOW_SIZES, 'size'], ['follow-h', FOLLOW_H, 'h'], ['follow-v', FOLLOW_V, 'v']];
+  const INST_LIST = [['guitar', 'Guitar'], ['piano', 'Piano']];
+  const followChoices = [['follow-inst', INST_LIST, 'inst'], ['follow-size', FOLLOW_SIZES, 'size'], ['follow-h', FOLLOW_H, 'h'], ['follow-v', FOLLOW_V, 'v']];
   function applyFollow() {
     const el = document.getElementById('follow');
     el.dataset.size = follow.size; el.dataset.h = follow.h; el.dataset.v = follow.v;
@@ -3989,7 +4257,11 @@
       document.querySelectorAll('#' + id + ' .key').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.id === follow[key])));
     });
     document.getElementById('follow-size-btn').textContent = 'Size: ' + FOLLOW_SIZES.find(x => x[0] === follow.size)[1];
-    try { localStorage.setItem('follow-panel', JSON.stringify({ size: follow.size, h: follow.h, v: follow.v })); } catch (e) { /* ignore */ }
+    document.getElementById('follow-inst-btn').textContent = follow.inst === 'piano' ? 'Guitar view' : 'Piano view';
+    if (followLast && !document.getElementById('follow').hidden) {
+      followCell('follow-prev', followLast[0], false); followCell('follow-cur', followLast[1], true); followCell('follow-next', followLast[2], false);
+    }
+    try { localStorage.setItem('follow-panel', JSON.stringify({ size: follow.size, h: follow.h, v: follow.v, inst: follow.inst })); } catch (e) { /* ignore */ }
   }
   // While nothing is playing, show the panel for a few seconds so a change can be seen
   function previewFollow() {
@@ -3999,12 +4271,14 @@
     const eff = effectiveSeq();
     const steps = (eff.length ? eff.map(x => stepChord(x)) : chords.filter((c, i) => active[i])).slice(0, 3);
     if (!steps.length) return;
-    let t = zoom.anchor;
+    let t = zoom.anchor, pt = 62;
     const items = steps.map((c, i) => {
       const ci = boardContext(c);
       const v = pickVoicing(c, t, ci.bands, ci.dim);
       if (v) t = v.mean;
-      return { chord: c, v, step: i + 1, total: steps.length };
+      const pv = pianoVoicing(c, pt);
+      if (pv) pt = pv.mean;
+      return { chord: c, v, p: pv, step: i + 1, total: steps.length };
     });
     const at = items.length > 1 ? 1 : 0;
     showFollow(items[at - 1] || null, items[at], items[at + 1] || null);
@@ -4022,6 +4296,11 @@
       b.addEventListener('click', () => { follow[key] = val; applyFollow(); previewFollow(); });
       wrap.appendChild(b);
     });
+  });
+  document.getElementById('follow-inst-btn').addEventListener('click', () => {
+    follow.inst = follow.inst === 'piano' ? 'guitar' : 'piano';
+    applyFollow();
+    previewFollow();
   });
   document.getElementById('follow-size-btn').addEventListener('click', () => {
     const i = FOLLOW_SIZES.findIndex(x => x[0] === follow.size);
@@ -4067,6 +4346,20 @@
     document.getElementById('focus-title').textContent = h2 ? h2.textContent : 'Fretboard';
     body.textContent = '';
     if (src.sub) { const sub = src.sub.cloneNode(true); body.appendChild(sub); }
+    if (focusCfg.inst === 'piano') {
+      const holder = document.createElement('div');
+      holder.className = 'fbwrap';
+      holder.innerHTML = pianoSvg(48, 84, pianoFocusMarks(focusTarget, src), { kw: 34, h: 150, r: 12, fs: 10, octLabels: true, aria: (h2 ? h2.textContent : 'Chords') + ' on the piano' });
+      body.appendChild(holder);
+      if (src.legend && src.legend.children.length) {
+        const lg = src.legend.cloneNode(true);
+        lg.removeAttribute('id');
+        body.appendChild(lg);
+      }
+      el.hidden = false;
+      document.querySelectorAll('.focus-btn').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.focus === focusTarget)));
+      return;
+    }
     const wrap = src.wrap.cloneNode(true);
     body.appendChild(wrap);
     if (src.legend && src.legend.children.length) {
@@ -4105,6 +4398,15 @@
   document.getElementById('focus-body').addEventListener('click', e => {
     const src = focusSource(focusTarget);
     if (!src || !src.wrap) return;
+    const pn = e.target.closest('.pn');
+    if (pn) {
+      if (soundOn && ensureAudio()) {
+        playPianoNote(Number(pn.dataset.midi), ac.currentTime + 0.02, 0.4);
+        pn.classList.remove('playing'); void pn.getBoundingClientRect(); pn.classList.add('playing');
+        setTimeout(() => pn.classList.remove('playing'), 520);
+      }
+      return;
+    }
     const note = e.target.closest('.note');
     const shape = e.target.closest('.shape');
     let real = null;
@@ -4117,16 +4419,17 @@
   document.getElementById('focus-close').addEventListener('click', closeFocus);
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && focusTarget) closeFocus(); });
 
-  const focusCfg = { size: 'large', h: 'center', v: 'middle' };
+  const focusCfg = { size: 'large', h: 'center', v: 'middle', inst: 'guitar' };
   try {
     const saved = JSON.parse(localStorage.getItem('focus-panel') || 'null');
     if (saved) {
       if (FOLLOW_SIZES.some(x => x[0] === saved.size)) focusCfg.size = saved.size;
       if (FOLLOW_H.some(x => x[0] === saved.h)) focusCfg.h = saved.h;
       if (FOLLOW_V.some(x => x[0] === saved.v)) focusCfg.v = saved.v;
+      if (saved.inst === 'guitar' || saved.inst === 'piano') focusCfg.inst = saved.inst;
     }
   } catch (e) { /* storage unavailable: keep the defaults */ }
-  const focusChoices = [['focus-size', FOLLOW_SIZES, 'size'], ['focus-h', FOLLOW_H, 'h'], ['focus-v', FOLLOW_V, 'v']];
+  const focusChoices = [['focus-inst', INST_LIST, 'inst'], ['focus-size', FOLLOW_SIZES, 'size'], ['focus-h', FOLLOW_H, 'h'], ['focus-v', FOLLOW_V, 'v']];
   function applyFocusCfg() {
     const el = document.getElementById('focus');
     el.dataset.size = focusCfg.size; el.dataset.h = focusCfg.h; el.dataset.v = focusCfg.v;
@@ -4134,7 +4437,9 @@
       document.querySelectorAll('#' + id + ' .key').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.id === focusCfg[key])));
     });
     document.getElementById('focus-size-btn').textContent = 'Size: ' + FOLLOW_SIZES.find(x => x[0] === focusCfg.size)[1];
+    document.getElementById('focus-inst-btn').textContent = focusCfg.inst === 'piano' ? 'Guitar view' : 'Piano view';
     try { localStorage.setItem('focus-panel', JSON.stringify(focusCfg)); } catch (e) { /* ignore */ }
+    refreshFocus();
   }
   focusChoices.forEach(([id, list, key]) => {
     const wrap = document.getElementById(id);
@@ -4147,6 +4452,10 @@
       b.addEventListener('click', () => { focusCfg[key] = val; applyFocusCfg(); });
       wrap.appendChild(b);
     });
+  });
+  document.getElementById('focus-inst-btn').addEventListener('click', () => {
+    focusCfg.inst = focusCfg.inst === 'piano' ? 'guitar' : 'piano';
+    applyFocusCfg();
   });
   document.getElementById('focus-size-btn').addEventListener('click', () => {
     const i = FOLLOW_SIZES.findIndex(x => x[0] === focusCfg.size);
@@ -4179,6 +4488,30 @@
       playPad(c, ac.currentTime + 0.02, 1.4, null);
     }
   });
+  (function () {
+    const wrap = document.getElementById('chordsound-row'), note = document.getElementById('chordsound-note');
+    const NOTES = { guitar: 'Chords play as plucked guitar strings.', piano: 'Chords play on a synthesized piano, in the voicing the Follow panel shows in Piano view. Notes light up on the piano as they play. It is an imitation of a piano, not a recording.' };
+    const draw = () => {
+      wrap.querySelectorAll('.key').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.id === chordSound.inst)));
+      note.textContent = NOTES[chordSound.inst];
+    };
+    [['guitar', 'Guitar'], ['piano', 'Piano']].forEach(([id, label]) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'key'; b.dataset.id = id; b.textContent = label;
+      b.addEventListener('click', () => {
+        chordSound.inst = id;
+        try { localStorage.setItem('chord-sound', id); } catch (e) { /* ignore */ }
+        draw();
+        if (soundOn && ensureAudio()) {   // a short preview so the change can be heard
+          stopAll();
+          const c = chords.find((x, i) => active[i]) || chords[0];
+          playChord(c, null, ac.currentTime + 0.02, zoom.anchor);
+        }
+      });
+      wrap.appendChild(b);
+    });
+    draw();
+  })();
   ['guitar', 'pad', 'drums', 'metro'].forEach(k => {
     const el = document.getElementById('mix-' + k);
     const val = document.getElementById('mix-' + k + '-val');
