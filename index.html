@@ -246,6 +246,24 @@
   }
   .tag .dot { width: 14px; height: 14px; border-radius: 50%; flex: none; }
   .empty { font-size: 14px; color: var(--muted); }
+  .song-q { display: block; width: 100%; box-sizing: border-box; margin-top: 8px; padding: 10px 12px; font-size: 16px;
+    border: 1.5px solid #d9ceb8; border-radius: 10px; background: #fff; color: var(--ink); font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .save-row { display: flex; gap: 8px; align-items: center; margin-top: 12px; }
+  .save-row .song-q { margin-top: 0; flex: 1; min-width: 0; }
+  .saved-box { margin-top: 10px; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 14px; }
+  .saved-box summary { cursor: pointer; padding: 6px 0; }
+  .saved-item { display: flex; gap: 8px; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e6dcc7; }
+  .saved-item .si-t { font-weight: 600; display: block; }
+  .saved-item .si-m { color: var(--muted); font-size: 13px; display: block; overflow-wrap: anywhere; }
+  .saved-item .si-btns { display: flex; gap: 6px; flex: none; }
+  #saved-io { width: 100%; box-sizing: border-box; margin-top: 10px; font-size: 16px; font-family: ui-monospace, monospace; border: 1.5px solid #d9ceb8; border-radius: 10px; padding: 8px; background: #fff; color: var(--ink); }
+  #song-results { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+  #song-results:empty { display: none; }
+  .song-row { text-align: left; padding: 8px 12px; background: #fff; border: 1.5px solid #d9ceb8; border-radius: 12px; font-size: 14px;
+    color: var(--ink); cursor: pointer; font-family: inherit; display: block; width: 100%; }
+  .song-row[aria-selected="true"] { border-color: #2b2a27; background: #f6efe0; }
+  .song-row .sr-t { font-weight: 600; }
+  .song-row .sr-m { display: block; color: var(--muted); font-size: 13px; margin-top: 2px; }
   .chip[aria-pressed="false"] { opacity: 0.45; }
   .chip[aria-pressed="false"] .dot { background: #ccc !important; }
   .hint {
@@ -523,6 +541,10 @@
     -->
 
     <h3 class="ctl-group" id="progression-heading">Progression builder</h3>
+    <p class="ctl-label">Find a song or a saved progression</p>
+    <input id="song-q" class="song-q" type="search" placeholder="Song, artist or saved title, or chords like G D Em C" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" role="combobox" aria-expanded="false" aria-controls="song-results" aria-label="Search for a song">
+    <div id="song-results" role="listbox" aria-label="Matching songs"></div>
+    <p class="hint" id="song-note" aria-live="polite"></p>
     <p class="ctl-label">Add chords one at a time</p>
     <div class="chips" id="seq-pick" role="group" aria-label="Add a chord to the progression"></div>
     <p class="ctl-label">Common progressions (each tap adds to the end)</p>
@@ -534,6 +556,20 @@
       <p class="ctl-label" id="seq-edit-label"></p>
       <div class="keys" id="seq-edit-opts" role="group" aria-label="Change this step"></div>
     </div>
+    <div class="save-row" id="save-row">
+      <input id="save-title" class="song-q" type="text" maxlength="60" placeholder="Title to save this progression" autocomplete="off" aria-label="Title for saving this progression">
+      <button type="button" class="key" id="save-btn">Save</button>
+    </div>
+    <p class="hint" id="save-note" aria-live="polite"></p>
+    <details class="saved-box" id="saved-box">
+      <summary id="saved-sum">Saved progressions (0)</summary>
+      <div id="saved-list"></div>
+      <div class="keys">
+        <button type="button" class="key" id="saved-export">Export</button>
+        <button type="button" class="key" id="saved-import">Import</button>
+      </div>
+      <textarea id="saved-io" rows="4" spellcheck="false" aria-label="Saved progressions as text" placeholder="Export shows your saved progressions here as text to copy. To restore or move them, paste that text here and tap Import."></textarea>
+    </details>
     <p class="hint">Only chords switched on above appear here. Tap chords one at a time, or tap common progressions to stack them into a song, such as a verse then a chorus. Adding a progression switches on any chord it needs. Tap a step in your song to change that chord to sus2, sus4, a 7th or a 9th (or back to plain), or to remove it. Sevenths and ninths are outlined as four-string shapes. The individual fretboards then show every step in order, and Play progression plays them. Undo steps back, Repeat all doubles the song, and Clear returns to the normal order.</p>
 
 
@@ -1315,7 +1351,10 @@
   let progSeq = [];
   const SEQ_MAX = 48;
   const progUndo = [];          // earlier versions of progSeq, for Undo
-  function snapProg() { progUndo.push(progSeq.map(st => ({ ...st }))); if (progUndo.length > 60) progUndo.shift(); }
+  function snapProg(withKey) {
+    const snap = progSeq.map(st => ({ ...st }));
+    if (withKey) { snap.root = currentRoot; snap.mode = currentMode; }   // a song load can change the key, so Undo puts that back too
+    progUndo.push(snap); if (progUndo.length > 60) progUndo.shift(); }
   let selStep = null;           // index in progSeq of the step open in the editor, or null
 
   // Spell a note a given number of letters above the root, so sus and added tones are named correctly
@@ -1501,7 +1540,9 @@
       undo.className = 'key';
       undo.textContent = 'Undo';
       undo.addEventListener('click', () => {
-        progSeq = progUndo.pop();
+        const prev = progUndo.pop();
+        if (prev.root !== undefined && (prev.root !== currentRoot || prev.mode !== currentMode)) setScale(prev.root, prev.mode);
+        progSeq = prev;
         selStep = null;
         drawSeq();
         renderAll();
@@ -1586,6 +1627,382 @@
     drawSeq();
     renderAll();
   }
+
+
+  // ---- Song search: a small built-in list of popular songs, written as the chord names players use ----
+  // Each song gives the key and mode the chords sit in (as shapes, so a capo is noted but not applied),
+  // and its sections. chk marks songs whose chords were compared with a published chord lesson;
+  // the others are from memory. Real recordings often differ, so this is a starting point to check by ear.
+  const SONGS = [
+    { t: 'Let It Be', a: 'The Beatles', key: 'C', mode: 'major', chk: 1, sec: [['Verse', 'C G Am F'], ['Chorus', 'Am G F C'], ['Turnaround', 'F C Dm C']] },
+    { t: 'Hey Jude', a: 'The Beatles', key: 'F', mode: 'major', chk: 1, sec: [['Verse', 'F C C7 F Bb F C F']], note: 'The C7 is often played C7sus4 then C7.' },
+    { t: "Don't Stop Believin'", a: 'Journey', key: 'E', mode: 'major', chk: 1, sec: [['Verse', 'E B C#m A E B G#m A'], ['Chorus', 'A B E']] },
+    { t: 'Wonderwall', a: 'Oasis', key: 'E', mode: 'minor', capo: 2, chk: 1, sec: [['Verse', 'Em7 G Dsus4 A7sus4'], ['Pre-chorus', 'Cadd9 D Em7'], ['Chorus', 'Cadd9 Em7 G Em7']] },
+    { t: 'Hotel California', a: 'Eagles', key: 'B', mode: 'minor', chk: 1, sec: [['Verse', 'Bm F# A E G D Em F#'], ['Chorus', 'G D F#7 Bm G D Em F#']] },
+    { t: 'Creep', a: 'Radiohead', key: 'G', mode: 'major', chk: 1, sec: [['Verse', 'G B C Cm']], note: 'Each chord lasts two bars.' },
+    { t: 'Sweet Home Alabama', a: 'Lynyrd Skynyrd', key: 'D', mode: 'mixolydian', chk: 1, sec: [['Riff and verse', 'D C G']] },
+    { t: 'Zombie', a: 'The Cranberries', key: 'E', mode: 'minor', chk: 1, sec: [['Verse and chorus', 'Em C G D/F#']] },
+    { t: 'Take Me Home, Country Roads', a: 'John Denver', key: 'A', mode: 'major', chk: 1, sec: [['Verse', 'A F#m E D A'], ['Chorus', 'A E F#m D A E D A']] },
+    { t: 'Hallelujah', a: 'Leonard Cohen', key: 'C', mode: 'major', chk: 1, sec: [['Verse', 'C Am C Am F G C G'], ['Bridge', 'C F G Am F G E7 Am'], ['Chorus', 'F Am F C G C G']] },
+    { t: 'Thunder Road', a: 'Bruce Springsteen', key: 'D', mode: 'major', capo: 3, chk: 1, sec: [['Verse', 'D G D F#m G A D G D A D G D'], ['Chorus', 'D Bm D G D F#m G A D'], ['Bridge', 'G A D Bm G A G A F#m Bm G A']] },
+    { t: 'Hungry Heart', a: 'Bruce Springsteen', key: 'C', mode: 'major', capo: 1, chk: 1, sec: [['Verse and chorus', 'C Am Dm G7 C']], note: 'Lessons give the last chord as G7 or G7sus4.' },
+    { t: 'Dancing in the Dark', a: 'Bruce Springsteen', key: 'B', mode: 'major', chk: 1, sec: [['Verse', 'B G#m'], ['Bridge', 'G#m B E F#']], note: 'Only the verse and bridge were checked. The chorus is not included.' },
+    { t: 'Glory Days', a: 'Bruce Springsteen', key: 'A', mode: 'major', chk: 1, sec: [['Chorus', 'A D/F#']], note: 'Only the chorus was checked. The verse is not included.' },
+    { t: 'Born to Run', a: 'Bruce Springsteen', key: 'E', mode: 'major', chk: 1, sec: [['Verse', 'B E A'], ['Chorus', 'E A B7sus4']] },
+    { t: 'Mr. Jones', a: 'Counting Crows', key: 'C', mode: 'major', chk: 1, sec: [['Verse', 'Am F Dm G'], ['Chorus', 'C F G G']] },
+    { t: 'A Long December', a: 'Counting Crows', key: 'G', mode: 'major', capo: 5, chk: 1, sec: [['Verse', 'C G D Am C'], ['Chorus', 'G C Am C G C Am']], note: 'The recording is in F, hence the capo on fret 5.' },
+    { t: 'Accidentally in Love', a: 'Counting Crows', key: 'G', mode: 'major', chk: 1, sec: [['Verse', 'G C'], ['Chorus', 'G Am C D']] },
+    { t: 'Round Here', a: 'Counting Crows', key: 'G', mode: 'major', chk: 1, sec: [['Verse', 'Cadd9 D Em7 G'], ['Chorus', 'C D Em G']] },
+    { t: 'Stand By Me', a: 'Ben E. King', key: 'A', mode: 'major', sec: [['Verse', 'A F#m D E']] },
+    { t: 'No Woman, No Cry', a: 'Bob Marley', key: 'C', mode: 'major', sec: [['Verse', 'C G Am F']] },
+    { t: 'Someone Like You', a: 'Adele', key: 'A', mode: 'major', sec: [['Verse', 'A E F#m D']] },
+    { t: "Knockin' on Heaven's Door", a: 'Bob Dylan', key: 'G', mode: 'major', sec: [['Verse', 'G D Am'], ['Chorus', 'G D C']] },
+    { t: 'Riptide', a: 'Vance Joy', key: 'A', mode: 'minor', capo: 1, sec: [['Verse', 'Am G C']] },
+    { t: 'With or Without You', a: 'U2', key: 'D', mode: 'major', sec: [['Verse', 'D A Bm G']] },
+    { t: 'Wagon Wheel', a: 'Old Crow Medicine Show', key: 'G', mode: 'major', sec: [['Verse', 'G D Em C']] },
+    { t: 'Perfect', a: 'Ed Sheeran', key: 'G', mode: 'major', sec: [['Verse', 'G Em C D']] },
+    { t: "Livin' on a Prayer", a: 'Bon Jovi', key: 'E', mode: 'minor', sec: [['Verse', 'Em C D']] },
+    { t: 'Brown Eyed Girl', a: 'Van Morrison', key: 'G', mode: 'major', sec: [['Verse', 'G C G D']] },
+    { t: 'Bad Moon Rising', a: 'Creedence Clearwater Revival', key: 'D', mode: 'major', sec: [['Verse', 'D A G D']] },
+    { t: 'Twist and Shout', a: 'The Isley Brothers', key: 'D', mode: 'major', sec: [['Verse', 'D G A']] },
+    { t: 'Imagine', a: 'John Lennon', key: 'C', mode: 'major', sec: [['Verse', 'C Cmaj7 F']] },
+    { t: 'All Along the Watchtower', a: 'Bob Dylan', key: 'A', mode: 'minor', sec: [['Verse', 'Am G F G']] },
+    { t: 'House of the Rising Sun', a: 'The Animals', key: 'A', mode: 'minor', sec: [['Verse', 'Am C D F Am E Am E']] },
+  ];
+
+  // Read a chord name such as F#m7, Dsus4, Cadd9, A7sus4 or D/F#. Returns its root and the intervals it needs.
+  const CHORD_KINDS = {
+    '': [0, 4, 7], maj: [0, 4, 7], M: [0, 4, 7], m: [0, 3, 7], min: [0, 3, 7], '-': [0, 3, 7],
+    sus2: [0, 2, 7], sus4: [0, 5, 7], sus: [0, 5, 7],
+    '7': [0, 4, 7, 10], maj7: [0, 4, 7, 11], M7: [0, 4, 7, 11], m7: [0, 3, 7, 10], min7: [0, 3, 7, 10],
+    '9': [0, 2, 4, 7, 10], maj9: [0, 2, 4, 7, 11], m9: [0, 2, 3, 7, 10],
+    dim: [0, 3, 6], aug: [0, 4, 8], m7b5: [0, 3, 6, 10],
+  };
+  function parseChordName(raw) {
+    const m = /^([A-G])([#b]?)(.*)$/.exec(String(raw).trim());
+    if (!m) return null;
+    const pc = (LETTER_PC[m[1]] + (m[2] === '#' ? 1 : m[2] === 'b' ? 11 : 0)) % 12;
+    let q = m[3].replace(/[()]/g, ''), simp = null;
+    const sl = q.indexOf('/');
+    if (sl >= 0) { q = q.slice(0, sl); simp = 'bass note dropped'; }
+    let iv = CHORD_KINDS[q];
+    if (!iv) {
+      if (q === '7sus4' || q === '7sus') { iv = CHORD_KINDS.sus4; simp = '7th dropped'; }
+      else if (/^(add9|add2|6|2|5)$/.test(q)) { iv = CHORD_KINDS['']; simp = 'added note dropped'; }
+      else if (/^m(add9|6|11)$/.test(q)) { iv = CHORD_KINDS.m; simp = 'added note dropped'; }
+      else return null;
+    }
+    return { src: String(raw).trim(), pc, iv, simp };
+  }
+
+  // Fit a parsed chord onto the current key: an exact match if the key has it, otherwise the nearest
+  // chord of the key, with the reason, so nothing is silently wrong.
+  function resolveChord(pc0) {
+    const c0 = pc0;
+    const has = (rel, want) => rel.length === want.length && want.every(v => rel.includes(v));
+    const relOf = (deg, mod) => {
+      const root = chords[deg].notes[0].pc;
+      if (!mod) {
+        const sc = scaleNotes;
+        return [0, (sc[(deg + 2) % 7].pc - root + 12) % 12, (sc[(deg + 4) % 7].pc - root + 12) % 12];
+      }
+      const v = chordFor(deg, mod);
+      return v ? v.pcs.map(x => (x - root + 12) % 12).sort((a, b) => a - b) : null;
+    };
+    const find = (deg, iv) => {
+      const want = iv.slice().sort((a, b) => a - b);
+      for (const mod of [null, ...modsFor(deg)]) {
+        const rel = relOf(deg, mod);
+        if (rel && has(rel.slice().sort((a, b) => a - b), want)) return { deg, mod };
+      }
+      return null;
+    };
+    let deg = chords.findIndex(c => c.notes[0].pc === c0.pc);
+    let offKey = false;
+    if (deg < 0) {
+      offKey = true;
+      let best = 99;
+      chords.forEach((c, i) => {
+        const d = Math.min((c.notes[0].pc - c0.pc + 12) % 12, (c0.pc - c.notes[0].pc + 12) % 12);
+        if (d < best) { best = d; deg = i; }
+      });
+    }
+    let step = offKey ? null : find(deg, c0.iv);
+    let note = null;
+    if (!step) {
+      // Drop 7ths and 9ths, then try the plain triad of that root
+      const tri = c0.iv.length > 3 ? c0.iv.filter(v => v !== 2 && v !== 10 && v !== 11) : c0.iv;
+      if (!offKey) step = find(deg, tri);
+      if (step) note = { kind: 'simplified', why: 'extension dropped' };
+    }
+    if (!step) {
+      step = { deg, mod: null };
+      note = { kind: 'approx' };
+    }
+    return { step, note };
+  }
+
+  function resolveChordList(text) {
+    const steps = [], simplified = [], approx = [];
+    for (const tok of text.split(/[\s,|]+/).filter(Boolean)) {
+      const p = parseChordName(tok);
+      if (!p) return { error: tok };
+      const r = resolveChord(p);
+      steps.push(r.step);
+      const used = stepChord(r.step).name;
+      if (r.note && r.note.kind === 'approx') approx.push(`${p.src} → ${used}`);
+      else if (p.simp || (r.note && r.note.kind === 'simplified')) simplified.push(`${p.src} → ${used}`);
+    }
+    return { steps, simplified, approx };
+  }
+
+  const uniq = a => [...new Set(a)];
+  function finishLoad(steps) {
+    if (steps.length > SEQ_MAX) steps = steps.slice(0, SEQ_MAX);
+    progSeq = steps.map(st => ({ deg: st.deg, mod: st.mod || null }));
+    selStep = null;
+    const switched = [];
+    steps.forEach(st => { if (!active[st.deg]) { active[st.deg] = true; switched.push(chords[st.deg].name); } });
+    drawChordChips(); drawSeq(); renderAll();
+    const edit = document.getElementById('seq-edit'); if (edit) edit.hidden = true;
+    return switched;
+  }
+
+  function loadSong(song) {
+    const rootPc = parseChordName(song.key).pc;
+    snapProg(true);
+    if (currentRoot !== rootPc || currentMode !== song.mode) setScale(rootPc, song.mode);
+    const simplified = [], approx = [], steps = [];
+    for (const [, text] of song.sec) {
+      const r = resolveChordList(text);
+      r.steps.forEach(st => steps.push(st));
+      simplified.push(...r.simplified); approx.push(...r.approx);
+    }
+    finishLoad(steps);
+    const parts = [`Loaded ${song.t} in ${currentScale}: ${song.sec.map(s => s[0]).join(', ')} (${progSeq.length} steps).`];
+    if (song.capo) parts.push(`These are the chord shapes; with a capo on fret ${song.capo} they sound ${song.capo} semitone${song.capo > 1 ? 's' : ''} higher.`);
+    if (song.note) parts.push(song.note);
+    if (simplified.length) parts.push(`Simplified: ${uniq(simplified).join(', ')}.`);
+    if (approx.length) parts.push(`Not in this key, so the closest key chord was used: ${uniq(approx).join(', ')}.`);
+    parts.push(song.chk ? 'Compared with a published chord lesson, but recordings vary, so check by ear.' : 'Written from memory and not checked against a source. Check by ear.');
+    document.getElementById('song-note').textContent = parts.join(' ');
+  }
+
+  function loadChordText(text) {
+    const r = resolveChordList(text);
+    if (r.error) { document.getElementById('song-note').textContent = `"${r.error}" is not a chord name I can read.`; return; }
+    snapProg();
+    finishLoad(r.steps);
+    const parts = [`Filled in ${progSeq.length} chords in ${currentScale} (the key was left as it is).`];
+    if (r.simplified.length) parts.push(`Simplified: ${uniq(r.simplified).join(', ')}.`);
+    if (r.approx.length) parts.push(`Not in this key, so the closest key chord was used: ${uniq(r.approx).join(', ')}.`);
+    document.getElementById('song-note').textContent = parts.join(' ');
+  }
+
+  const normText = s => String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9# ]+/g, ' ').replace(/\s+/g, ' ').trim();
+  function searchSongs(q) {
+    const words = normText(q).split(' ').filter(Boolean);
+    if (!words.length) return [];
+    return SONGS.map(s => {
+      const title = normText(s.t), hay = title + ' ' + normText(s.a);
+      if (!words.every(w => hay.split(' ').some(h => h.startsWith(w)) || hay.includes(' ' + w) || hay.startsWith(w))) return null;
+      return { s, rank: title.startsWith(words[0]) ? 0 : title.includes(words[0]) ? 1 : 2 };
+    }).filter(Boolean).sort((a, b) => a.rank - b.rank).slice(0, 8).map(x => x.s);
+  }
+  function searchSaved(q) {
+    const words = normText(q).split(' ').filter(Boolean);
+    if (!words.length) return [];
+    return savedList.filter(r => { const hay = normText(r.title); return words.every(w => hay.includes(w)); }).slice(0, 8);
+  }
+  function looksLikeChords(q) {
+    const toks = q.split(/[\s,|]+/).filter(Boolean);
+    return toks.length >= 2 && toks.every(t => parseChordName(t));
+  }
+
+
+  // ---- Saved progressions: the user's own titled progressions, kept in this browser (localStorage) ----
+  // Stored as key, mode and steps (degree plus any sus/7/9), so a saved song is the same in any tuning of the page.
+  const SAVE_KEY = 'triad-fretboards-saved-v1', SAVE_MAX = 100;
+  let savedList = [], saveWorks = true;
+  function readSaved() {
+    try {
+      const raw = localStorage.getItem(SAVE_KEY);
+      const arr = raw ? JSON.parse(raw) : [];
+      savedList = Array.isArray(arr) ? arr.filter(validSaved) : [];
+    } catch (e) { savedList = []; saveWorks = false; }
+  }
+  function writeSaved() {
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify(savedList)); saveWorks = true; return true; }
+    catch (e) { saveWorks = false; return false; }
+  }
+  function validSaved(r) {
+    return r && typeof r.title === 'string' && r.title.trim() && Number.isInteger(r.root) && r.root >= 0 && r.root < 12 &&
+      MODES.some(m => m.id === r.mode) && Array.isArray(r.steps) && r.steps.length > 0 && r.steps.length <= SEQ_MAX &&
+      r.steps.every(st => st && Number.isInteger(st.deg) && st.deg >= 0 && st.deg < 7 && (st.mod === null || MOD_ORDER.includes(st.mod)));
+  }
+  const sameTitle = (a, b) => a.trim().toLowerCase() === b.trim().toLowerCase();
+  function saveCurrent() {
+    const inp = document.getElementById('save-title'), note = document.getElementById('save-note');
+    const title = inp.value.trim().replace(/\s+/g, ' ');
+    if (!progSeq.length) { note.textContent = 'Build a progression first, then give it a title.'; return; }
+    if (!title) { note.textContent = 'Type a title first.'; inp.focus(); return; }
+    const rec = { title, root: currentRoot, mode: currentMode, steps: progSeq.map(st => ({ deg: st.deg, mod: st.mod || null })),
+      names: progSeq.map(st => stepChord(st).name).join(' '), saved: Date.now() };
+    const at = savedList.findIndex(r => sameTitle(r.title, title));
+    if (at >= 0) {
+      if (!window.confirm(`"${savedList[at].title}" is already saved. Replace it?`)) { note.textContent = 'Not saved. Pick a different title to keep both.'; return; }
+      savedList[at] = rec;
+    } else {
+      if (savedList.length >= SAVE_MAX) { note.textContent = `You have ${SAVE_MAX} saved progressions, the limit. Delete one first.`; return; }
+      savedList.unshift(rec);
+    }
+    const ok = writeSaved();
+    note.textContent = ok ? `Saved "${title}" (${rec.steps.length} steps in ${currentScale}).`
+      : `Saved for now, but this browser would not store it, so it will be gone when you close the page. Use Export to keep a copy.`;
+    inp.value = '';
+    drawSaved();
+  }
+  function loadSaved(rec) {
+    snapProg(true);
+    if (currentRoot !== rec.root || currentMode !== rec.mode) setScale(rec.root, rec.mode);
+    finishLoad(rec.steps);
+    document.getElementById('song-note').textContent = `Loaded your saved "${rec.title}" in ${currentScale} (${progSeq.length} steps).`;
+  }
+  function deleteSaved(rec) {
+    if (!window.confirm(`Delete "${rec.title}"?`)) return;
+    savedList = savedList.filter(r => r !== rec);
+    writeSaved(); drawSaved();
+  }
+  function drawSaved() {
+    const wrap = document.getElementById('saved-list');
+    document.getElementById('saved-sum').textContent = `Saved progressions (${savedList.length})`;
+    wrap.innerHTML = '';
+    if (!savedList.length) {
+      const e = document.createElement('p'); e.className = 'empty';
+      e.textContent = saveWorks ? 'Nothing saved yet. Build a progression, type a title above and tap Save.' : 'This browser is not keeping saved data, so saves last only until the page closes. Use Export to keep a copy.';
+      wrap.appendChild(e);
+    }
+    savedList.forEach(rec => {
+      const row = document.createElement('div'); row.className = 'saved-item';
+      const txt = document.createElement('span');
+      const t = document.createElement('span'); t.className = 'si-t'; t.textContent = rec.title;
+      const m = document.createElement('span'); m.className = 'si-m';
+      m.textContent = `${keyLabel(rec)} · ${rec.names || ''}`;
+      txt.append(t, m);
+      const btns = document.createElement('span'); btns.className = 'si-btns';
+      const l = document.createElement('button'); l.type = 'button'; l.className = 'key'; l.textContent = 'Load';
+      l.addEventListener('click', () => loadSaved(rec));
+      const d = document.createElement('button'); d.type = 'button'; d.className = 'key'; d.textContent = 'Delete';
+      d.setAttribute('aria-label', `Delete ${rec.title}`);
+      d.addEventListener('click', () => deleteSaved(rec));
+      btns.append(l, d); row.append(txt, btns); wrap.appendChild(row);
+    });
+  }
+  function keyLabel(rec) {
+    const mode = MODES.find(m => m.id === rec.mode);
+    return `${spellScale(rec.root, mode.steps).name} ${mode.word}`;
+  }
+  function exportSaved() {
+    const box = document.getElementById('saved-io'), note = document.getElementById('save-note');
+    box.value = JSON.stringify({ app: 'triad-fretboards', version: 1, saved: savedList }, null, 1);
+    box.focus(); box.select();
+    let copied = false;
+    try { copied = !!(navigator.clipboard && navigator.clipboard.writeText); if (copied) navigator.clipboard.writeText(box.value).catch(() => {}); } catch (e) {}
+    note.textContent = `${savedList.length} saved progression${savedList.length === 1 ? '' : 's'} are in the box below` + (copied ? ' (and copied). ' : '. Select all and copy. ') + 'Paste them into Notes or a file to keep a backup.';
+  }
+  function importSaved() {
+    const box = document.getElementById('saved-io'), note = document.getElementById('save-note');
+    let data;
+    try { data = JSON.parse(box.value); } catch (e) { note.textContent = 'That text is not an export from this page, so nothing was imported.'; return; }
+    const arr = Array.isArray(data) ? data : (data && Array.isArray(data.saved) ? data.saved : null);
+    if (!arr) { note.textContent = 'That text is not an export from this page, so nothing was imported.'; return; }
+    let added = 0, replaced = 0, skipped = 0;
+    arr.forEach(r => {
+      if (!validSaved(r)) { skipped++; return; }
+      const rec = { title: r.title.trim().replace(/\s+/g, ' ').slice(0, 60), root: r.root, mode: r.mode,
+        steps: r.steps.map(st => ({ deg: st.deg, mod: st.mod || null })), names: typeof r.names === 'string' ? r.names.slice(0, 400) : '', saved: Number(r.saved) || Date.now() };
+      const at = savedList.findIndex(x => sameTitle(x.title, rec.title));
+      if (at >= 0) { savedList[at] = rec; replaced++; }
+      else if (savedList.length < SAVE_MAX) { savedList.push(rec); added++; } else skipped++;
+    });
+    const ok = writeSaved();
+    note.textContent = `Imported ${added} new, replaced ${replaced} with the same title` + (skipped ? `, skipped ${skipped} that could not be read or did not fit` : '') + '.' + (ok ? '' : ' This browser would not store them, so they last only until the page closes.');
+    drawSaved();
+  }
+  readSaved();
+  drawSaved();
+  document.getElementById('save-btn').addEventListener('click', saveCurrent);
+  document.getElementById('save-title').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); saveCurrent(); } });
+  document.getElementById('saved-export').addEventListener('click', exportSaved);
+  document.getElementById('saved-import').addEventListener('click', importSaved);
+
+  let songHits = [], songSel = -1;
+  function drawSongResults() {
+    const wrap = document.getElementById('song-results');
+    const inp = document.getElementById('song-q');
+    const q = inp.value;
+    wrap.innerHTML = '';
+    songHits = [];
+    if (q.trim()) {
+      if (looksLikeChords(q)) songHits.push({ chordsText: q.trim() });
+      searchSaved(q).forEach(r => songHits.push({ saved: r }));
+      searchSongs(q).forEach(s => songHits.push({ song: s }));
+    } else if (document.activeElement === inp && savedList.length) {
+      savedList.slice(0, 8).forEach(r => songHits.push({ saved: r }));   // tapping the empty box lists your saved ones
+    }
+    songHits.forEach((h, i) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'song-row'; b.setAttribute('role', 'option');
+      b.setAttribute('aria-selected', String(i === songSel)); b.dataset.i = String(i);
+      const t = document.createElement('span'); t.className = 'sr-t';
+      const m = document.createElement('span'); m.className = 'sr-m';
+      if (h.saved) {
+        t.textContent = h.saved.title;
+        m.textContent = `Yours \u00b7 ${keyLabel(h.saved)} \u00b7 ${h.saved.names || ''}`;
+      } else if (h.song) {
+        const s = h.song;
+        t.textContent = `${s.t} – ${s.a}`;
+        const kn = MODES.find(x => x.id === s.mode).label;
+        m.textContent = `${s.key} ${kn.toLowerCase()}${s.capo ? `, capo ${s.capo}` : ''} · ${s.sec[0][1]}${s.chk ? '' : ' · from memory'}`;
+      } else {
+        t.textContent = `Use these chords: ${h.chordsText}`;
+        m.textContent = `Fills the progression in the current key (${currentScale})`;
+      }
+      b.append(t, m);
+      b.addEventListener('click', () => pickSongHit(i));
+      wrap.appendChild(b);
+    });
+    inp.setAttribute('aria-expanded', String(songHits.length > 0));
+    if (q.trim() && !songHits.length) {
+      document.getElementById('song-note').textContent = `No match for "${q.trim()}" in the ${SONGS.length} built-in songs. Type its chords (like G D Em C) to fill them in, or use the chord buttons and common progressions below.`;
+    }
+  }
+  function pickSongHit(i) {
+    const h = songHits[i];
+    if (!h) return;
+    if (h.saved) loadSaved(h.saved); else if (h.song) loadSong(h.song); else loadChordText(h.chordsText);
+    document.getElementById('song-q').value = '';
+    songSel = -1; songHits = [];
+    document.getElementById('song-results').innerHTML = '';
+    document.getElementById('song-q').setAttribute('aria-expanded', 'false');
+  }
+  (function () {
+    const inp = document.getElementById('song-q');
+    inp.addEventListener('focus', () => { if (!inp.value.trim()) drawSongResults(); });
+    inp.addEventListener('input', () => { songSel = -1; document.getElementById('song-note').textContent = ''; drawSongResults(); });
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        if (!songHits.length) return;
+        e.preventDefault();
+        songSel = (songSel + (e.key === 'ArrowDown' ? 1 : -1) + songHits.length) % songHits.length;
+        document.querySelectorAll('#song-results .song-row').forEach((b, i) => b.setAttribute('aria-selected', String(i === songSel)));
+      } else if (e.key === 'Enter') {
+        if (songHits.length) { e.preventDefault(); pickSongHit(songSel >= 0 ? songSel : 0); }
+      } else if (e.key === 'Escape') {
+        inp.value = ''; songSel = -1; drawSongResults(); songHits = []; document.getElementById('song-results').innerHTML = '';
+      }
+    });
+  })();
 
   function drawPresets() {
     const wrap = document.getElementById('seq-presets');
