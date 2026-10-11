@@ -149,6 +149,13 @@
   details.quiz > summary .chev { font-size: 14px; color: var(--muted); }
   details.quiz[open] > summary .chev { transform: rotate(90deg); }
   .quiz-body { margin-top: 12px; }
+  .quiz-section { position: relative; }
+  .focus-btn.quiz-focus { top: 20px; right: 56px; }
+  .focus-body .quiz-body { margin-top: 0; }
+  button.tag.qa { font-size: 15px; padding: 7px 14px; }
+  button.tag.qa:disabled { cursor: default; opacity: 0.75; }
+  button.tag.qa.right { border-color: #2e7d32; background: #eef7ee; opacity: 1; }
+  button.tag.qa.wrong { border-color: #b3261e; background: #fbeeed; opacity: 1; }
   .quiz-q { font-size: 18px; margin: 12px 0 8px; font-family: Georgia, serif; }
   .quiz-score { font-size: 14px; color: var(--muted); margin: 0 0 4px; }
   .qcell { cursor: pointer; }
@@ -722,11 +729,13 @@
     <div class="chips" id="scale-chips"></div>
   </section>
 
-  <section class="board">
+  <section class="board quiz-section">
+    <button type="button" class="focus-btn quiz-focus" data-focus="quiz" aria-pressed="false" aria-label="Focus view: enlarge the quiz">Focus</button>
     <details class="quiz" id="quiz">
       <summary><h2>Quiz yourself</h2><span class="chev" aria-hidden="true">&#9654;</span></summary>
       <div class="quiz-body">
         <div class="keys" id="quiz-type" role="group" aria-label="Quiz type"></div>
+        <div class="keys" id="quiz-shapes" role="group" aria-label="Which chord shapes to show" hidden></div>
         <p class="quiz-score" id="quiz-score"></p>
         <p class="quiz-q" id="quiz-q"></p>
         <div id="quiz-board"></div>
@@ -2745,10 +2754,57 @@
     renderAll();
   });
 
-  // ---- Quiz: name a note, or find every one of a note on a string ----
+  // ---- Quiz: name a note, find every one of a note on a string, or name a chord from its triad shape ----
   const QUIZ_STRINGS = ['low E', 'A', 'D', 'G', 'B', 'high E'];
-  const quiz = { type: 'name', right: 0, total: 0, q: null, marks: new Set(), checked: false, answered: false };
+  const quiz = { type: 'name', right: 0, total: 0, q: null, marks: new Set(), checked: false, answered: false, picked: null,
+    shapes: 'all',        // chord quiz: 'all', 'triad' (three strings) or 'full' (open and barre chords)
+    cardNo: 0, sr: {} };   // chord quiz review: cards served so far, and the chords missed that are waiting to come back
   const rnd = n => Math.floor(Math.random() * n);
+
+  // The seven triads of the key, whatever the Triads / 7ths / 9ths setting is (the quiz always asks about triads)
+  function triadChord(deg) {
+    if (stackSize === 3) return chords[deg];
+    const notes = stack(scaleNotes, deg, 3);
+    const iv = notes.map(n => (n.pc - notes[0].pc + 12) % 12);
+    const third = iv[1], fifth = iv[2];
+    const dim = third === 3 && fifth === 6, aug = third === 4 && fifth === 8;
+    let roman = BASE_ROMAN[deg];
+    if (third === 3) roman = roman.toLowerCase();
+    if (dim) roman += '\u00b0';
+    if (aug) roman += '+';
+    return { deg, roman, name: notes[0].name + (QUALITY[iv.join(',')] || ''), notes, pcs: notes.map(n => n.pc), color: DEG_COLORS[deg],
+      type: third === 4 ? 'major' : 'minor', dim, formula: iv.map(v => INTERVAL_LABEL[v] || v).join(' ') };
+  }
+  const quizTriads = () => [0, 1, 2, 3, 4, 5, 6].map(triadChord);
+  // Every shape a chord card can show: three-string triads, and full chords (open and barre forms, four to six strings)
+  const quizShapeCache = new Map();
+  function quizShapes(chord, kind) {
+    const key = kind + '|' + chord.pcs.join(',') + '|' + (chord.dim ? 1 : 0);
+    if (!quizShapeCache.has(key)) {
+      const out = [];
+      if (kind === 'triad') for (let low = 0; low <= 3; low++) triadShapes(chord, low).forEach(sh => out.push(sh));
+      else for (let low = 0; low <= 2; low++) fullShapes(chord, low).forEach(sh => out.push(sh));
+      quizShapeCache.set(key, out);
+    }
+    return quizShapeCache.get(key);
+  }
+  // Review: a chord you miss comes back after two other cards. Answer it right and it comes back once more,
+  // a little later; right twice in a row and it is cleared. Miss it again and it returns sooner.
+  const SR_FIRST = 3, SR_AGAIN = 6, SR_SOON = 2, SR_NEED = 2;
+  const SR_MOVED = 2;   // after the exact shape, the same shape in a new place comes back this many cards later
+  const shapeSig = sh => { const m = Math.min(...sh.frets); return sh.low + ':' + sh.frets.map(f => f - m).join(','); };
+  const shapePos = sh => sh.low + ':' + sh.frets.join(',');
+  const srKey = deg => currentRoot + ':' + currentMode + ':' + deg;
+  const srHere = () => Object.values(quiz.sr).filter(e => e.root === currentRoot && e.mode === currentMode);
+  function quizPlayChord() {
+    const q = quiz.q;
+    if (!q || q.kind !== 'chord' || !(typeof soundOn !== 'undefined' && soundOn && ensureAudio())) return;
+    stopAll();
+    if (chordSound.inst === 'piano') {
+      const pv = pianoVoicing(q.chord, 62);
+      if (pv) pianoHit(pv.notes, ac.currentTime + 0.02, { ring: 2.4 });
+    } else strum(q.sh.low, q.sh.frets, ac.currentTime + 0.02, null);
+  }
 
   function quizPlay(si, f) {
     if (typeof soundOn !== 'undefined' && soundOn && ensureAudio()) playNote(midiOf(si, f), ac.currentTime + 0.02, 0.4);
@@ -2774,7 +2830,22 @@
     for (let f = 1; f <= FRETS; f++) g += `<text x="${xFret(f)}" y="${T + 5 * SS + 36}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" fill="#7a7466">${f}</text>`;
     const nameOf = pc => (scaleNotes.find(n => n.pc === pc) || {}).name || '';
     const tx = (cx, cy, t, fill = '#fff') => `<text x="${cx}" y="${cy + 4.5}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="${fill}" stroke="#2b2a27" stroke-width="2.6" stroke-opacity="0.55" paint-order="stroke">${t}</text>`;
-    if (q.kind === 'name') {
+    if (q.kind === 'chord') {
+      // One triad shape, drawn like the shapes on the chord boards: a rounded outline round three notes.
+      // Until it is answered the notes show "?" and the chord colour stays hidden.
+      const c = q.chord, sh = q.sh, n = sh.frets.length, done = quiz.answered;
+      const xs = sh.frets.map(f => xNote(f));
+      const x0 = Math.min(...xs) - R - 7, x1 = Math.max(...xs) + R + 7;
+      const y0 = yStr(sh.low + n - 1) - R - 7, y1 = yStr(sh.low) + R + 7;
+      const col = done ? c.color : '#8a7d63';
+      g += `<rect x="${x0}" y="${y0}" width="${x1 - x0}" height="${y1 - y0}" rx="16" fill="${col}" fill-opacity="${done ? 0.14 : 0.08}" stroke="${col}" stroke-width="2.5"${done ? '' : ' stroke-dasharray="6 4"'}/>`;
+      const names = dotNames(c);
+      sh.frets.forEach((f, j) => {
+        const pc = (TUNING[sh.low + j] + f) % 12, cx = xNote(f), cy = yStr(sh.low + j);
+        g += `<circle class="qdot" cx="${cx}" cy="${cy}" r="${R}" fill="${done ? c.color : '#b4532a'}" stroke="#2b2a27" stroke-width="${done && pc === c.pcs[0] ? 2.6 : 1}"/>`;
+        g += tx(cx, cy, done ? esc(names[pc] !== undefined ? names[pc] : '') : '?');
+      });
+    } else if (q.kind === 'name') {
       const cx = xNote(q.f), cy = yStr(q.s);
       g += `<circle cx="${cx}" cy="${cy}" r="${R}" fill="${quiz.answered ? '#5a4d3c' : '#b4532a'}" stroke="#fffdf8" stroke-width="1.5"/>`;
       g += tx(cx, cy, quiz.answered ? nameOf(q.pc) : '?');
@@ -2803,7 +2874,12 @@
   function quizDraw() {
     const q = quiz.q;
     if (!q) return;
-    document.getElementById('quiz-score').textContent = quiz.total ? `Score: ${quiz.right} of ${quiz.total}` : '';
+    const due = quiz.type === 'chord' ? srHere() : [];
+    document.getElementById('quiz-score').textContent = (quiz.total ? `Score: ${quiz.right} of ${quiz.total}` : '') +
+      (due.length ? `${quiz.total ? ' \u00b7 ' : ''}To review: ${due.sort((a, b) => a.due - b.due).map(e => triadChord(e.deg).name).join(', ')}` : '');
+    const shapeRow = document.getElementById('quiz-shapes');
+    shapeRow.hidden = quiz.type !== 'chord';
+    shapeRow.querySelectorAll('.key').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.shapes === quiz.shapes)));
     document.getElementById('quiz-board').innerHTML = quizSvg();
     const ans = document.getElementById('quiz-answers');
     const act = document.getElementById('quiz-actions');
@@ -2819,7 +2895,21 @@
       parent.appendChild(b);
       return b;
     };
-    if (q.kind === 'name') {
+    if (q.kind === 'chord') {
+      document.getElementById('quiz-q').textContent = `Which chord is this shape? (The seven triads of ${currentScale}.)` + (q.rev === 'exact' ? ' Review: the exact shape you missed.' : q.rev === 'moved' ? ' Review: the shape you missed, in a new place.' : q.review ? ' Review: you missed this chord earlier.' : '');
+      quizTriads().forEach(c => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'tag qa' + (quiz.answered ? (c.deg === q.deg ? ' right' : c.deg === quiz.picked ? ' wrong' : '') : '');
+        b.dataset.deg = String(c.deg);
+        b.disabled = quiz.answered;
+        b.setAttribute('aria-label', `${c.roman} ${c.name}`);
+        b.innerHTML = `<span class="dot" style="background:${c.color}"></span><span>${esc(c.roman)} ${esc(c.name)}</span>`;
+        b.addEventListener('click', () => quizAnswerChord(c));
+        ans.appendChild(b);
+      });
+      if (quiz.answered) { mkBtn(act, 'Hear it', quizPlayChord); mkBtn(act, 'Next chord', quizNew); }
+    } else if (q.kind === 'name') {
       document.getElementById('quiz-q').textContent = `Which note is this? (Notes of ${currentScale} only.)`;
       scaleNotes.forEach(n => mkBtn(ans, n.name, () => quizAnswer(n), quiz.answered));
       if (quiz.answered) mkBtn(act, 'Next note', quizNew);
@@ -2853,6 +2943,38 @@
     quizDraw();
   }
 
+  function quizAnswerChord(c) {
+    if (quiz.answered) return;
+    const q = quiz.q;
+    quiz.answered = true;
+    quiz.picked = c.deg;
+    quiz.total++;
+    const ok = c.deg === q.deg;
+    if (ok) quiz.right++;
+    const real = q.chord;
+    const tones = real.notes.map(n => n.name).join(', ');
+    const k = srKey(q.deg), e = quiz.sr[k];
+    let tail = '';
+    if (ok) {
+      if (e) {
+        e.need--;
+        if (e.need <= 0) { delete quiz.sr[k]; tail = ' Review cleared.'; }
+        else if (q.rev === 'exact') { e.stage = 'moved'; e.due = quiz.cardNo + SR_MOVED; tail = ' Next: the same shape in a different place on the neck.'; }
+        else { e.due = quiz.cardNo + (e.stage === 'moved' ? SR_MOVED : SR_AGAIN); tail = ' One more right answer clears it.'; }
+      }
+    } else {
+      // Missed: the very same shape in the very same place comes back first, then the same shape elsewhere
+      quiz.sr[k] = { root: currentRoot, mode: currentMode, deg: q.deg, need: SR_NEED, stage: 'exact', sh: q.sh, kind: q.shKind, due: quiz.cardNo + (e ? SR_SOON : SR_FIRST) };
+      tail = ' This exact shape will come back shortly, then the same shape in other places.';
+    }
+    const tab = tabOf(q.sh);
+    document.getElementById('quiz-feedback').textContent = (ok
+      ? `Correct. That is ${real.roman}, ${real.name} (${tones}).`
+      : `Not quite. That shape is ${real.roman}, ${real.name} (${tones}), not ${c.roman} ${c.name}.`) + ` Frets, low string to high: ${tab}.` + tail;
+    quizPlayChord();
+    quizDraw();
+  }
+
   function quizCheck() {
     const q = quiz.q;
     if (quiz.checked) return;
@@ -2875,8 +2997,43 @@
     quiz.marks = new Set();
     quiz.checked = false;
     quiz.answered = false;
+    quiz.picked = null;
     document.getElementById('quiz-feedback').textContent = '';
-    if (quiz.type === 'name') {
+    if (quiz.type === 'chord') {
+      quiz.cardNo++;
+      const prev = quiz.q && quiz.q.kind === 'chord' ? quiz.q.deg : -1;
+      const kinds = quiz.shapes === 'all' ? ['triad', 'full'] : [quiz.shapes];
+      const makeCard = (deg, review, e) => {
+        const chord = triadChord(deg);
+        let sh = null, shKind = null, rev = null;
+        if (e && e.sh) {
+          if (e.stage === 'moved') {
+            const sig = shapeSig(e.sh), here = shapePos(e.sh);
+            const alts = quizShapes(chord, e.kind).filter(x => shapeSig(x) === sig && shapePos(x) !== here);
+            if (alts.length) { sh = alts[rnd(alts.length)]; shKind = e.kind; rev = 'moved'; }
+          }
+          if (!sh) { sh = e.sh; shKind = e.kind; rev = 'exact'; }   // exact shape and place (also when the shape has no other position)
+        }
+        if (!sh) {
+          const ks = kinds.filter(k => quizShapes(chord, k).length);
+          if (!ks.length) return null;
+          shKind = ks[rnd(ks.length)];                     // triads and full chords are equally likely
+          const pool = quizShapes(chord, shKind);
+          sh = pool[rnd(pool.length)];
+        }
+        return { kind: 'chord', deg, chord, sh, shKind, rev, review: review || srHere().some(x => x.deg === deg) };   // a waiting chord is marked as review even if it turns up early
+      };
+      let card = null;
+      // A missed chord that is due comes first
+      const due = srHere().filter(e => e.due <= quiz.cardNo && e.deg !== prev).sort((x, y) => x.due - y.due)[0];
+      if (due) card = makeCard(due.deg, true, due);
+      for (let tries = 0; tries < 30 && !card; tries++) {
+        const deg = rnd(7);
+        if (deg === prev && tries < 20) continue;
+        card = makeCard(deg, false, srHere().find(x => x.deg === deg));
+      }
+      quiz.q = card;
+    } else if (quiz.type === 'name') {
       let si, f;
       do { si = rnd(6); f = rnd(13); } while (!scaleNotes.some(n => n.pc === (TUNING[si] + f) % 12));
       quiz.q = { kind: 'name', s: si, f, pc: (TUNING[si] + f) % 12 };
@@ -2900,7 +3057,7 @@
   });
 
   const quizTypeWrap = document.getElementById('quiz-type');
-  [['Name the note', 'name'], ['Find the note', 'find']].forEach(([label, value]) => {
+  [['Name the note', 'name'], ['Find the note', 'find'], ['Name the chord', 'chord']].forEach(([label, value]) => {
     const b = document.createElement('button');
     b.type = 'button';
     b.className = 'key';
@@ -2913,6 +3070,18 @@
       quizNew();
     });
     quizTypeWrap.appendChild(b);
+  });
+
+  const quizShapesWrap = document.getElementById('quiz-shapes');
+  [['All shapes', 'all'], ['Triads', 'triad'], ['Full chords', 'full']].forEach(([label, value]) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'key';
+    b.textContent = label;
+    b.dataset.shapes = value;
+    b.setAttribute('aria-pressed', String(value === quiz.shapes));
+    b.addEventListener('click', () => { quiz.shapes = value; quizNew(); });
+    quizShapesWrap.appendChild(b);
   });
 
   // ---- Audio: a plucked-string synth built into the page (no files or libraries needed) ----
@@ -4327,7 +4496,13 @@
     const sec = root.closest('section.board');
     return { sec, wrap: root.querySelector('.fbwrap'), legend: document.getElementById(target + '-chips'), sub: null };
   }
+  // The quiz is not copied into the Focus view: its own panel is moved in, so it stays live, and moved back out afterwards
+  function restoreQuiz() {
+    const qb = document.querySelector('#focus-body .quiz-body');
+    if (qb) document.getElementById('quiz').appendChild(qb);
+  }
   function closeFocus() {
+    restoreQuiz();
     focusTarget = null;
     focusObs.forEach(o => o.disconnect());
     focusObs = [];
@@ -4336,6 +4511,23 @@
   }
   function refreshFocus() {
     if (!focusTarget) return;
+    const instBtn = document.getElementById('focus-inst-btn');
+    if (focusTarget === 'quiz') {
+      const body = document.getElementById('focus-body');
+      focusObs.forEach(o => o.disconnect());
+      focusObs = [];
+      if (!document.querySelector('#focus-body .quiz-body')) {
+        body.textContent = '';
+        body.appendChild(document.querySelector('#quiz .quiz-body'));
+      }
+      document.getElementById('focus-title').textContent = 'Quiz yourself';
+      instBtn.hidden = true;
+      document.getElementById('focus').hidden = false;
+      document.querySelectorAll('.focus-btn').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.focus === focusTarget)));
+      return;
+    }
+    restoreQuiz();
+    instBtn.hidden = false;
     const src = focusSource(focusTarget);
     if (!src || !src.wrap) { closeFocus(); return; }
     const el = document.getElementById('focus');
