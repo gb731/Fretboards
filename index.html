@@ -917,25 +917,30 @@
     return shapes;
   }
 
-  // How many fingers a set of frets needs (frets by string, low to high; 0 is an open string).
-  // A barre across the lowest fretted fret counts as one finger when every string it covers is
-  // fretted at that fret or higher; other notes on neighboring strings at the same fret share a finger.
+  // Can a hand play these frets (by string, low to high; 0 is an open string)? Fingers are given out
+  // from the lowest fret up, so the index takes the lowest fret and the pinky the highest.
+  //  - a barre is the index across the lowest fretted fret, and every string it covers is fretted at that fret or higher
+  //  - above that, neighboring strings at one fret share a finger (a small barre of up to 3 strings by the middle or ring finger)
+  //  - the pinky never bars: it plays one string
+  //  - a fret used on separate strings gets a separate finger for each run, low string to high
+  //  - four fingers at most
+  // Returns the finger count, or 99 when the shape cannot be fingered.
   function fingerCount(frets) {
     const fretted = frets.map((f, i) => ({ f, i })).filter(x => x.f > 0);
     if (!fretted.length) return 0;
     const lowest = Math.min(...fretted.map(x => x.f));
-    const runs = idxs => idxs.reduce((n, v, k) => n + (k === 0 || v !== idxs[k - 1] + 1 ? 1 : 0), 0);
-    let fingers = 0;
-    [...new Set(fretted.map(x => x.f))].forEach(fret => {
+    let finger = 0;
+    for (const fret of [...new Set(fretted.map(x => x.f))].sort((a, b) => a - b)) {
       const idxs = fretted.filter(x => x.f === fret).map(x => x.i).sort((a, b) => a - b);
-      if (fret === lowest) {
-        const barre = frets.slice(idxs[0], idxs[idxs.length - 1] + 1).every(f => f >= fret);
-        fingers += barre ? 1 : runs(idxs);
-      } else {
-        fingers += runs(idxs);
+      if (fret === lowest && frets.slice(idxs[0], idxs[idxs.length - 1] + 1).every(f => f >= fret)) { finger++; continue; }
+      const runs = [];
+      idxs.forEach((v, k) => { if (k === 0 || v !== idxs[k - 1] + 1) runs.push([]); runs[runs.length - 1].push(v); });
+      for (const run of runs) {
+        finger++;
+        if (run.length > 1 && (finger >= 4 || run.length > 3)) return 99;
       }
-    });
-    return fingers;
+    }
+    return finger > 4 ? 99 : finger;
   }
 
   // Full chord shapes: every string from `low` up to the high e carries a chord tone, the lowest
@@ -1258,6 +1263,9 @@
   let focusObs = [];                // observers that copy the playing highlight onto the Focus view
   const openShapeLists = new Set(); // chord keys whose Shapes list is expanded
   const chordKeyOf = c => c.deg + ':' + (c.mod || '');
+  // Picks belong to one fretboard: its place in the progression plus the chord, so the same chord on two boards is picked separately
+  const posKeyOf = (pos, c) => pos + '|' + chordKeyOf(c);
+  const picksFor = (c, pos) => pos == null ? (Object.keys(picks).find(k => k.endsWith('|' + chordKeyOf(c))) ? picks[Object.keys(picks).find(k => k.endsWith('|' + chordKeyOf(c)))] : []) : picksOf(posKeyOf(pos, c));
   const tabOf = sh => { const a = Array(6).fill('x'); sh.frets.forEach((f, j) => { a[sh.low + j] = String(f); }); return a.join(' '); };
   // How many different notes a shape sounds: shapes with every chord tone come before ones that skip the 5th
   const toneCount = sh => new Set(sh.frets.map((f, j) => (TUNING[sh.low + j] + f) % 12)).size;
@@ -1341,11 +1349,11 @@
     document.getElementById('hint-shapes').textContent = t[1] + ' Notes outside the outlines fade, so only the playable shapes stand out. Switch off Fade other notes to see every chord tone.';
   }
 
-  function board(list, bands = [], dimOutside = false, single = false, focus = null) {
+  function board(list, bands = [], dimOutside = false, single = false, focus = null, pos = 0) {
     const extras = {};
     if (single && list.length === 1) {
       extras.rootPcs = new Set([list[0].pcs[0]]);
-      extras.chordKey = chordKeyOf(list[0]);
+      extras.chordKey = posKeyOf(pos, list[0]);
       extras.picks = picksOf(extras.chordKey);
     }
     if (focus) extras.focus = focus;
@@ -2059,10 +2067,10 @@
   // The line that says which shapes are picked (with their fingering), plus a collapsible list of every
   // shape on the board. Shapes nested inside a bigger outline are easy to miss, so the list lets you pick
   // any of them, and more than one.
-  function shapeCaption(c) {
+  function shapeCaption(c, pos) {
     const ctx = boardContext(c);
     const shapes = highlightedShapes(c, ctx.bands, ctx.dim);
-    const key = chordKeyOf(c);
+    const key = posKeyOf(pos, c);
     const keyOf = sh => sh.low + ':' + sh.frets.join(',');
     const picked = shapes.filter(sh => picksOf(key).includes(keyOf(sh)));
     let line = '';
@@ -2106,6 +2114,8 @@
       wrap.innerHTML = '<p class="empty">No chords selected. Turn on a chord above.</p>';
       return;
     }
+    const live = new Set(list.map((c, pos) => posKeyOf(pos, c)));
+    Object.keys(picks).forEach(k => { if (!live.has(k)) delete picks[k]; });   // a board whose chord changed loses its picks
     list.forEach((c, pos) => {
       const prefix = seqMode ? `${pos + 1}. ` : '';
       const sec = document.createElement('section');
@@ -2115,8 +2125,8 @@
         `<button type="button" class="focus-btn" data-focus="single:${pos}" aria-pressed="${focusTarget === 'single:' + pos}" aria-label="Focus view: enlarge the ${c.name} fretboard">Focus</button>` +
         `<h2 class="single-title"><span class="dot" style="background:${c.color}"></span>${prefix}${c.roman}: ${c.name}</h2>` +
         `<p class="chord-sub">${c.notes.map(n => n.name).join(' ')} (${c.formula})</p>` +
-        shapeCaption(c) +
-        board([c], boardContext(c).bands, boardContext(c).dim, true);
+        shapeCaption(c, pos) +
+        board([c], boardContext(c).bands, boardContext(c).dim, true, null, pos);
       wrap.appendChild(sec);
     });
   }
@@ -3303,8 +3313,8 @@
   }
 
   // Choose one highlighted shape, nearest `target` fret (and a little toward the middle strings)
-  function pickVoicing(chord, target, bands, dim) {
-    const pk = picksOf(chordKeyOf(chord));
+  function pickVoicing(chord, target, bands, dim, pos) {
+    const pk = picksFor(chord, pos);
     if (pk.length) { // use the picked shape, or the picked one nearest `target` if several
       let hit = null;
       highlightedShapes(chord, bands, dim).forEach(x => {
@@ -3334,14 +3344,14 @@
     statusTimer = setTimeout(() => { el.textContent = ''; }, 6000);
   }
 
-  function playChord(chord, card, startAt, target, dest) {
+  function playChord(chord, card, startAt, target, dest, pos) {
     if (chordSound.inst === 'piano') {
       const pv = pianoVoicing(chord, 62);
       if (pv) pianoHit(pv.notes, startAt, { dest, ring: 2.4 });
       return pv;
     }
     const ctxInfo = boardContext(chord);
-    const v = pickVoicing(chord, target, ctxInfo.bands, ctxInfo.dim);
+    const v = pickVoicing(chord, target, ctxInfo.bands, ctxInfo.dim, pos);
     if (v) strum(v.low, v.frets, startAt, card, dest);
     return v;
   }
@@ -4062,9 +4072,9 @@
     const B = tempo.beats;
     const skipped = [];
     // Choose every voicing first (each stays near the last), so the panel can show the next one too
-    const vs = steps.map(c => {
+    const vs = steps.map((c, k) => {
       const ctxInfo = boardContext(c);
-      const v = pickVoicing(c, st.target, ctxInfo.bands, ctxInfo.dim);
+      const v = pickVoicing(c, st.target, ctxInfo.bands, ctxInfo.dim, k);
       if (v) st.target = v.mean;
       return v;
     });
@@ -4140,7 +4150,8 @@
     if (btn) {
       stopAll();
       const chord = chordFor(Number(btn.getAttribute('data-chord')), btn.getAttribute('data-mod') || null);
-      if (chord && !playChord(chord, btn.closest('section.board'), now, zoom.anchor)) {
+      const card = btn.closest('section.board');
+      if (chord && !playChord(chord, card, now, zoom.anchor, undefined, Array.from(document.querySelectorAll('#singles .board')).indexOf(card))) {
         say(`No highlighted shape to play for ${chord.name} in this view. Try another string set, a wider zoom, or more CAGED shapes.`);
       }
     } else if (noteEl) {
@@ -4443,7 +4454,7 @@
     let t = zoom.anchor, pt = 62;
     const items = steps.map((c, i) => {
       const ci = boardContext(c);
-      const v = pickVoicing(c, t, ci.bands, ci.dim);
+      const v = pickVoicing(c, t, ci.bands, ci.dim, i);
       if (v) t = v.mean;
       const pv = pianoVoicing(c, pt);
       if (pv) pt = pv.mean;
