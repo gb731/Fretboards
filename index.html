@@ -425,6 +425,13 @@
   .focus-title { font: 600 15px Georgia, serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
   .focus-tools button { border: 1px solid #cfc8b8; background: #fff; border-radius: 999px; font-size: 12px; padding: 2px 10px; cursor: pointer; color: #2b2a27; flex: none; }
   .focus-tools .focus-close { border: 0; background: transparent; font-size: 24px; line-height: 1; padding: 0 6px; }
+  @media (max-width: 640px) {   /* title and close on the first row, the option buttons wrap onto the next */
+    .focus-tools { flex-wrap: wrap; }
+    .focus-title { order: 1; flex: 1 1 calc(100% - 44px); }
+    .focus-tools .focus-close { order: 2; }
+    .focus-tools .sp { display: none; }
+    .focus-tools button:not(.focus-close) { order: 3; }
+  }
   .focus-body .fbwrap { overflow-x: auto; }
   .focus-body svg { width: 100%; height: auto; max-width: none !important; min-width: 0 !important; display: block; }
   @media (max-width: 600px) { .focus-body svg { min-width: 640px !important; } }
@@ -781,6 +788,7 @@
   <div class="focus-tools">
     <strong class="focus-title" id="focus-title"></strong>
     <span class="sp"></span>
+    <button type="button" id="focus-label-btn" aria-label="Cycle the dot labels: note names, intervals, fingering">Labels: Notes</button>
     <button type="button" id="focus-inst-btn" aria-label="Switch this panel between guitar and piano">Piano view</button>
     <button type="button" id="focus-size-btn" aria-label="Change the size of this panel">Size: Large</button>
     <button type="button" id="focus-move-btn" aria-label="Move this panel to the next spot">Move</button>
@@ -941,6 +949,35 @@
       }
     }
     return finger > 4 ? 99 : finger;
+  }
+
+  // Suggested fingering for a shape: one number (1 = index ... 4 = pinky) per string, 0 for an open string.
+  // Open-position shapes give each fretted note its own finger, lowest fret first (a note on a neighboring string
+  // at the same fret shares a finger only when that is needed to stay within four). Shapes with no open string use
+  // the barre rule above: the index lays a barre across the lowest fret, then each higher fret takes the next finger.
+  // Returns null when the shape cannot be fingered.
+  function fingerMap(frets) {
+    const notes = frets.map((f, i) => ({ f, i })).filter(x => x.f > 0);
+    const out = frets.map(() => 0);
+    if (!notes.length) return out;
+    const lowest = Math.min(...notes.map(x => x.f));
+    const runsOf = idxs => { const r = []; idxs.forEach((v, k) => { if (k === 0 || v !== idxs[k - 1] + 1) r.push([]); r[r.length - 1].push(v); }); return r; };
+    const hasOpen = frets.includes(0);
+    const frs = [...new Set(notes.map(x => x.f))].sort((a, b) => a - b);
+    const build = merge => {
+      let finger = 0;
+      for (const fret of frs) {
+        const idxs = notes.filter(x => x.f === fret).map(x => x.i).sort((a, b) => a - b);
+        if (!hasOpen && fret === lowest && frets.slice(idxs[0], idxs[idxs.length - 1] + 1).every(f => f >= fret)) {
+          finger++; idxs.forEach(i => { out[i] = finger; }); continue;
+        }
+        const groups = merge ? runsOf(idxs) : idxs.map(i => [i]);
+        for (const g of groups) { finger++; if (g.length > 1 && (finger >= 4 || g.length > 3)) return false; g.forEach(i => { out[i] = finger; }); }
+      }
+      return finger <= 4;
+    };
+    if (build(false)) return out;
+    return build(true) ? out : null;
   }
 
   // Full chord shapes: every string from `low` up to the high e carries a chord tone, the lowest
@@ -1153,7 +1190,22 @@
     let badgeSvg = '';   // drawn after the notes so the count badge sits on top
     const pickItems = single ? items.filter(it => !it.faded && (extras.picks || []).includes(it.skey)) : [];
     const shapeKeys = new Set();
-    (pickItems.length ? pickItems : items).forEach(it => it.sh.frets.forEach((f, j) => shapeKeys.add((it.low + j) + ',' + f)));
+    // Fingering labels (single chord boards only): the picked shapes, or else the shape Play would use
+    const fingerAt = new Map();
+    let fingerShapes = null;
+    if (labelMode === 'fingers' && single && items.length) {
+      fingerShapes = pickItems.map(it => ({ low: it.low, frets: it.sh.frets }));
+      if (!fingerShapes.length) {
+        const dv = pickVoicing(items[0].c, win.anchor, bands, dimOutside, extras.pos);
+        if (dv && dv.frets.every(inView)) fingerShapes = [{ low: dv.low, frets: dv.frets }];
+      }
+      fingerShapes.forEach(fs => {
+        const fm = fingerMap(fs.frets);
+        fs.frets.forEach((f, j) => { if (!fingerAt.has((fs.low + j) + ',' + f)) fingerAt.set((fs.low + j) + ',' + f, fm ? String(fm[j]) : '?'); });
+      });
+    }
+    if (fingerShapes && fingerShapes.length && !pickItems.length) fingerShapes.forEach(fs => fs.frets.forEach((f, j) => shapeKeys.add((fs.low + j) + ',' + f)));
+    else (pickItems.length ? pickItems : items).forEach(it => it.sh.frets.forEach((f, j) => shapeKeys.add((it.low + j) + ',' + f)));
     const outlineLegacy = it => {
       s += `<rect x="${it.x0}" y="${it.y0}" width="${it.x1 - it.x0}" height="${it.y1 - it.y0}" rx="16" fill="${it.c.color}" fill-opacity="0.12" stroke="${it.c.color}" stroke-width="2.5" class="shape" data-low="${it.low}" data-frets="${it.sh.frets.join(',')}" style="cursor:pointer"/>`;
     };
@@ -1211,7 +1263,7 @@
         const cx = xNote(f);
         const cy = yStr(i);
         const bandFaded = dimOutside && bands.length > 0 && !bands.some(b => f >= b.lo && f <= b.hi);
-        const shapeFaded = (pickItems.length > 0 || (fadeOthers && shapeSets.length > 0)) && !shapeKeys.has(i + ',' + f);
+        const shapeFaded = (pickItems.length > 0 || (fingerShapes && fingerShapes.length > 0) || (fadeOthers && shapeSets.length > 0)) && !shapeKeys.has(i + ',' + f);
         const focusFaded = extras.focus && !owners.includes(extras.focus);
         const faded = bandFaded || shapeFaded || focusFaded;
         s += `<g class="note" data-s="${i}" data-f="${f}"${faded ? ' opacity="0.2"' : ''} style="cursor:pointer">`;
@@ -1232,7 +1284,7 @@
         if (extras.ringPcs && extras.ringPcs.has(pc) && !faded) {
           s += `<circle cx="${cx}" cy="${cy}" r="${R + 3.5}" fill="none" stroke="#2b2a27" stroke-width="2.5"/>`;
         }
-        s += `<text x="${cx}" y="${cy + 4.5}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#fff" stroke="#2b2a27" stroke-width="2.6" stroke-opacity="0.55" paint-order="stroke">${pcNames[pc]}</text>`;
+        s += `<text x="${cx}" y="${cy + 4.5}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#fff" stroke="#2b2a27" stroke-width="2.6" stroke-opacity="0.55" paint-order="stroke">${fingerShapes ? (fingerAt.get(i + ',' + f) || '') : pcNames[pc]}</text>`;
         s += '</g>';
       }
     }
@@ -1277,7 +1329,7 @@
   };
   const modeSteps = () => (MODES.find(m => m.id === currentMode) || MODES[0]).steps;
   function dotNames(single) {
-    if (labelMode === 'names') {
+    if (labelMode !== 'intervals') {   // note names; the Fingering option names the notes wherever no fingering is shown
       if (single) {
         const nm = {};
         single.notes.forEach(n => { nm[n.pc] = n.name; });
@@ -1354,6 +1406,7 @@
     if (single && list.length === 1) {
       extras.rootPcs = new Set([list[0].pcs[0]]);
       extras.chordKey = posKeyOf(pos, list[0]);
+      extras.pos = pos;
       extras.picks = picksOf(extras.chordKey);
     }
     if (focus) extras.focus = focus;
@@ -2735,15 +2788,19 @@
   });
 
   // Dot labels: note names or intervals
-  const LABEL_OPTIONS = [['Note names', 'names'], ['Intervals', 'intervals']];
+  const LABEL_OPTIONS = [['Note names', 'names'], ['Intervals', 'intervals'], ['Fingering', 'fingers']];
   const LABEL_HINTS = {
     names: 'Dots show note names.',
     intervals: 'Dots show each note’s job. The scale and chord-group boards count from the key’s root: 1 is the tonic, b3 a flat third, 5 the fifth, and so on. Each individual chord board counts from that chord’s own root: R, 3 or b3, 5. The root of the scale board and of each individual chord has a dark ring.',
+    fingers: 'Dots show a suggested fingering on each individual chord board and in the Follow and Focus panels: 1 is the index finger, 2 middle, 3 ring, 4 pinky, and 0 an open string. A barre shows the same number on every string it covers. Tap a shape outline to see that shape’s fingering; with none picked, the board shows the shape Play would use and fades the rest. The scale and chord-group boards, which show many shapes at once, keep note names.',
   };
+  const FOCUS_LABEL_NAMES = { names: 'Notes', intervals: 'Intervals', fingers: 'Fingering' };
   const labelWrap = document.getElementById('labelmode');
   function syncLabelMode() {
     labelWrap.querySelectorAll('.key').forEach((btn, i) => btn.setAttribute('aria-pressed', String(LABEL_OPTIONS[i][1] === labelMode)));
     document.getElementById('labelmode-hint').textContent = LABEL_HINTS[labelMode];
+    const fl = document.getElementById('focus-label-btn');
+    if (fl) fl.textContent = 'Labels: ' + FOCUS_LABEL_NAMES[labelMode];
   }
   LABEL_OPTIONS.forEach(([label, value]) => {
     const b = document.createElement('button');
@@ -4001,6 +4058,7 @@
   // A small horizontal fretboard (low string at the bottom, like the main boards) showing only this voicing
   function miniBoard(chord, v) {
     const names = dotNames(chord);
+    const fm = labelMode === 'fingers' ? fingerMap(v.frets) : undefined;   // suggested fingering instead of note names
     const played = {};
     v.frets.forEach((f, j) => { played[v.low + j] = f; });
     const fretted = v.frets.filter(f => f > 0);
@@ -4020,7 +4078,7 @@
       const y = rowY(si);
       if (f === undefined) { g += `<text x="${x0 - 14}" y="${y + 4}" text-anchor="middle" font-size="12" fill="#8a7f66">\u00d7</text>`; continue; }
       const pc = (TUNING[si] + f) % 12;
-      const lab = esc(names[pc] !== undefined ? names[pc] : '');
+      const lab = labelMode === 'fingers' ? (fm ? String(fm[si - v.low]) : '?') : esc(names[pc] !== undefined ? names[pc] : '');
       const isRoot = pc === chord.pcs[0];
       if (f === 0) {
         g += `<circle cx="${x0 - 14}" cy="${y}" r="7.5" fill="${chord.color}" stroke="#2b2a27" stroke-width="${isRoot ? 2.2 : 0.8}"/>` +
@@ -4533,12 +4591,15 @@
       }
       document.getElementById('focus-title').textContent = 'Quiz yourself';
       instBtn.hidden = true;
+      document.getElementById('focus-label-btn').hidden = true;
       document.getElementById('focus').hidden = false;
       document.querySelectorAll('.focus-btn').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.focus === focusTarget)));
       return;
     }
     restoreQuiz();
     instBtn.hidden = false;
+    // The label button is for the individual chord boards, on the guitar view (piano keys show note names or intervals only)
+    document.getElementById('focus-label-btn').hidden = !(focusTarget.startsWith('single:') && focusCfg.inst === 'guitar');
     const src = focusSource(focusTarget);
     if (!src || !src.wrap) { closeFocus(); return; }
     const el = document.getElementById('focus');
@@ -4655,6 +4716,12 @@
       b.addEventListener('click', () => { focusCfg[key] = val; applyFocusCfg(); });
       wrap.appendChild(b);
     });
+  });
+  document.getElementById('focus-label-btn').addEventListener('click', () => {
+    const order = LABEL_OPTIONS.map(o => o[1]);
+    labelMode = order[(order.indexOf(labelMode) + 1) % order.length];
+    syncLabelMode();
+    renderAll();   // the same setting as Dot labels in the controls, so every board follows it
   });
   document.getElementById('focus-inst-btn').addEventListener('click', () => {
     focusCfg.inst = focusCfg.inst === 'piano' ? 'guitar' : 'piano';
