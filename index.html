@@ -273,6 +273,7 @@
   .song-row .sr-m { display: block; color: var(--muted); font-size: 13px; margin-top: 2px; }
   .chip[aria-pressed="false"] { opacity: 0.45; }
   .chip[aria-pressed="false"] .dot { background: #ccc !important; }
+  .tuning-select { font: inherit; font-size: 14px; padding: 6px 10px; border: 1px solid #cfc8b8; border-radius: 10px; background: #fff; color: #2b2a27; max-width: 100%; }
   .hint {
     font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
     font-size: 13px;
@@ -519,6 +520,10 @@
     <div class="keys" id="labelmode" role="group" aria-label="Dot labels"></div>
     <p class="hint" id="labelmode-hint"></p>
 
+    <p class="ctl-label" id="tuning-label">Tuning</p>
+    <select id="tuning" class="tuning-select" aria-labelledby="tuning-label"></select>
+    <p class="hint" id="tuning-hint"></p>
+
     <p class="ctl-label">Board size</p>
     <div class="keys" id="bsize" role="group" aria-label="Board size"></div>
     <p class="hint">Smaller sizes put the fretboards side by side so more fit on screen. Pair a small size with Zoom to a fret range to keep the notes readable.</p>
@@ -535,9 +540,12 @@
     <div class="chips" id="chord-minor" role="group" aria-label="Minor-type chords"></div>
     <p class="hint" id="chord-hint"></p>
 
+    <p class="warn-note" id="caged-off" hidden>CAGED shapes are built for standard tuning, so they are hidden in this tuning. The shape outlines below still work.</p>
+    <div id="caged-wrap">
     <p class="ctl-label">CAGED shapes on the individual chord fretboards</p>
     <div class="keys" id="caged" role="group" aria-label="CAGED shapes"></div>
     <p class="hint">Dashed bands mark where each open-chord shape lands for that chord. Tap any combination of letters, such as C, A and D, to see the forms above and below each other. Notes outside the chosen shapes fade. Minor chords use the minor form (labeled like "Am shape") in the same positions. Of the minor forms, Am, Em and Dm are the ones guitarists really play. The Cm and Gm shapes are awkward and rarely used, but they are shown so the five-shape pattern stays complete. Diminished chords are left out.</p>
+    </div>
 
     <p class="ctl-label">Shape type</p>
     <div class="keys" id="stype" role="group" aria-label="Shape type"></div>
@@ -811,7 +819,25 @@
 <script>
   const LETTERS = ['C','D','E','F','G','A','B'];
   const LETTER_PC = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
-  const TUNING = [4, 9, 2, 7, 11, 4]; // low E to high E
+  const TUNING = [4, 9, 2, 7, 11, 4]; // pitch class of each open string, low to high (changed in place by the Tuning option)
+  // Tunings: string names and the MIDI note of each open string, low to high
+  const TUNINGS = [
+    { id: 'standard', name: 'Standard', strings: ['E', 'A', 'D', 'G', 'B', 'E'], midi: [40, 45, 50, 55, 59, 64], note: 'The usual tuning.' },
+    { id: 'dropd', name: 'Drop D', strings: ['D', 'A', 'D', 'G', 'B', 'E'], midi: [38, 45, 50, 55, 59, 64], note: 'Only the low E drops a whole step, so one finger bars a power chord across the bottom three strings.' },
+    { id: 'doubledropd', name: 'Double drop D', strings: ['D', 'A', 'D', 'G', 'B', 'D'], midi: [38, 45, 50, 55, 59, 62], note: 'Both E strings drop a whole step to D.' },
+    { id: 'halfdown', name: 'Half step down', strings: ['Eb', 'Ab', 'Db', 'Gb', 'Bb', 'Eb'], midi: [39, 44, 49, 54, 58, 63], note: 'Standard tuning one half step lower. The shapes are the same as in standard tuning.' },
+    { id: 'fulldown', name: 'Full step down', strings: ['D', 'G', 'C', 'F', 'A', 'D'], midi: [38, 43, 48, 53, 57, 62], note: 'Standard tuning one whole step lower (D standard). The shapes are the same as in standard tuning.' },
+    { id: 'dropc', name: 'Drop C', strings: ['C', 'G', 'C', 'F', 'A', 'D'], midi: [36, 43, 48, 53, 57, 62], note: 'Drop D tuning a whole step lower, a heavy-rock staple.' },
+    { id: 'dadgad', name: 'DADGAD', strings: ['D', 'A', 'D', 'G', 'A', 'D'], midi: [38, 45, 50, 55, 57, 62], note: 'A suspended open tuning with no third: open strings ring as Dsus4.' },
+    { id: 'opend', name: 'Open D', strings: ['D', 'A', 'D', 'F#', 'A', 'D'], midi: [38, 45, 50, 54, 57, 62], note: 'Open strings ring a D major chord, so one finger barring any fret plays a major chord.' },
+    { id: 'openg', name: 'Open G', strings: ['D', 'G', 'D', 'G', 'B', 'D'], midi: [38, 43, 50, 55, 59, 62], note: 'Open strings ring a G major chord, so one finger barring any fret plays a major chord.' },
+    { id: 'opene', name: 'Open E', strings: ['E', 'B', 'E', 'G#', 'B', 'E'], midi: [40, 47, 52, 56, 59, 64], note: 'Open strings ring an E major chord (open D raised a whole step).' },
+    { id: 'opena', name: 'Open A', strings: ['E', 'A', 'E', 'A', 'C#', 'E'], midi: [40, 45, 52, 57, 61, 64], note: 'Open strings ring an A major chord (open G raised a whole step).' },
+    { id: 'openc', name: 'Open C', strings: ['C', 'G', 'C', 'G', 'C', 'E'], midi: [36, 43, 48, 55, 60, 64], note: 'Open strings ring a C major chord.' },
+    { id: 'fourths', name: 'All fourths', strings: ['E', 'A', 'D', 'G', 'C', 'F'], midi: [40, 45, 50, 55, 60, 65], note: 'Every string a fourth above the last, so a shape keeps the same form on every string set.' },
+  ];
+  let tuningId = 'standard';
+  const tuningNow = () => TUNINGS.find(t => t.id === tuningId) || TUNINGS[0];
   const FRETS = 22; // standard electric guitar neck
 
   // Key button label, root pitch class (the note names are chosen automatically per mode)
@@ -964,20 +990,23 @@
     const runsOf = idxs => { const r = []; idxs.forEach((v, k) => { if (k === 0 || v !== idxs[k - 1] + 1) r.push([]); r[r.length - 1].push(v); }); return r; };
     const hasOpen = frets.includes(0);
     const frs = [...new Set(notes.map(x => x.f))].sort((a, b) => a - b);
-    const build = merge => {
+    // mode 0: every note its own finger (open-position shapes). mode 1: the index may bar the lowest fret.
+    // mode 2: as 1, and neighboring strings at one fret may share a finger.
+    const build = mode => {
+      out.fill(0);
       let finger = 0;
       for (const fret of frs) {
         const idxs = notes.filter(x => x.f === fret).map(x => x.i).sort((a, b) => a - b);
-        if (!hasOpen && fret === lowest && frets.slice(idxs[0], idxs[idxs.length - 1] + 1).every(f => f >= fret)) {
+        if (mode >= 1 && fret === lowest && frets.slice(idxs[0], idxs[idxs.length - 1] + 1).every(f => f >= fret)) {
           finger++; idxs.forEach(i => { out[i] = finger; }); continue;
         }
-        const groups = merge ? runsOf(idxs) : idxs.map(i => [i]);
+        const groups = mode === 2 ? runsOf(idxs) : idxs.map(i => [i]);
         for (const g of groups) { finger++; if (g.length > 1 && (finger >= 4 || g.length > 3)) return false; g.forEach(i => { out[i] = finger; }); }
       }
       return finger <= 4;
     };
-    if (build(false)) return out;
-    return build(true) ? out : null;
+    for (const mode of hasOpen ? [0, 1, 2] : [1, 2]) if (build(mode)) return out;
+    return null;
   }
 
   // Full chord shapes: every string from `low` up to the high e carries a chord tone, the lowest
@@ -1046,6 +1075,7 @@
 
   // mode is 'all' or a Set of letters (any combination of C, A, G, E, D)
   function cagedBands(chord, mode) {
+    if (tuningId !== 'standard') return [];   // the five CAGED forms are built for standard tuning
     if (chord.dim || (mode !== 'all' && (!mode || mode.size === 0))) return [];
     const bands = [];
     CAGED.filter(sh => mode === 'all' || mode.has(sh.letter)).forEach(sh => {
@@ -1288,6 +1318,11 @@
         s += '</g>';
       }
     }
+    if (tuningId !== 'standard') {   // name each open string at the left edge, so a changed tuning is visible on the board
+      tuningNow().strings.forEach((nm, i) => {
+        s += `<text x="9" y="${yStr(i) + 3.5}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#7a7466" pointer-events="none" class="strname">${nm}</text>`;
+      });
+    }
     s += badgeSvg;
     s += `</svg></div>`;
     return s;
@@ -1394,7 +1429,7 @@
     5: ['9th chord shapes', 'An outline marks four neighboring strings holding the 3rd, 7th and 9th plus the root or 5th, all within a 4-fret stretch. An open string counts as fret 0. This is a common way to voice a 9th chord on guitar.'],
   };
 
-  const FULL_TEXT = ['full chord shapes', 'An outline marks a complete chord shape: it starts on the root in the bass, covers every string from there up to the high e, includes every chord tone (a 7th or 9th chord may leave out its 5th), fits a 4-fret stretch, and needs four fingers or fewer (a barre counts as one). An open string counts as fret 0. The buttons name the strings you can play. A shape may skip low strings it does not use, so with E A D G B e selected you get every shape: open forms at the nut and the barred C, A, G, E and D forms up the neck. Diminished chords only form 4-string shapes (D G B e), which are included whenever those strings are available.'];
+  const FULL_TEXT = ['full chord shapes', 'An outline marks a complete chord shape: it starts on the root in the bass, covers every string from there up to the high e, includes every chord tone (a 7th or 9th chord may leave out its 5th), fits a 4-fret stretch, and needs four fingers or fewer (a barre counts as one). An open string counts as fret 0. The buttons name the strings you can play. A shape may skip low strings it does not use, so with all six strings selected you get every shape, from open forms at the nut to barre forms up the neck. Diminished chords only form 4-string shapes (D G B e), which are included whenever those strings are available.'];
   function updateShapeText() {
     const t = shapeType === 'full' ? FULL_TEXT : SHAPE_TEXT[stackSize];
     document.getElementById('lbl-shapes').textContent = `Outline playable ${t[0]} on these strings`;
@@ -2444,12 +2479,12 @@
     modesWrap.appendChild(b);
   });
 
-  const STRING_NAMES = ['E', 'A', 'D', 'G', 'B', 'e'];
+  const stringNames = () => tuningId === 'standard' ? ['E', 'A', 'D', 'G', 'B', 'e'] : tuningNow().strings;
   const shapesWrap = document.getElementById('shapes');
   function drawShapeButtons() {
     const n = voiceCount();
     const options = [['Off', 'off']];
-    for (let low = 0; low <= 6 - n; low++) options.push([STRING_NAMES.slice(low, shapeType === 'full' ? 6 : low + n).join(' '), low]);
+    for (let low = 0; low <= 6 - n; low++) options.push([stringNames().slice(low, shapeType === 'full' ? 6 : low + n).join(' '), low]);
     if (shapeType !== 'full') options.push(['All', 'all']); // for full chords the first button already allows every shape
     if (shapeType === 'full' && shapeMode === 'all') shapeMode = 0;
     if (typeof shapeMode === 'number') shapeMode = Math.min(shapeMode, 6 - n);
@@ -2811,6 +2846,35 @@
     labelWrap.appendChild(b);
   });
   syncLabelMode();
+
+  // Tuning: the pitch of each open string. Everything that reads TUNING (shapes, dot names, the quiz) or
+  // OPEN_MIDI (sound) follows, so the arrays are changed in place and the caches are cleared.
+  const tuningSel = document.getElementById('tuning');
+  TUNINGS.forEach(t => {
+    const o = document.createElement('option');
+    o.value = t.id;
+    o.textContent = t.id === 'standard' ? 'Standard (E A D G B E)' : `${t.name} (${t.strings.join(' ')})`;
+    tuningSel.appendChild(o);
+  });
+  function applyTuning(id) {
+    const t = TUNINGS.find(x => x.id === id) || TUNINGS[0];
+    tuningId = t.id;
+    t.midi.forEach((m, i) => { TUNING[i] = m % 12; OPEN_MIDI[i] = m; });
+    shapeCache.clear();
+    quizShapeCache.clear();
+    quiz.sr = {};
+    tuningSel.value = t.id;
+    const std = t.id === 'standard';
+    document.getElementById('tuning-hint').textContent = (std ? '' : `Low to high: ${t.strings.join(' ')}. `) + t.note +
+      (std ? '' : ' Shapes, note names and sound all follow the tuning.');
+    document.getElementById('caged-wrap').hidden = !std;
+    document.getElementById('caged-off').hidden = std;
+    drawShapeButtons();
+    setScale(currentRoot, currentMode);   // redraws every board, clears picks, and starts a new quiz question
+  }
+  tuningSel.addEventListener('change', () => applyTuning(tuningSel.value));
+  tuningSel.value = tuningId;
+  document.getElementById('tuning-hint').textContent = tuningNow().note;
 
   // Focus: tap a chord in a legend to fade the others on the group boards
   document.addEventListener('click', e => {
