@@ -274,6 +274,10 @@
   .chip[aria-pressed="false"] { opacity: 0.45; }
   .chip[aria-pressed="false"] .dot { background: #ccc !important; }
   .tuning-select { font: inherit; font-size: 14px; padding: 6px 10px; border: 1px solid #cfc8b8; border-radius: 10px; background: #fff; color: #2b2a27; max-width: 100%; }
+  .motion-line { margin: 2px 0 6px; font-size: 13px; color: #4a4638; }
+  .motion-line .mt { color: #7a7466; }
+  .vl-summary ul { margin: 4px 0 6px; padding-left: 18px; font-size: 13px; color: #4a4638; }
+  .vl-summary .mt { color: #7a7466; }
   .hint {
     font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
     font-size: 13px;
@@ -582,6 +586,16 @@
       <p class="ctl-label" id="seq-edit-label"></p>
       <div class="keys" id="seq-edit-opts" role="group" aria-label="Change this step"></div>
     </div>
+    <div id="vl-opts">
+      <p class="ctl-label">Voice leading: movement</p>
+      <div class="keys" id="vl-move" role="group" aria-label="How voice leading moves between chords"></div>
+      <p class="ctl-label">Voice leading: pitch</p>
+      <div class="keys" id="vl-pitch" role="group" aria-label="Whether voice leading rises or falls"></div>
+      <p class="ctl-label">Voice leading: show movement on the boards</p>
+      <div class="keys" id="vl-show" role="group" aria-label="Show the movement between chords on the boards"></div>
+    </div>
+    <div id="vl-summary" class="vl-summary" hidden></div>
+    <p class="hint" id="vl-note" aria-live="polite"></p>
     <div class="save-row" id="save-row">
       <input id="save-title" class="song-q" type="text" maxlength="60" placeholder="Title to save this progression" autocomplete="off" aria-label="Title for saving this progression">
       <button type="button" class="key" id="save-btn">Save</button>
@@ -1318,6 +1332,42 @@
         s += '</g>';
       }
     }
+    // Voice leading movement from the previous board's shape: rings where its notes were, an arrow to where
+    // each one goes, and a green ring on notes that keep their pitch
+    if (extras.motion) {
+      const mo = extras.motion;
+      s += '<g pointer-events="none" class="motion">';
+      const visible = n => inView(n.f);
+      mo.voices.forEach(v => {
+        if (v.from && v.to && v.d === 0) {
+          if (visible(v.to)) {
+            const x = xNote(v.to.f), y = yStr(v.to.si);
+            s += `<circle cx="${x}" cy="${y}" r="${R + 6}" fill="none" stroke="#2e7d32" stroke-width="3.2"/>`;
+          }
+          if (v.from.si !== v.to.si && visible(v.from)) {   // same pitch on another string
+            s += `<circle cx="${xNote(v.from.f)}" cy="${yStr(v.from.si)}" r="${R - 3}" fill="none" stroke="#2e7d32" stroke-width="2" stroke-dasharray="3 3"/>`;
+            s += `<line x1="${xNote(v.from.f)}" y1="${yStr(v.from.si)}" x2="${xNote(v.to.f)}" y2="${yStr(v.to.si)}" stroke="#2e7d32" stroke-width="2" stroke-dasharray="3 3"/>`;
+          }
+        } else if (v.from && v.to) {
+          if (!visible(v.from) || !visible(v.to)) return;
+          const x1 = xNote(v.from.f), y1 = yStr(v.from.si), x2 = xNote(v.to.f), y2 = yStr(v.to.si);
+          s += `<circle cx="${x1}" cy="${y1}" r="${R - 3}" fill="#fffdf8" fill-opacity="0.7" stroke="#8a5a00" stroke-width="2" stroke-dasharray="3 3"/>`;
+          const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy) || 1;
+          const sx = x1 + dx / len * (R - 1), sy = y1 + dy / len * (R - 1), ex = x2 - dx / len * (R + 3), ey = y2 - dy / len * (R + 3);
+          if (len > 2 * R + 4) {
+            s += `<line x1="${sx}" y1="${sy}" x2="${ex}" y2="${ey}" stroke="#8a5a00" stroke-width="2.6"/>`;
+            const ang = Math.atan2(ey - sy, ex - sx);
+            s += `<path d="M${ex} ${ey} L${ex - 9 * Math.cos(ang - 0.45)} ${ey - 9 * Math.sin(ang - 0.45)} L${ex - 9 * Math.cos(ang + 0.45)} ${ey - 9 * Math.sin(ang + 0.45)} Z" fill="#8a5a00"/>`;
+          }
+          const mx = (sx + ex) / 2, my = (sy + ey) / 2 - 9;
+          s += `<g><rect x="${mx - 13}" y="${my - 8}" width="26" height="15" rx="7.5" fill="#fffdf8" stroke="#8a5a00" stroke-width="1.2"/>` +
+            `<text x="${mx}" y="${my + 3.5}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10.5" font-weight="700" fill="#8a5a00">${v.d > 0 ? '+' : '\u2212'}${Math.abs(v.d)}</text></g>`;
+        } else if (v.from && visible(v.from)) {   // a note the new shape drops
+          s += `<circle cx="${xNote(v.from.f)}" cy="${yStr(v.from.si)}" r="${R - 3}" fill="none" stroke="#8a8272" stroke-width="1.8" stroke-dasharray="2 3"/>`;
+        }
+      });
+      s += '</g>';
+    }
     if (tuningId !== 'standard') {   // name each open string at the left edge, so a changed tuning is visible on the board
       tuningNow().strings.forEach((nm, i) => {
         s += `<text x="9" y="${yStr(i) + 3.5}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#7a7466" pointer-events="none" class="strname">${nm}</text>`;
@@ -1443,6 +1493,7 @@
       extras.chordKey = posKeyOf(pos, list[0]);
       extras.pos = pos;
       extras.picks = picksOf(extras.chordKey);
+      extras.motion = motionFor(pos);
     }
     if (focus) extras.focus = focus;
     return fretboard(list, list.map(() => true), dotNames(single && list.length === 1 ? list[0] : null),
@@ -1652,6 +1703,32 @@
         renderAll();
       });
       list.appendChild(rep2);
+    }
+    document.getElementById('vl-opts').hidden = !progSeq.length;
+    drawVlOptions();
+    if (progSeq.length) {
+      const vl = document.createElement('button');
+      vl.type = 'button';
+      vl.className = 'key';
+      vl.id = 'seq-vl';
+      vl.textContent = 'Voice lead all boards';
+      vl.addEventListener('click', voiceLeadAll);
+      list.appendChild(vl);
+      if (Object.keys(picks).length) {
+        const cp = document.createElement('button');
+        cp.type = 'button';
+        cp.className = 'key';
+        cp.id = 'seq-clearpicks';
+        cp.textContent = 'Clear all picks';
+        cp.addEventListener('click', () => {
+          picks = {};
+          vlApplied = false;
+          drawSeq();
+          renderAll();
+          document.getElementById('vl-note').textContent = 'All shape picks cleared.';
+        });
+        list.appendChild(cp);
+      }
     }
     if (progUndo.length) {
       const undo = document.createElement('button');
@@ -2193,6 +2270,7 @@
     const eff = effectiveSeq();
     const seqMode = eff.length > 0;
     const list = seqMode ? eff.map(st => stepChord(st)) : selected;
+    boardChords = list;
     document.getElementById('singles-title').textContent = seqMode
       ? `Individual chords in ${currentScale}: ${eff.map(st => st.deg + 1).join('\u2013')}`
       : `Individual chords in ${currentScale}`;
@@ -2213,7 +2291,7 @@
         `<button type="button" class="focus-btn" data-focus="single:${pos}" aria-pressed="${focusTarget === 'single:' + pos}" aria-label="Focus view: enlarge the ${c.name} fretboard">Focus</button>` +
         `<h2 class="single-title"><span class="dot" style="background:${c.color}"></span>${prefix}${c.roman}: ${c.name}</h2>` +
         `<p class="chord-sub">${c.notes.map(n => n.name).join(' ')} (${c.formula})</p>` +
-        shapeCaption(c, pos) +
+        shapeCaption(c, pos) + motionLine(pos) +
         board([c], boardContext(c).bands, boardContext(c).dim, true, null, pos);
       wrap.appendChild(sec);
     });
@@ -2358,6 +2436,7 @@
     renderGroup('minor', selected.filter(c => c.type === 'minor'), 'No minor chords selected.');
     renderSingles(selected);
     renderProgression();
+    drawVlSummary();
     refreshFocus();
   }
 
@@ -3306,9 +3385,71 @@
     return bufCache.get(midi);
   }
 
+  // ---- Electric guitar tones. The plucked-string sound goes through a small amp model: a high-pass to tighten
+  // the low end, a soft or hard clip (tanh) for the distortion, tone shaping, and a low-pass that stands in for
+  // the speaker cabinet. All the notes of a chord share one chain, so a chord distorts together the way it does
+  // through a real amp. k is how hard the clipping is (0 = none); decay is how long a note rings, in seconds.
+  // These are synthesized imitations, not recordings of an amp. ----
+  // The electric tones do not use the plucked-string sound: a string with a pickup is a steady, harmonic-rich
+  // tone, not a noisy pluck. Each note is an oscillator with a harmonic recipe (alpha: how fast the harmonics
+  // fade out going up; pp: where the pickup sits along the string, which notches out some harmonics), then a
+  // low-pass that starts open and closes as the note rings (f0 and f1 are multiples of the note's pitch, tau
+  // is how fast it closes), so the note starts bright and mellows like a real string.
+  const TONES = {
+    crunch: { label: 'Crunch',         k: 3,  bias: 0.05, hp: 110, lp: 4600, eq: [[1700, 3, 0.9], [260, -2, 0.7]],   post: 0.3,  decay: 3.0, attack: 0.008, alpha: 1.1, pp: 0.17, f0: 11, f1: 4,   tau: 0.5,  end: 0.06 },
+    drive:  { label: 'Overdrive',      k: 8,  bias: 0.08, hp: 120, lp: 4600, eq: [[1100, 4, 0.8], [3300, 1, 1.0]],   post: 0.17, decay: 4.0, attack: 0.012, alpha: 1.0, pp: 0.15, f0: 9,  f1: 3.5, tau: 0.45, end: 0.15 },
+    dist:   { label: 'Distortion',     k: 26, bias: 0.1,  hp: 160, lp: 4800, eq: [[650, -3, 0.8], [2700, 3, 1.0]],   post: 0.15, decay: 4.0, attack: 0.014, alpha: 1.0, pp: 0.13, f0: 8,  f1: 3,   tau: 0.4,  end: 0.15 },
+    mute:   { label: 'Palm mute',      k: 20, bias: 0.1,  hp: 140, lp: 2400, eq: [[500, 2, 0.8], [1700, 1.5, 1.0]],  post: 0.25, decay: 0.4, attack: 0.008, alpha: 1.0, pp: 0.13, f0: 6,  f1: 2.5, tau: 0.16 },
+  };
+  const toneNow = () => TONES[chordSound.inst] || null;
+  const toneCurves = {};
+  const curveFor = t => {
+    if (!toneCurves[t.label]) {
+      const n = 2048, c = new Float32Array(n), norm = Math.tanh(t.k * (1 + t.bias)) || 1;
+      for (let i = 0; i < n; i++) { const x = (i / (n - 1)) * 2 - 1; c[i] = (Math.tanh(t.k * (x + t.bias)) - Math.tanh(t.k * t.bias)) / norm; }
+      toneCurves[t.label] = c;
+    }
+    return toneCurves[t.label];
+  };
+  const toneWaves = new WeakMap();   // audio context -> periodic waves by tone
+  function toneWave(id) {
+    let m = toneWaves.get(ac);
+    if (!m) { m = {}; toneWaves.set(ac, m); }
+    if (!m[id]) {
+      const t = TONES[id], H = 48, real = new Float32Array(H + 1), imag = new Float32Array(H + 1);
+      for (let h = 1; h <= H; h++) imag[h] = Math.abs(Math.sin(Math.PI * h * t.pp)) / Math.pow(h, t.alpha);
+      m[id] = ac.createPeriodicWave(real, imag);
+    }
+    return m[id];
+  }
+  const toneBuses = new WeakMap();   // the node a chain plays into -> its chains, by tone
+  function toneBus(outNode, id) {
+    let byTone = toneBuses.get(outNode);
+    if (!byTone) { byTone = {}; toneBuses.set(outNode, byTone); }
+    if (byTone[id]) return byTone[id];
+    const t = TONES[id];
+    const input = ac.createGain();
+    let tail = input;
+    const chain = n => { tail.connect(n); tail = n; };
+    const hp = ac.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = t.hp; hp.Q.value = 0.7; chain(hp);
+    if (t.k > 0) {
+      const ws = ac.createWaveShaper(); ws.curve = curveFor(t); ws.oversample = '2x';
+      const pre = ac.createGain(); pre.gain.value = 1;   // notes arrive at about 0.3, so k sets how hard they clip
+      chain(pre); chain(ws);
+    }
+    t.eq.forEach(([f, gain, q]) => { const pk = ac.createBiquadFilter(); pk.type = 'peaking'; pk.frequency.value = f; pk.gain.value = gain; pk.Q.value = q; chain(pk); });
+    const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = t.lp; lp.Q.value = 0.6; chain(lp);
+    const post = ac.createGain(); chain(post);
+    post.connect(outNode);
+    byTone[id] = { input, post };
+    return byTone[id];
+  }
+
   function playNote(midi, when, level = 0.3, dest = null) {
+    const tone = toneNow();
+    if (level * mix.guitar < 0.001) return;
+    if (tone) return playElectricNote(tone, midi, when, level, dest);
     const lv = level * mix.guitar;
-    if (lv < 0.001) return;
     const { buf, rate } = bufferFor(midi);
     const src = ac.createBufferSource();
     src.buffer = buf;
@@ -3323,6 +3464,33 @@
     src.stop(when + 2.5);
     liveSources.add(src);
     src.onended = () => liveSources.delete(src);
+  }
+
+  function playElectricNote(tone, midi, when, level, dest) {
+    const f = freqOf(midi);
+    const osc = ac.createOscillator();
+    osc.setPeriodicWave(toneWave(chordSound.inst));
+    osc.frequency.value = f;
+    const lpf = ac.createBiquadFilter();
+    lpf.type = 'lowpass'; lpf.Q.value = 0.8;
+    lpf.frequency.setValueAtTime(Math.min(12000, f * tone.f0), when);
+    lpf.frequency.exponentialRampToValueAtTime(Math.max(300, Math.min(9000, f * tone.f1)), when + tone.tau);   // the note mellows as it rings
+    const g = ac.createGain();
+    g.gain.setValueAtTime(0.0001, when);
+    g.gain.linearRampToValueAtTime(level, when + tone.attack);   // a soft start: no pick click or noise burst
+    if (tone.end) {
+      g.gain.exponentialRampToValueAtTime(level * tone.end, when + tone.decay);
+      g.gain.exponentialRampToValueAtTime(0.0001, when + tone.decay + 0.12);
+    } else g.gain.exponentialRampToValueAtTime(0.0001, when + tone.decay);
+    osc.connect(lpf);
+    lpf.connect(g);
+    const bus = toneBus(dest || master, chordSound.inst);
+    bus.post.gain.value = tone.post * mix.guitar;   // the Mix slider sets the level after the amp, so it does not change the distortion
+    g.connect(bus.input);
+    osc.start(when);
+    osc.stop(when + tone.decay + 0.25);
+    liveSources.add(osc);
+    osc.onended = () => liveSources.delete(osc);
   }
 
   function stopAll() {
@@ -3456,6 +3624,210 @@
     return best;
   }
 
+  // Voice leading: pick one shape on every individual board so the hand moves as little as possible from
+  // one chord to the next. The first board keeps a shape you already picked, or else takes the shape
+  // nearest the nut. Each later board takes, from the shapes it shows, the cheapest one after the shape
+  // before it. Picks on later boards are replaced.
+  //   Movement  Nearest: fewest frets moved on the strings both shapes use.
+  //             Along the neck: stay on the same strings and slide along the frets.
+  //             Across the strings: stay in the same fret area and change string sets.
+  //   Pitch     Any, or Up / Down: the chord's average pitch should rise or fall from one board to the next.
+  //             This is a strong preference, not a rule: when the neck runs out the chord takes the smallest step it can.
+  // --- Movement between two shapes: which notes stay, which step, which are new. ---
+  // Each note of the new shape is matched to a note of the old one so the total pitch movement is smallest.
+  // A note that keeps its pitch "stays" (a common tone), even if it moves to another string.
+  const shapeNotes = sh => sh.frets.map((f, j) => ({ si: sh.low + j, f, midi: OPEN_MIDI[sh.low + j] + f }));
+  function matchVoices(prevSh, curSh) {
+    const a = shapeNotes(prevSh), b = shapeNotes(curSh);
+    const n = a.length, m = b.length, UNMATCHED = 6;
+    const memo = new Map();
+    const solve = (j, mask) => {
+      if (j === m) { let left = 0; for (let i = 0; i < n; i++) if (!(mask & (1 << i))) left++; return { cost: left * UNMATCHED, pick: null }; }
+      const key = j * 64 + mask;
+      if (memo.has(key)) return memo.get(key);
+      let best = { cost: UNMATCHED + solve(j + 1, mask).cost, pick: -1 };
+      for (let i = 0; i < n; i++) {
+        if (mask & (1 << i)) continue;
+        const c = Math.abs(a[i].midi - b[j].midi) + solve(j + 1, mask | (1 << i)).cost;
+        if (c < best.cost) best = { cost: c, pick: i };
+      }
+      memo.set(key, best);
+      return best;
+    };
+    const voices = [];
+    let mask = 0;
+    for (let j = 0; j < m; j++) {
+      const r = solve(j, mask);
+      if (r.pick >= 0) { voices.push({ from: a[r.pick], to: b[j], d: b[j].midi - a[r.pick].midi }); mask |= 1 << r.pick; }
+      else voices.push({ from: null, to: b[j], d: 0 });
+    }
+    a.forEach((x, i) => { if (!(mask & (1 << i))) voices.push({ from: x, to: null, d: 0 }); });
+    return voices;
+  }
+  function describeMotion(voices) {
+    const matched = voices.filter(v => v.from && v.to);
+    const stay = matched.filter(v => v.d === 0).length;
+    const moves = matched.filter(v => v.d !== 0);
+    const parts = [];
+    if (stay) parts.push(`${stay} note${stay === 1 ? '' : 's'} stay`);
+    moves.forEach(v => parts.push(`${noteLabel(v.from.midi)} ${v.d > 0 ? 'up' : 'down'} ${Math.abs(v.d)} to ${noteLabel(v.to.midi)}`));
+    const added = voices.filter(v => !v.from).length, dropped = voices.filter(v => !v.to).length;
+    if (added) parts.push(`${added} new`);
+    if (dropped) parts.push(`${dropped} dropped`);
+    return { text: parts.join(', '), total: matched.reduce((t, v) => t + Math.abs(v.d), 0), stay, moved: moves.length };
+  }
+  const noteLabel = midi => { const pc = ((midi % 12) + 12) % 12; return pcNames[pc] || ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'][pc]; };
+  // The shape on board `pos` when exactly one is picked there
+  function singlePickAt(pos) {
+    const c = boardChords[pos];
+    if (!c) return null;
+    const pk = picksOf(posKeyOf(pos, c));
+    if (pk.length !== 1) return null;
+    const [l, f] = pk[0].split(':');
+    return { low: Number(l), frets: f.split(',').map(Number) };
+  }
+  // The transition shown on board `pos`: from the board before it (board 1 shows the loop from the last board)
+  let vlShow = true;
+  function motionFor(pos) {
+    if (!vlShow) return null;
+    const n = boardChords.length;
+    let prevPos = pos - 1, loop = false;
+    if (pos === 0) {
+      if (!(vlApplied && vlPitch === 'any' && n >= 2)) return null;
+      prevPos = n - 1; loop = true;
+    }
+    const prev = singlePickAt(prevPos), cur = singlePickAt(pos);
+    if (!prev || !cur) return null;
+    const voices = matchVoices(prev, cur);
+    return { prev, cur, voices, loop, fromName: boardChords[prevPos].name, ...describeMotion(voices) };
+  }
+  function motionLine(pos) {
+    const mo = motionFor(pos);
+    if (!mo) return '';
+    return `<p class="motion-line"><strong>${mo.loop ? 'Loop back from' : 'From'} ${esc(mo.fromName)}:</strong> ${esc(mo.text || 'no notes in common')} ` +
+      `<span class="mt">(${mo.total} semitone${mo.total === 1 ? '' : 's'} in all)</span></p>`;
+  }
+  // The movement summary under the voice leading buttons: every transition that has a shape picked on both boards
+  function drawVlSummary() {
+    const box = document.getElementById('vl-summary');
+    if (!box) return;
+    const rows = [];
+    let total = 0;
+    boardChords.forEach((c, pos) => {
+      const mo = motionFor(pos);
+      if (!mo) return;
+      total += mo.total;
+      rows.push(`<li><strong>${esc(mo.fromName)} \u2192 ${esc(c.name)}${mo.loop ? ' (loop)' : ''}</strong>: ${esc(mo.text || 'no notes in common')} <span class="mt">(${mo.total})</span></li>`);
+    });
+    if (!rows.length) { box.hidden = true; box.innerHTML = ''; return; }
+    box.hidden = false;
+    box.innerHTML = `<p class="ctl-label">Movement summary (semitones moved)</p><ul>${rows.join('')}</ul>` +
+      `<p class="hint"><strong>${total}</strong> semitone${total === 1 ? '' : 's'} in all, an average of ${(total / rows.length).toFixed(1)} per chord change. ` +
+      `On the boards, a green ring is a note that stays, and a dashed amber ring with an arrow is where a note comes from and how far it moves.</p>`;
+  }
+  const VL_MOVES = [['near', 'Nearest'], ['along', 'Along the neck'], ['across', 'Across the strings']];
+  const VL_PITCH = [['any', 'Any'], ['up', 'Up'], ['down', 'Down']];
+  let vlMove = 'near', vlPitch = 'any', vlApplied = false;
+  let boardChords = [];
+  function drawVlOptions() {
+    [['vl-move', VL_MOVES, () => vlMove, v => { vlMove = v; }], ['vl-pitch', VL_PITCH, () => vlPitch, v => { vlPitch = v; }], ['vl-show', [['on', 'On'], ['off', 'Off']], () => vlShow ? 'on' : 'off', v => { vlShow = v === 'on'; }]].forEach(([id, opts, get, set]) => {
+      const wrap = document.getElementById(id);
+      wrap.innerHTML = '';
+      opts.forEach(([v, label]) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'key';
+        b.textContent = label;
+        b.setAttribute('aria-pressed', String(get() === v));
+        b.addEventListener('click', () => {
+          set(v);
+          drawVlOptions();
+          if (id === 'vl-show') renderAll();
+          else if (vlApplied) voiceLeadAll();   // already voice led: apply the new choice straight away
+        });
+        wrap.appendChild(b);
+      });
+    });
+  }
+  function voiceLeadAll() {
+    const list = boardChords;
+    const note = document.getElementById('vl-note');
+    if (!list.length) return;
+    const keyOf = sh => sh.low + ':' + sh.frets.join(',');
+    const meanOf = sh => sh.frets.reduce((a, f) => a + f, 0) / sh.frets.length;
+    const pitchOf = sh => sh.frets.reduce((a, f, j) => a + OPEN_MIDI[sh.low + j] + f, 0) / sh.frets.length;
+    const next = {};
+    let prev = null, boards = 0, first = '', unmet = 0, firstShape = null, firstPos = 0, looped = false;
+    // What it costs the hand to go from shape `from` to shape `sh` (the chord being played is `c`)
+    const moveCost = (from, sh, c) => {
+      let sum = 0, n = 0;
+      sh.frets.forEach((f, j) => { const k = sh.low + j - from.low; if (k >= 0 && k < from.frets.length) { sum += Math.abs(f - from.frets[k]); n++; } });
+      const dMean = Math.abs(meanOf(sh) - meanOf(from));
+      let cost = 1.5 * (c.pcs.length - toneCount(sh));
+      if (vlMove === 'along') cost += (n ? sum / n : dMean + 2) + 0.3 * dMean + 6 * Math.abs(sh.low - from.low);
+      else if (vlMove === 'across') cost += 2 * dMean + (sh.low === from.low ? 2.5 : 0) + 0.2 * Math.abs(sh.low - from.low);
+      else {   // Nearest: the semitones each note moves (the same count the movement summary shows), plus a little for hand position
+        let st = 0;
+        matchVoices(from, sh).forEach(v => { st += v.from && v.to ? Math.abs(v.d) : 6; });
+        cost += st / Math.max(from.frets.length, sh.frets.length) + 0.5 * dMean + 0.25 * Math.abs(sh.low - from.low);
+      }
+      const dp = pitchOf(sh) - pitchOf(from);
+      if (vlPitch === 'up') cost += dp > 0 ? 0.3 * dp : 6 + 0.8 * -dp;
+      if (vlPitch === 'down') cost += dp < 0 ? 0.3 * -dp : 6 + 0.8 * dp;
+      return cost;
+    };
+    const lowsSeen = new Set(), allLows = new Set();
+    list.forEach((c, pos) => {
+      const ctx = boardContext(c);
+      const shapes = highlightedShapes(c, ctx.bands, ctx.dim);
+      if (!shapes.length) return;   // nothing to pick here, so the next board leads from the last shape
+      let chosen = null;
+      if (!prev) {
+        const kept = shapes.filter(sh => picksOf(posKeyOf(pos, c)).includes(keyOf(sh))).sort((x, y) => meanOf(x) - meanOf(y))[0];
+        if (kept) { chosen = kept; first = 'board 1 kept the shape you picked'; }
+        else if (vlPitch === 'down') {   // coming down needs room, so start around the 12th fret
+          const v = pickVoicing(c, 12, ctx.bands, ctx.dim, pos);
+          chosen = shapes.find(sh => keyOf(sh) === keyOf(v));
+          first = 'board 1 starts around the 12th fret so there is room to come down';
+        } else {
+          const v = pickVoicing(c, 0, ctx.bands, ctx.dim, pos);
+          chosen = shapes.find(sh => keyOf(sh) === keyOf(v));
+          first = 'board 1 starts with the shape nearest the nut';
+        }
+      } else {
+        let bestCost = Infinity;
+        // With Pitch on Any the song is treated as a loop: the last board also has to lead back into board 1
+        const lastBoard = pos === list.length - 1 || list.slice(pos + 1).every(cc => !highlightedShapes(cc, boardContext(cc).bands, boardContext(cc).dim).length);
+        const wrapTo = lastBoard && vlPitch === 'any' && boards >= 1 ? firstShape : null;
+        shapes.forEach(sh => {
+          let cost = moveCost(prev, sh, c);
+          if (wrapTo) cost += moveCost(sh, wrapTo, list[firstPos]);
+          if (cost < bestCost) { bestCost = cost; chosen = sh; }
+        });
+        if (wrapTo) looped = true;
+        const dp = pitchOf(chosen) - pitchOf(prev);
+        if ((vlPitch === 'up' && dp <= 0) || (vlPitch === 'down' && dp >= 0)) unmet++;
+      }
+      next[posKeyOf(pos, c)] = [keyOf(chosen)];
+      lowsSeen.add(chosen.low);
+      if (!firstShape) { firstShape = chosen; firstPos = pos; }
+      shapes.forEach(sh => allLows.add(sh.low));
+      prev = chosen;
+      boards++;
+    });
+    picks = next;
+    vlApplied = boards > 0;
+    drawSeq();
+    renderAll();
+    const how = { near: 'moving as little as possible', along: 'staying on the same strings and sliding along the neck', across: 'staying in the same fret area and changing string sets' }[vlMove] +
+      (vlPitch === 'up' ? ', rising' : vlPitch === 'down' ? ', falling' : '');
+    note.textContent = `Voice leading applied to ${boards} board${boards === 1 ? '' : 's'} (${how}); ${first || 'no board had a shape to pick'}.` +
+      (looped ? ' The last chord also leads back into chord 1, so the song loops smoothly.' : '') +
+      (unmet ? ` ${unmet} chord${unmet === 1 ? '' : 's'} could not ${vlPitch === 'up' ? 'rise' : 'fall'} any further on the neck and took the smallest step.` : '') +
+      (vlMove !== 'near' && allLows.size === 1 ? ' Only one string set is on, so there is nothing to move between: under Shapes, choose All (or, for full chords, the lowest string option) to let the voicings change strings.' : '') +
+      ' Tap a shape on any board to change it.';
+  }
+
   let statusTimer = null;
   function say(msg) {
     const el = document.getElementById('sound-status');
@@ -3566,7 +3938,7 @@
   // ---- Piano sound: a small additive synth (a few harmonics that die away at different rates, a hammer
   // tick, and a low-pass that darkens high notes). It is a synthetic imitation, not a sampled piano. ----
   const chordSound = { inst: 'guitar' };
-  try { const cs = localStorage.getItem('chord-sound'); if (cs === 'piano' || cs === 'guitar') chordSound.inst = cs; } catch (e) { /* storage unavailable */ }
+  try { const cs = localStorage.getItem('chord-sound'); if (cs === 'piano' || cs === 'guitar' || (cs !== 'clean' && TONES[cs])) chordSound.inst = cs; } catch (e) { /* storage unavailable */ }
   let pianoNoise = null;
   function playPianoNote(midi, when, level = 0.3, dest = null, maxRing = null) {
     const lv = level * mix.guitar;
@@ -4303,6 +4675,7 @@
       if (at + 1 < keys.length) { cur.push(keys[at + 1]); added = keys[at + 1]; }
     }
     if (cur.length) picks[ck] = cur; else delete picks[ck];
+    vlApplied = false;
     previewPick(el.closest('section.board'), added);
   }
   function previewPick(sectionEl, key) {
@@ -4326,6 +4699,7 @@
       if (i >= 0) cur.splice(i, 1); else { cur.push(k); added = k; }
     }
     if (cur.length) picks[ck] = cur; else delete picks[ck];
+    vlApplied = false;
     openShapeLists.add(ck);
     previewPick(el.closest('section.board'), added);
   }
@@ -4824,12 +5198,17 @@
   });
   (function () {
     const wrap = document.getElementById('chordsound-row'), note = document.getElementById('chordsound-note');
-    const NOTES = { guitar: 'Chords play as plucked guitar strings.', piano: 'Chords play on a synthesized piano, in the voicing the Follow panel shows in Piano view. Notes light up on the piano as they play. It is an imitation of a piano, not a recording.' };
+    const NOTES = { guitar: 'Chords play as plucked acoustic guitar strings.',
+      crunch: 'Light amp breakup: the sound of a rhythm guitar pushed just past clean.',
+      drive: 'An overdriven amp: thicker and more sustained, the classic rock rhythm and lead sound.',
+      dist: 'Heavy distortion: tight lows, scooped mids and a long sustain. Chords with a third sound thick and dense, and power chords stay clear.',
+      mute: 'A short, tight, distorted chug, like a palm-muted rhythm guitar.',
+      piano: 'Chords play on a synthesized piano, in the voicing the Follow panel shows in Piano view. Notes light up on the piano as they play. It is an imitation of a piano, not a recording.' };
     const draw = () => {
       wrap.querySelectorAll('.key').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.id === chordSound.inst)));
       note.textContent = NOTES[chordSound.inst];
     };
-    [['guitar', 'Guitar'], ['piano', 'Piano']].forEach(([id, label]) => {
+    [['guitar', 'Acoustic'], ['crunch', 'Crunch'], ['drive', 'Overdrive'], ['dist', 'Distortion'], ['mute', 'Palm mute'], ['piano', 'Piano']].forEach(([id, label]) => {
       const b = document.createElement('button');
       b.type = 'button'; b.className = 'key'; b.dataset.id = id; b.textContent = label;
       b.addEventListener('click', () => {
