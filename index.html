@@ -1038,6 +1038,7 @@
   <div class="quick-bar" id="quick-bar" data-show="singles">
     <div class="qb-group" data-g="shapes"><span class="qb-lbl" id="qb-lbl">String sets</span><div class="keys" id="qb-strings" role="group" aria-label="String sets"></div></div>
     <div class="qb-group" data-g="size"><button type="button" class="key" id="qb-size" aria-label="Boards per row: tap to change">Boards per row: 1</button></div>
+    <div class="qb-group" data-g="labels"><button type="button" class="key" id="qb-labels" aria-label="Dot labels: tap to change">Labels: Notes</button></div>
     <div class="qb-group" data-g="vl"><button type="button" class="key" id="qb-vl">Voice lead all</button><button type="button" class="key" id="qb-clear" hidden>Clear picks</button></div>
   </div>
   <div class="pm-bar" id="pm-bar" data-show="singles" data-g="playmode" hidden></div>
@@ -1213,7 +1214,7 @@
 
 <section data-g="singles"><h2>Individual chord boards</h2>
 <p>One board per chord, or per step when a progression is set. Outlines mark playable shapes; tap one to hear it and pick it as this board's voicing. Each board keeps its own pick.</p>
-<p>The bar above the boards repeats the <b>String sets</b> buttons and <b>Voice lead all</b> from the controls (plus Clear picks once anything is picked), so you can change them without opening the controls.</p>
+<p>The bar above the boards repeats the <b>String sets</b> buttons, <b>Boards per row</b>, <b>Labels</b> and <b>Voice lead all</b> from the controls (plus Clear picks once anything is picked), so you can change them without opening the controls.</p>
 <p>The <b>Faded: Shapes / Faded: Scale</b> button next to Focus switches what the faded notes show (see Faded notes).</p>
 <p><b>Zoom</b> appears once a board has exactly one shape picked. It zooms that board to 8 frets with the shape centered (shapes near the nut show the nut and frets 1 to 8), so the shape and the notes around it are as large as possible. Only shapes that fit in the zoomed area are outlined. It switches off by itself if you clear the pick or pick a second shape, and comes back when you are down to one again.</p>
 <p>The line under each board shows the picked shape as tab (strings low to high, x = not played), how far the notes move from the previous chord in semitones (st), and how many shapes the board has. Tap it to open the details: the chord's notes and formula, the full movement from the previous chord, and every shape as a list you can pick from.</p>
@@ -3634,6 +3635,8 @@
   const FOCUS_LABEL_NAMES = { names: 'Notes', intervals: 'Chord intervals', scaledeg: 'Scale intervals', fingers: 'Fingering' };
   const labelWrap = document.getElementById('labelmode');
   function syncLabelMode() {
+    const ql = document.getElementById('qb-labels');
+    if (ql) ql.textContent = 'Labels: ' + FOCUS_LABEL_NAMES[labelMode];
     labelWrap.querySelectorAll('.key').forEach((btn, i) => btn.setAttribute('aria-pressed', String(LABEL_OPTIONS[i][1] === labelMode)));
     document.getElementById('labelmode-hint').textContent = LABEL_HINTS[labelMode];
     const fl = document.getElementById('focus-label-btn');
@@ -6461,6 +6464,15 @@
     ['last-setup', 'views', 'chord-sound', 'focus-panel', 'follow-panel', 'panel-secs', 'learn'].forEach(k => { try { localStorage.removeItem(k); } catch (e) { /* ignore */ } });
     try { location.replace(location.pathname + location.search); } catch (e) { location.reload(); }
   });
+
+  // ---- Dot labels, cycled from the bar above the individual boards (same setting as the controls) ----
+  document.getElementById('qb-labels').addEventListener('click', () => {
+    const order = LABEL_OPTIONS.map(o => o[1]);
+    labelMode = order[(order.indexOf(labelMode) + 1) % order.length];
+    syncLabelMode();
+    renderAll();
+  });
+  syncLabelMode();
 
   // ---- Boards per row, cycled from the bar above the individual boards (1, 2, 3, 4, then back to 1) ----
   (function sizeCycle() {
