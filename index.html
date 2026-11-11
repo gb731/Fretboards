@@ -15,13 +15,13 @@
   * { box-sizing: border-box; }
   body {
     margin: 0;
-    padding: 32px 20px 48px;
+    padding: 14px 20px 48px;
     background: var(--paper);
     color: var(--ink);
     font-family: Georgia, "Iowan Old Style", "Times New Roman", serif;
   }
   main { max-width: 1400px; margin: 0 auto; }
-  h1 { font-size: 30px; font-weight: 400; margin: 0 0 4px; }
+  h1 { font-size: 24px; font-weight: 400; margin: 0 0 8px; line-height: 1.2; }
   .subtitle { font-size: 19px; color: var(--muted); margin: 0 0 12px; }
   .intro {
     color: var(--muted);
@@ -335,6 +335,62 @@
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
     cursor: pointer;
   }
+  .title-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .title-row .key { margin-left: auto; }
+  .panel-tools { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .panel-tools .key { padding: 6px 12px; font-size: 13px; }
+  .setup-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; margin: 0 0 10px; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .ctl-sec { border-top: 1px solid #e0d6c2; padding: 2px 0; }
+  .ctl-sec > summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; padding: 11px 0;
+    font: 700 12px system-ui, -apple-system, "Segoe UI", sans-serif; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .ctl-sec > summary::-webkit-details-marker { display: none; }
+  .ctl-sec > summary::after { content: '\25b8'; font-size: 14px; transition: transform 0.15s; }
+  .ctl-sec[open] > summary { color: var(--ink); }
+  .ctl-sec[open] > summary::after { transform: rotate(90deg); }
+  .ctl-sec[open] { padding-bottom: 12px; }
+  /* Sections inside a group (Song builder, Display options) */
+  .ctl-grp[open] { padding-bottom: 4px; }
+  .ctl-sub { margin-left: 2px; padding-left: 12px; border-top: 1px dashed #e0d6c2; border-left: 2px solid #e0d6c2; }
+  .ctl-sub > summary { padding: 9px 0; font-size: 11px; color: var(--muted); }
+  .ctl-sub > summary::after { font-size: 12px; }
+  .ctl-grp > .ctl-sub:first-of-type { border-top: 0; }
+  .ctl-sec > summary + .ctl-label, .ctl-sec > summary + div > .ctl-label:first-child { margin-top: 0; }
+  .master .ctl-sec .ctl-label:not(:first-child) { margin-top: 12px; }
+  .panel .explain { display: none; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .tuning-select { margin-bottom: 4px; }
+  .view-off { display: none !important; }
+  .learn-card { position: sticky; top: 8px; z-index: 30; margin: 0 0 14px; padding: 10px 14px 12px; background: #fffdf8; border: 1.5px solid #b4532a; border-radius: 8px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12); max-height: 45vh; overflow-y: auto; font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .learn-card .lc-head { display: flex; align-items: center; gap: 6px; }
+  .learn-card .lc-head strong { font-size: 15px; }
+  .learn-card .sp, .gp-bar .sp { flex: 1; }
+  .learn-card .lc-head button { padding: 3px 10px; font: 600 12px system-ui, -apple-system, "Segoe UI", sans-serif; border: 1.5px solid #d9ceb8; border-radius: 14px; background: #fff; color: var(--ink); cursor: pointer; }
+  .learn-card.min { max-height: none; }
+  .learn-card.min .lc-body { display: none; }
+  .learn-card p, .learn-card ul { margin: 8px 0 0; }
+  .learn-card ul { padding-left: 20px; }
+  .learn-card .lc-now { margin-top: 10px; padding: 8px 10px; background: #f3ebdc; border-radius: 6px; }
+  .learn-card .lc-now b { display: block; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .guide-page { position: fixed; inset: 0; z-index: 200; background: var(--paper); overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .gp-bar { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; gap: 8px; padding: 10px 20px; background: #fffdf8; border-bottom: 1px solid #e0d6c2; font: 16px system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .gp-inner { max-width: 1000px; margin: 0 auto; padding: 16px 20px 60px; display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 28px; }
+  .gp-toc { position: sticky; top: 64px; align-self: start; font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .gp-toc b { display: block; margin: 12px 0 4px; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .gp-toc a { display: block; padding: 3px 0; color: var(--ink); text-decoration: none; }
+  .gp-toc a:hover { text-decoration: underline; }
+  .gp-body { font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .gp-body section { padding: 6px 0 14px; border-bottom: 1px solid #e0d6c2; scroll-margin-top: 64px; }
+  .gp-body h2 { font: 400 24px Georgia, "Iowan Old Style", serif; margin: 14px 0 6px; }
+  .gp-body section.hl { background: #fff4e0; border-radius: 6px; }
+  @media (max-width: 700px) { .gp-inner { grid-template-columns: minmax(0, 1fr); } .gp-toc { position: static; columns: 2; } }
+  .fab-play { bottom: 72px; padding: 10px 16px; font-size: 14px; background: #b4532a; }
+  .fab-play[data-playing="true"] { background: #2b2a27; }
+  .fade-view { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin: -4px 0 8px; font: 600 11px system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--muted); }
+  .fade-view button { padding: 2px 9px; font: 600 11px system-ui, -apple-system, "Segoe UI", sans-serif; border: 1.5px solid #d9ceb8; border-radius: 12px; background: #fff; color: var(--ink); cursor: pointer; }
+  .fade-view button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: #fffdf8; }
+  .boards.cols-3 .fade-view, .boards.cols-4 .fade-view { margin: -2px 0 5px; font-size: 10px; }
+  .boards.cols-3 .fade-view button, .boards.cols-4 .fade-view button { font-size: 10px; padding: 1px 6px; }
   .fab:focus-visible { outline: 3px solid #b4532a; outline-offset: 2px; }
   @media (max-width: 999px) {
     .layout, .layout:not(.ctl-open) { display: block; }
@@ -479,8 +535,107 @@
   .follow[data-size="large"] .fcell.cur .ft { font-size: 18px; }
   .follow[data-size="large"] .fcell .fsub { font-size: 13px; }
   @media (max-width: 600px) { .follow { grid-template-columns: .8fr 1.5fr .8fr; gap: 4px; padding: 4px 6px 4px; } .fcell .fsub { display: none; } }
-  .shape-list { margin: 4px 0 8px; font-size: 13px; }
-  .shape-list summary { cursor: pointer; color: #6b665c; padding: 4px 0; }
+  .shape-list { margin: 4px 0 0; font: 13px system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .shape-list summary { cursor: pointer; color: #6b665c; padding: 2px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .shape-list summary b { color: var(--ink); letter-spacing: 0.04em; }
+  .bd-more[open] summary { margin-bottom: 6px; }
+  .bd-more .chord-sub { margin: 0 0 6px; }
+  .proxied { display: none !important; }
+  .pm-bar[hidden], .proxy-select[hidden], .quick-bar [hidden] { display: none !important; }
+  .tuning-select { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .sel-line { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+  .sel-line .ctl-label { margin: 0 !important; flex: 0 0 auto; max-width: 45%; }
+  .sel-line select { flex: 1 1 auto; min-width: 0; margin: 0; }
+  .ctl-sec > summary + .sel-line { margin-top: 0; }
+  /* Key, mode and scale stay as buttons, packed into tidy grids */
+  #keys, #modes, #scaletype, #scaleoutside { display: grid; gap: 5px; }
+  #keys { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  #modes { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  #scaletype, #scaleoutside { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #keys .key, #modes .key, #scaletype .key, #scaleoutside .key { padding: 6px 2px; font-size: 12px; min-width: 0; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #keys .key { font-size: 12px; letter-spacing: -0.01em; }
+  #scaleoutside[hidden], #outside-label[hidden] { display: none; }
+  .ctl-sec[data-sec="key"] .ctl-label { margin-top: 10px; margin-bottom: 5px; }
+  .ctl-sec[data-sec="key"] > summary + .ctl-label { margin-top: 0; }
+  /* Every button row in the controls: small, even grids */
+  .panel .keys, .panel .chips { display: grid; gap: 5px; margin: 0 0 8px; }
+  .panel .key, .panel .chip { min-width: 0; padding: 6px 4px; font-size: 12px; line-height: 1.2; border-radius: 8px; text-align: center; justify-content: center;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .panel .chip { gap: 5px; }
+  .panel .chip > span { overflow: hidden; text-overflow: ellipsis; }
+  .panel .chip .dot { flex: 0 0 auto; width: 9px; height: 9px; }
+  .panel .chip .nt { font-size: 11px; }
+  #view-row, #sound-row, #panel .panel-tools, #seq-edit-opts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  #panel #play-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .panel-tools { display: grid !important; gap: 5px; }
+  #chord-major, #chord-minor { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #seq-pick, #seq-list { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  #seq-actions, #vl-move, #vl-pitch { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  #vl-actions, #vl-show { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #seq-list .empty, #seq-pick .empty { grid-column: 1 / -1; white-space: normal; }
+  #caged { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+  #shapes { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  #shapes .key:last-child { grid-column: 1 / -1; }
+  #sound-row2, #play-row, #drum-row, #metro-row, #metro-opts, #saved-box .keys, #labelmode, #stype, #strum-patterns { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #bsize, #meter-row, #metro-sub, #metro-sound { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  #metro-sound, #metro-sub { grid-template-columns: repeat(4, minmax(max-content, 1fr)); }
+  #metro-sound .key, #metro-sub .key { padding-left: 6px; padding-right: 6px; }
+  @media (max-width: 420px) { #metro-sound { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  #chordsound-row, #drum-patterns { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .save-row .key { padding: 6px 12px; }
+  .panel .zoom-row .key { padding: 6px 10px; }
+  .quick-bar .key { padding: 4px 9px; font-size: 12px; border-radius: 8px; }
+  .panel .zoom-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; margin: 0 0 8px; }
+  #tempo-row, #mix-row, #strum-row, #metro-tempo-row { grid-template-columns: minmax(0, 1fr); }
+  .panel .stepper { min-width: 0; justify-content: space-between; gap: 4px; padding: 3px 4px 3px 10px; font-size: 12px; border-radius: 8px; white-space: nowrap; }
+  .panel .stepper > :first-child { overflow: hidden; text-overflow: ellipsis; }
+  .panel .stepper button { width: 24px; height: 24px; border-radius: 6px; font-size: 14px; flex: 0 0 auto; }
+  .panel .stepper .val { min-width: 20px; }
+  .panel .stepper input[type="range"] { flex: 1 1 auto; width: auto; min-width: 0; }
+  .panel .stepper .val.wide { min-width: 50px; text-align: right; padding-right: 6px; }
+  .panel .zoom-row > .key { width: 100%; }
+  .panel select.tuning-select { width: 100%; }
+  .save-row .key { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .quick-bar { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; font: 13px system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .quick-bar .qb-group { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .quick-bar .qb-lbl { font-weight: 700; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .quick-bar .keys { margin: 0; gap: 5px; }
+  .quick-bar .key { padding: 5px 11px; font-size: 13px; }
+  body.play-mode .quick-bar { display: none !important; }
+  .pm-bar { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font: 14px system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .pm-bar .key { padding: 6px 14px; font-size: 13px; }
+  .pm-bar .pm-enter { background: #b4532a; border-color: #b4532a; color: #fffdf8; }
+  .pm-bar.on { position: sticky; top: 0; z-index: 25; padding: 8px 12px; background: #2b2a27; color: #fffdf8; border-radius: 8px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2); }
+  .pm-bar.on .key { background: #fffdf8; color: var(--ink); border-color: #fffdf8; }
+  .pm-bar.on .key[aria-pressed="true"] { background: #b4532a; color: #fffdf8; border-color: #b4532a; }
+  .pm-bar .pm-tip { color: #d9ceb8; font-size: 13px; }
+  .pm-bar .sp { flex: 1; }
+  body.play-mode #prog-section, body.play-mode .bd-more, body.play-mode .bz-btn { display: none !important; }
+  /* Individual boards: title on the left, Faded / Focus / Play on the right of one row */
+  /* When the card is too narrow for both, the buttons drop to their own line under the title */
+  #singles .bd-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 8px; }
+  #singles .bd-head .single-title { flex: 1 1 7em; min-width: 7em; margin: 0; padding-right: 0; }
+  #singles .bd-tools { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 5px; margin-left: auto; max-width: 100%; }
+  #singles .bd-tools .play, #singles .bd-tools .focus-btn { position: static; }
+  #singles .fv-btn { padding: 5px 11px; font: 600 12px system-ui, -apple-system, "Segoe UI", sans-serif; border: 1.5px solid #d9ceb8; border-radius: 16px; background: #fff; color: var(--ink); cursor: pointer; white-space: nowrap; }
+  #singles .fv-btn[aria-pressed="true"] { background: #2b2a27; color: #fffdf8; border-color: #2b2a27; }
+  .boards.cols-2 #singles .bd-head { margin-bottom: 5px; gap: 6px; }
+  .boards.cols-2 #singles .bd-tools { gap: 4px; }
+  .boards.cols-2 #singles .fv-btn { font-size: 11px; padding: 3px 9px; }
+  .boards.cols-3 #singles .bd-head { margin-bottom: 4px; gap: 4px; }
+  .boards.cols-3 #singles .bd-tools { gap: 3px; }
+  .boards.cols-3 #singles .fv-btn { font-size: 10px; padding: 2px 7px; }
+  .boards.cols-4 #singles .bd-head { margin-bottom: 3px; gap: 3px; }
+  .boards.cols-4 #singles .bd-tools { gap: 2px; }
+  .boards.cols-4 #singles .fv-btn { font-size: 9px; padding: 2px 6px; }
+  .bd-more .shape-pick { margin: 0 0 6px; }
+  .boards.cols-3 .shape-list, .boards.cols-4 .shape-list { font-size: 11px; }
+  .sum-board { grid-column: 1 / -1; }
+  .sum-board .chips { margin-top: 8px; }
+  .boards.cols-2 #singles section.board, .boards.cols-2 .sum-board { padding: 8px 8px 6px; }
+  .boards.cols-3 #singles section.board, .boards.cols-3 .sum-board { padding: 6px 5px 4px; }
+  .boards.cols-4 #singles section.board, .boards.cols-4 .sum-board { padding: 5px 4px 3px; }
+  .boards.cols-3, .boards.cols-4 { gap: 10px; }
   .shape-list .chips { margin-top: 6px; }
   .shape-chip { font-variant-numeric: tabular-nums; letter-spacing: .03em; }
   .shape-chip[aria-pressed="true"] { background: #2b2a27; color: #fffdf8; }
@@ -497,181 +652,257 @@
 <body>
 <main>
   <h1>Fretboards</h1>
-  <p class="subtitle">Triads, CAGED shapes, and chord progressions in every key and mode</p>
-  <p class="intro">Pick a key and a mode, then choose which chords to show. Each chord has its own color, and where two chords share a note the dot is split. Every fretboard below follows your selection.</p>
-  <p class="hint swipe-hint">On a phone each fretboard is wider than the screen. Swipe it sideways to see the whole neck, or turn Zoom on to focus on a few frets.</p>
 
   <div class="layout ctl-open" id="layout">
     <aside class="panel" id="panel" aria-label="Controls">
       <div class="panel-head"><strong>Controls</strong><button type="button" class="key" id="panel-close">Done</button></div>
-  <div class="keymode">
-    <p class="ctl-label">Key (root note)</p>
+  <div class="panel-tools">
+    <button type="button" class="key" id="guide-open">Guide</button>
+    <button type="button" class="key" id="learn-toggle" aria-pressed="false">Learning mode</button>
+    <button type="button" class="key" id="sec-collapse">Collapse all</button>
+  </div>
+  <div class="setup-row" data-g="setup">
+    <button type="button" class="key" id="setup-copy">Copy setup link</button>
+    <button type="button" class="key" id="setup-reset">Reset to defaults</button>
+  </div>
+  <div class="master">
+  <details class="ctl-sec" data-sec="tuning" data-g="tuning" open>
+    <summary>Tuning</summary>
+    <select id="tuning" class="tuning-select" aria-labelledby="tuning-label"></select>
+    <p class="ctl-label sr-only" id="tuning-label">Tuning</p>
+    <p class="hint explain" id="tuning-hint"></p>
+  </details>
+
+  <details class="ctl-sec" data-sec="key" data-g="key" open>
+    <summary>Key &amp; scale</summary>
+    <p class="ctl-label">Key</p>
     <div class="keys" id="keys" role="group" aria-label="Key"></div>
     <p class="ctl-label">Mode</p>
     <div class="keys" id="modes" role="group" aria-label="Mode"></div>
-    <p class="hint" id="mode-hint"></p>
-    <p class="ctl-label">Scale board notes</p>
+    <p class="hint explain" id="mode-hint"></p>
+    <div data-g="scale">
+    <p class="ctl-label">Scale board</p>
     <div class="keys" id="scaletype" role="group" aria-label="Scale board notes"></div>
     <p class="ctl-label" id="outside-label">Outside the mode</p>
-    <div class="keys" id="scaleoutside" role="group" aria-label="Scales that include notes outside the mode"></div>
-    <p class="hint" id="scaletype-hint"></p>
+    <div class="keys" id="scaleoutside" data-optlabel="Outside the mode" role="group" aria-label="Scales that include notes outside the mode"></div>
+    <p class="hint explain" id="scaletype-hint"></p>
     <p class="warn-note" id="scaletype-warn" hidden></p>
-  </div>
+    </div>
+  </details>
 
-  <div class="master">
-    <h3 class="ctl-group" id="fretboard-heading">Fretboard options</h3>
-    <p class="ctl-label">Dot labels</p>
-    <div class="keys" id="labelmode" role="group" aria-label="Dot labels"></div>
-    <p class="hint" id="labelmode-hint"></p>
-
-    <p class="ctl-label" id="tuning-label">Tuning</p>
-    <select id="tuning" class="tuning-select" aria-labelledby="tuning-label"></select>
-    <p class="hint" id="tuning-hint"></p>
-
-    <p class="ctl-label">Board size</p>
-    <div class="keys" id="bsize" role="group" aria-label="Board size"></div>
-    <p class="hint">Smaller sizes put the fretboards side by side so more fit on screen. Pair a small size with Zoom to a fret range to keep the notes readable.</p>
-
+  <details class="ctl-sec" data-sec="chords" data-g="chords" open>
+    <summary>Chords displayed</summary>
     <!-- 7th and 9th chord selection is hidden for now. To bring it back, remove this HTML comment
          and the matching JS comment marked "7TH AND 9TH CHORD SELECTION".
     <p class="ctl-label">Chord type</p>
     <div class="keys" id="ctype" role="group" aria-label="Chord type"></div>
     -->
-
     <p class="ctl-label" id="lbl-major">Major chords</p>
     <div class="chips" id="chord-major" role="group" aria-label="Major-type chords"></div>
     <p class="ctl-label" id="lbl-minor">Minor chords</p>
     <div class="chips" id="chord-minor" role="group" aria-label="Minor-type chords"></div>
-    <p class="hint" id="chord-hint"></p>
+    <p class="hint explain" id="chord-hint"></p>
+  </details>
 
-    <p class="warn-note" id="caged-off" hidden>CAGED shapes are built for standard tuning, so they are hidden in this tuning. The shape outlines below still work.</p>
-    <div id="caged-wrap">
-    <p class="ctl-label">CAGED shapes on the individual chord fretboards</p>
-    <div class="keys" id="caged" role="group" aria-label="CAGED shapes"></div>
-    <p class="hint">Dashed bands mark where each open-chord shape lands for that chord. Tap any combination of letters, such as C, A and D, to see the forms above and below each other. Notes outside the chosen shapes fade. Minor chords use the minor form (labeled like "Am shape") in the same positions. Of the minor forms, Am, Em and Dm are the ones guitarists really play. The Cm and Gm shapes are awkward and rarely used, but they are shown so the five-shape pattern stays complete. Diminished chords are left out.</p>
-    </div>
-
+  <details class="ctl-sec" data-sec="display" data-g="display">
+    <summary>Fretboard display options</summary>
+    <div data-g="shapes">
     <p class="ctl-label">Shape type</p>
     <div class="keys" id="stype" role="group" aria-label="Shape type"></div>
-
-    <p class="ctl-label" id="lbl-shapes">Outline playable triads on these strings</p>
+    <p class="ctl-label" id="lbl-shapes">Strings</p>
     <div class="keys" id="shapes" role="group" aria-label="Playable shapes"></div>
-    <p class="hint" id="hint-shapes"></p>
-
-    <p class="ctl-label">Zoom to a fret range</p>
+    <p class="hint explain" id="hint-shapes"></p>
+    </div>
+    <div data-g="labels">
+    <p class="ctl-label">Dot labels</p>
+    <div class="keys" id="labelmode" role="group" aria-label="Dot labels"></div>
+    <p class="hint explain" id="labelmode-hint"></p>
+    </div>
+    <div data-g="size">
+    <p class="ctl-label">Boards per row</p>
+    <div class="keys" id="bsize" role="group" aria-label="Boards per row"></div>
+    </div>
+    <div data-g="caged">
+    <p class="warn-note" id="caged-off" hidden>CAGED needs standard tuning (or half or full step down).</p>
+    <div id="caged-wrap">
+    <p class="ctl-label">CAGED shapes</p>
+    <div class="keys" id="caged" role="group" aria-label="CAGED shapes"></div>
+    </div>
+    </div>
+    <div data-g="zoom">
+    <p class="ctl-label">Zoom</p>
     <div class="zoom-row off" id="zoom" role="group" aria-label="Zoom"></div>
     <p class="hint" id="zoom-readout"></p>
+    </div>
+  </details>
 
-    <!-- Progression selection is hidden for now. To bring it back, remove this HTML comment
-         and the matching JS comment marked "PROGRESSION SELECTION".
-    <p class="ctl-label">Progression</p>
-    <div class="keys" id="prog-presets" role="group" aria-label="Progression"></div>
-    <div id="prog-start" hidden><div class="zoom-row" id="prog-start-row"></div></div>
-    <p class="hint">Pick a progression to step through it chord by chord. Each chord uses the CAGED shape nearest the previous one, so you can see the smallest hand move. The progression fretboard sets its own zoom.</p>
-    -->
 
-    <h3 class="ctl-group" id="progression-heading">Progression builder</h3>
-    <p class="ctl-label">Find a song or a saved progression</p>
-    <input id="song-q" class="song-q" type="search" placeholder="Song, artist or saved title, or chords like G D Em C" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" role="combobox" aria-expanded="false" aria-controls="song-results" aria-label="Search for a song">
-    <div id="song-results" role="listbox" aria-label="Matching songs"></div>
-    <p class="hint" id="song-note" aria-live="polite"></p>
-    <p class="ctl-label">Add chords one at a time</p>
-    <div class="chips" id="seq-pick" role="group" aria-label="Add a chord to the progression"></div>
-    <p class="ctl-label">Common progressions (each tap adds to the end)</p>
-    <div class="chips" id="seq-presets" role="group" aria-label="Common progressions"></div>
-    <p class="hint" id="seq-note" aria-live="polite"></p>
-    <p class="ctl-label">Your song (tap a step to change it)</p>
-    <div class="chips" id="seq-list" aria-live="polite"></div>
-    <div class="seq-edit" id="seq-edit" hidden>
-      <p class="ctl-label" id="seq-edit-label"></p>
-      <div class="keys" id="seq-edit-opts" role="group" aria-label="Change this step"></div>
-    </div>
-    <div id="vl-opts">
-      <p class="ctl-label">Voice leading: movement</p>
-      <div class="keys" id="vl-move" role="group" aria-label="How voice leading moves between chords"></div>
-      <p class="ctl-label">Voice leading: pitch</p>
-      <div class="keys" id="vl-pitch" role="group" aria-label="Whether voice leading rises or falls"></div>
-      <p class="ctl-label">Voice leading: show movement on the boards</p>
-      <div class="keys" id="vl-show" role="group" aria-label="Show the movement between chords on the boards"></div>
-    </div>
-    <div id="vl-summary" class="vl-summary" hidden></div>
-    <p class="hint" id="vl-note" aria-live="polite"></p>
-    <div class="save-row" id="save-row">
-      <input id="save-title" class="song-q" type="text" maxlength="60" placeholder="Title to save this progression" autocomplete="off" aria-label="Title for saving this progression">
-      <button type="button" class="key" id="save-btn">Save</button>
-    </div>
-    <p class="hint" id="save-note" aria-live="polite"></p>
-    <details class="saved-box" id="saved-box">
-      <summary id="saved-sum">Saved progressions (0)</summary>
-      <div id="saved-list"></div>
-      <div class="keys">
-        <button type="button" class="key" id="saved-export">Export</button>
-        <button type="button" class="key" id="saved-import">Import</button>
+  <!-- Progression selection is hidden for now. To bring it back, remove this HTML comment
+       and the matching JS comment marked "PROGRESSION SELECTION".
+  <p class="ctl-label">Progression</p>
+  <div class="keys" id="prog-presets" role="group" aria-label="Progression"></div>
+  <div id="prog-start" hidden><div class="zoom-row" id="prog-start-row"></div></div>
+  -->
+
+  <details class="ctl-sec ctl-grp" data-sec="songb" data-g="prog" open>
+    <summary>Song builder</summary>
+    <details class="ctl-sec ctl-sub" data-sec="prog" data-g="prog">
+      <summary>Progression builder</summary>
+      <div data-g="songs">
+      <input id="song-q" class="song-q" type="search" placeholder="Song, artist, saved title or chords" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" role="combobox" aria-expanded="false" aria-controls="song-results" aria-label="Search for a song">
+      <div id="song-results" role="listbox" aria-label="Matching songs"></div>
+      <p class="hint" id="song-note" aria-live="polite"></p>
       </div>
-      <textarea id="saved-io" rows="4" spellcheck="false" aria-label="Saved progressions as text" placeholder="Export shows your saved progressions here as text to copy. To restore or move them, paste that text here and tap Import."></textarea>
+      <p class="ctl-label">Add a chord</p>
+      <div class="chips" id="seq-pick" role="group" aria-label="Add a chord to the progression"></div>
+      <p class="ctl-label">Common progressions</p>
+      <select id="seq-presets" class="tuning-select" aria-label="Add a common progression"></select>
+      <p class="hint" id="seq-note" aria-live="polite"></p>
+      <p class="ctl-label">Your progression</p>
+      <div class="chips" id="seq-list" aria-live="polite"></div>
+      <div class="keys" id="seq-actions" role="group" aria-label="Progression actions">
+        <button type="button" class="key" id="seq-clear">Clear</button>
+        <button type="button" class="key" id="seq-repeat">Repeat all</button>
+        <button type="button" class="key" id="seq-undo">Undo</button>
+      </div>
+      <div class="seq-edit" id="seq-edit" hidden>
+        <p class="ctl-label" id="seq-edit-label"></p>
+        <div class="keys" id="seq-edit-opts" role="group" aria-label="Change this step"></div>
+      </div>
+      <div data-g="saved">
+      <div class="save-row" id="save-row">
+        <input id="save-title" class="song-q" type="text" maxlength="60" placeholder="Title to save" autocomplete="off" aria-label="Title for saving this progression">
+        <button type="button" class="key" id="save-btn">Save</button>
+      </div>
+      <p class="hint" id="save-note" aria-live="polite"></p>
+      <details class="saved-box" id="saved-box">
+        <summary id="saved-sum">Saved progressions (0)</summary>
+        <div id="saved-list"></div>
+        <div class="keys">
+          <button type="button" class="key" id="saved-export">Export</button>
+          <button type="button" class="key" id="saved-import">Import</button>
+        </div>
+        <textarea id="saved-io" rows="4" spellcheck="false" aria-label="Saved progressions as text" placeholder="Export puts your saved progressions here to copy. Paste text here and tap Import to restore."></textarea>
+      </details>
+      </div>
     </details>
-    <p class="hint">Only chords switched on above appear here. Tap chords one at a time, or tap common progressions to stack them into a song, such as a verse then a chorus. Adding a progression switches on any chord it needs. Tap a step in your song to change that chord to sus2, sus4, a 7th or a 9th (or back to plain), or to remove it. Sevenths and ninths are outlined as four-string shapes. The individual fretboards then show every step in order, and Play progression plays them. Undo steps back, Repeat all doubles the song, and Clear returns to the normal order.</p>
 
-
-    <h3 class="ctl-group" id="sound-heading">Sound</h3>
-    <div class="keys" id="sound-row" role="group" aria-label="On and off switches">
-      <button type="button" class="key" id="sound-toggle" aria-pressed="true">Sound on</button>
-      <button type="button" class="key" id="loop-toggle" aria-pressed="false">Loop off</button>
-      <button type="button" class="key" id="pad-toggle" aria-pressed="true">Synth on</button>
-      <button type="button" class="key" id="drums-toggle" aria-pressed="true">Drums on</button>
-      <button type="button" class="key" id="metro-toggle" aria-pressed="false">Metronome off</button>
-      <button type="button" class="key" id="follow-toggle" aria-pressed="true">Follow on</button>
-    </div>
-    <div class="keys" id="play-row" role="group" aria-label="Play">
-      <button type="button" class="key" id="play-prog">Play chords</button>
-      <button type="button" class="key" id="stop-audio">Stop</button>
-    </div>
-    <div class="zoom-row" id="tempo-row" role="group" aria-label="Tempo">
-      <div class="stepper">
-        <label for="tempo">Tempo</label>
-        <input type="range" id="tempo" min="40" max="200" step="1" value="80" aria-label="Tempo in beats per minute">
-        <span class="val wide" id="tempo-val">80 BPM</span>
+    <details class="ctl-sec ctl-sub" data-sec="vl" data-g="vl">
+      <summary>Voice leading</summary>
+      <div class="keys" id="vl-actions" role="group" aria-label="Voice leading">
+        <button type="button" class="key" id="seq-vl">Voice lead all boards</button>
+        <button type="button" class="key" id="seq-clearpicks">Clear all picks</button>
       </div>
-      <div class="stepper">
-        <span>Beats per chord</span>
-        <button type="button" id="beats-minus" aria-label="Fewer beats per chord">&minus;</button>
-        <span class="val" id="beats-val">2</span>
-        <button type="button" id="beats-plus" aria-label="More beats per chord">+</button>
+      <div id="vl-opts" data-g="vl">
+        <p class="ctl-label">Movement</p>
+        <div class="keys" id="vl-move" role="group" aria-label="How voice leading moves between chords"></div>
+        <p class="ctl-label">Pitch</p>
+        <div class="keys" id="vl-pitch" role="group" aria-label="Whether voice leading rises or falls"></div>
+        <p class="ctl-label">Show movement</p>
+        <div class="keys" id="vl-show" role="group" aria-label="Show the movement between chords on the boards"></div>
       </div>
-    </div>
-    <p class="ctl-label">Time signature</p>
-    <div class="keys" id="meter-row" role="group" aria-label="Time signature">
-      <button type="button" class="key" data-meter="4/4" aria-pressed="true">4/4</button>
-      <button type="button" class="key" data-meter="3/4" aria-pressed="false">3/4</button>
-      <button type="button" class="key" data-meter="6/8" aria-pressed="false">6/8</button>
-      <button type="button" class="key" data-meter="2/4" aria-pressed="false">2/4</button>
-    </div>
-    <p class="hint" id="tempo-note"></p>
+      <div id="vl-summary" class="vl-summary" hidden data-g="vl"></div>
+      <p class="hint" id="vl-note" aria-live="polite"></p>
+    </details>
 
-    <p class="ctl-label">Chord sound</p>
-    <div class="keys" id="chordsound-row" role="group" aria-label="Chord sound"></div>
-    <p class="hint" id="chordsound-note"></p>
-
-    <p class="ctl-label">Strumming and rhythm</p>
-    <div class="zoom-row" id="strum-row" role="group" aria-label="Strum speed">
-      <div class="stepper">
-        <label for="strum-speed">Strum speed</label>
-        <input type="range" id="strum-speed" min="0" max="100" step="1" value="29" aria-label="Strum speed, slow to fast">
-        <span class="val wide" id="strum-speed-val">50 ms</span>
+    <details class="ctl-sec ctl-sub" data-sec="sound" data-g="sound">
+      <summary>Play song</summary>
+      <div class="keys" id="play-row" role="group" aria-label="Play">
+        <button type="button" class="key" id="play-prog">Play chords</button>
+        <button type="button" class="key" id="loop-toggle" aria-pressed="false">Loop off</button>
+        <button type="button" class="key" id="stop-audio">Stop</button>
       </div>
-    </div>
-    <div class="keys" id="strum-patterns" role="group" aria-label="Strumming pattern"></div>
-    <p class="hint" id="strum-note"></p>
+      <div class="keys" id="sound-row" role="group" aria-label="Parts that play along">
+        <button type="button" class="key" id="drums-toggle" aria-pressed="true">Drums on</button>
+        <button type="button" class="key" id="pad-toggle" aria-pressed="true">Synth on</button>
+        <button type="button" class="key" id="metro-toggle" aria-pressed="false">Metronome off</button>
+      </div>
+      <div class="keys" id="sound-row2" role="group" aria-label="Sound and Follow panel">
+        <button type="button" class="key" id="sound-toggle" aria-pressed="true">Sound on</button>
+        <button type="button" class="key" id="follow-toggle" aria-pressed="true">Follow on</button>
+      </div>
+      <div data-g="tempo">
+      <p class="ctl-label">Time signature</p>
+      <div class="keys" id="meter-row" role="group" aria-label="Time signature">
+        <button type="button" class="key" data-meter="4/4" aria-pressed="true">4/4</button>
+        <button type="button" class="key" data-meter="3/4" aria-pressed="false">3/4</button>
+        <button type="button" class="key" data-meter="6/8" aria-pressed="false">6/8</button>
+        <button type="button" class="key" data-meter="2/4" aria-pressed="false">2/4</button>
+      </div>
+      <div class="zoom-row" id="tempo-row" role="group" aria-label="Tempo">
+        <div class="stepper">
+          <label for="tempo">Tempo</label>
+          <input type="range" id="tempo" min="40" max="200" step="1" value="80" aria-label="Tempo in beats per minute">
+          <span class="val wide" id="tempo-val">80 BPM</span>
+        </div>
+        <div class="stepper">
+          <span>Beats per chord</span>
+          <button type="button" id="beats-minus" aria-label="Fewer beats per chord">&minus;</button>
+          <span class="val" id="beats-val">2</span>
+          <button type="button" id="beats-plus" aria-label="More beats per chord">+</button>
+        </div>
+      </div>
+      <p class="hint explain" id="tempo-note"></p>
+      </div>
+      <div data-g="chordsound">
+      <p class="ctl-label">Chord sound</p>
+      <div class="keys" id="chordsound-row" role="group" aria-label="Chord sound"></div>
+      <p class="hint explain" id="chordsound-note"></p>
+      </div>
+      <div data-g="strum">
+      <p class="ctl-label">Strumming</p>
+      <div class="zoom-row" id="strum-row" role="group" aria-label="Strum speed">
+        <div class="stepper">
+          <label for="strum-speed">Strum speed</label>
+          <input type="range" id="strum-speed" min="0" max="100" step="1" value="29" aria-label="Strum speed, slow to fast">
+          <span class="val wide" id="strum-speed-val">50 ms</span>
+        </div>
+      </div>
+      <div class="keys" id="strum-patterns" role="group" aria-label="Strumming pattern"></div>
+      <p class="hint explain" id="strum-note"></p>
+      </div>
+      <p class="hint" id="sound-status" aria-live="polite"></p>
+    </details>
 
-    <h3 class="ctl-group" id="drums-heading">Drums</h3>
-    <div class="keys" id="drum-row" role="group" aria-label="Drums">
-      <button type="button" class="key" id="drum-kick" aria-pressed="true">Bass drum</button>
-      <button type="button" class="key" id="drum-snare" aria-pressed="true">Snare</button>
-    </div>
-    <div class="keys" id="drum-patterns" role="group" aria-label="Drum pattern"></div>
-    <p class="hint" id="drum-note"></p>
+    <details class="ctl-sec ctl-sub" data-sec="drums" data-g="drums">
+      <summary>Drums</summary>
+      <div class="keys" id="drum-row" role="group" aria-label="Drums">
+        <button type="button" class="key" id="drum-kick" aria-pressed="true">Bass drum</button>
+        <button type="button" class="key" id="drum-snare" aria-pressed="true">Snare</button>
+      </div>
+      <div class="keys" id="drum-patterns" role="group" aria-label="Drum pattern"></div>
+      <p class="hint explain" id="drum-note"></p>
+    </details>
 
-    <h3 class="ctl-group" id="metro-heading">Metronome</h3>
+    <details class="ctl-sec ctl-sub" data-sec="mix" data-g="mix">
+      <summary>Mix</summary>
+      <div class="zoom-row" id="mix-row" role="group" aria-label="Volume mix">
+        <div class="stepper">
+          <label for="mix-guitar">Chords</label>
+          <input type="range" id="mix-guitar" min="0" max="100" step="1" value="100">
+          <span class="val wide" id="mix-guitar-val">100%</span>
+        </div>
+        <div class="stepper">
+          <label for="mix-pad">Synth</label>
+          <input type="range" id="mix-pad" min="0" max="100" step="1" value="70">
+          <span class="val wide" id="mix-pad-val">70%</span>
+        </div>
+        <div class="stepper">
+          <label for="mix-drums">Drums</label>
+          <input type="range" id="mix-drums" min="0" max="100" step="1" value="100">
+          <span class="val wide" id="mix-drums-val">100%</span>
+        </div>
+        <div class="stepper">
+          <label for="mix-metro">Metronome</label>
+          <input type="range" id="mix-metro" min="0" max="100" step="1" value="60">
+          <span class="val wide" id="mix-metro-val">60%</span>
+        </div>
+      </div>
+    </details>
+  </details>
+
+  <details class="ctl-sec" data-sec="metro" data-g="metro">
+    <summary>Metronome</summary>
     <div class="keys" id="metro-row" role="group" aria-label="Metronome">
       <button type="button" class="key" id="metro-run" aria-pressed="false">Start metronome</button>
       <button type="button" class="key" id="metro-tap">Tap tempo</button>
@@ -680,64 +911,62 @@
       <button type="button" class="key" id="metro-accent" aria-pressed="true">Accent beat 1</button>
       <button type="button" class="key" id="metro-count" aria-pressed="false">Count-in bar</button>
     </div>
+    <div class="zoom-row" id="metro-tempo-row" role="group" aria-label="Metronome tempo">
+      <div class="stepper">
+        <label for="metro-tempo">Tempo</label>
+        <input type="range" id="metro-tempo" min="40" max="200" step="1" value="80" aria-label="Tempo in beats per minute (the same tempo as Play Song)">
+        <span class="val wide" id="metro-tempo-val">80 BPM</span>
+      </div>
+    </div>
     <p class="ctl-label">Subdivision</p>
     <div class="keys" id="metro-sub" role="group" aria-label="Metronome subdivision"></div>
     <p class="ctl-label">Sound</p>
     <div class="keys" id="metro-sound" role="group" aria-label="Metronome sound"></div>
     <div class="metro-dots" id="metro-dots" aria-hidden="true"></div>
-    <p class="hint" id="metro-note"></p>
+    <p class="hint explain" id="metro-note"></p>
+  </details>
 
-    <h3 class="ctl-group" id="focus-heading">Focus view</h3>
-    <p class="hint">Tap Focus on any fretboard to enlarge it in a panel, even while a progression plays. Choose Piano below to see the same notes on a keyboard (the sound stays guitar). Tap a note or outline in the panel to hear it. Tap Focus again, or the &times;, to close.</p>
-    <p class="ctl-label">Instrument</p>
-    <div class="keys" id="focus-inst" role="group" aria-label="Focus view instrument"></div>
-    <p class="ctl-label">Size</p>
-    <div class="keys" id="focus-size" role="group" aria-label="Focus view size"></div>
-    <p class="ctl-label">Across the screen</p>
-    <div class="keys" id="focus-h" role="group" aria-label="Focus view horizontal position"></div>
-    <p class="ctl-label">Up and down</p>
-    <div class="keys" id="focus-v" role="group" aria-label="Focus view vertical position"></div>
+  <details class="ctl-sec ctl-grp" data-sec="dispopts" data-g="view">
+    <summary>Display options</summary>
+    <details class="ctl-sec ctl-sub" data-sec="view" data-g="view" open>
+      <summary>Main page view</summary>
+      <div class="keys" id="view-row" role="group" aria-label="Sections shown on the page"></div>
+    </details>
 
-    <h3 class="ctl-group" id="follow-heading">Follow panel</h3>
-    <p class="ctl-label">Instrument</p>
-    <div class="keys" id="follow-inst" role="group" aria-label="Follow panel instrument"></div>
-    <p class="ctl-label">Size</p>
-    <div class="keys" id="follow-size" role="group" aria-label="Follow panel size"></div>
-    <p class="ctl-label">Across the screen</p>
-    <div class="keys" id="follow-h" role="group" aria-label="Follow panel horizontal position"></div>
-    <p class="ctl-label">Up and down</p>
-    <div class="keys" id="follow-v" role="group" aria-label="Follow panel vertical position"></div>
-    <p class="hint">The panel shows the previous, current and next chord while Play chords runs. Turn it on or off with Follow at the top of Sound. Pick a size and a spot that keeps the fretboard you are watching clear. Choose Piano to see each chord as keys instead (the sound stays guitar). You can also change both with the buttons on the panel itself, and your choices are remembered on this device.</p>
+    <details class="ctl-sec ctl-sub" data-sec="focus" data-g="focus">
+      <summary>Focus view</summary>
+      <p class="ctl-label">Instrument</p>
+      <div class="keys" id="focus-inst" role="group" aria-label="Focus view instrument"></div>
+      <p class="ctl-label">Size</p>
+      <div class="keys" id="focus-size" role="group" aria-label="Focus view size"></div>
+      <p class="ctl-label">Horizontal</p>
+      <div class="keys" id="focus-h" role="group" aria-label="Focus view horizontal position"></div>
+      <p class="ctl-label">Vertical</p>
+      <div class="keys" id="focus-v" role="group" aria-label="Focus view vertical position"></div>
+    </details>
 
-    <h3 class="ctl-group" id="mix-heading">Mix</h3>
-    <div class="zoom-row" id="mix-row" role="group" aria-label="Volume mix">
-      <div class="stepper">
-        <label for="mix-guitar">Chords</label>
-        <input type="range" id="mix-guitar" min="0" max="100" step="1" value="100">
-        <span class="val wide" id="mix-guitar-val">100%</span>
-      </div>
-      <div class="stepper">
-        <label for="mix-pad">Synth</label>
-        <input type="range" id="mix-pad" min="0" max="100" step="1" value="70">
-        <span class="val wide" id="mix-pad-val">70%</span>
-      </div>
-      <div class="stepper">
-        <label for="mix-drums">Drums</label>
-        <input type="range" id="mix-drums" min="0" max="100" step="1" value="100">
-        <span class="val wide" id="mix-drums-val">100%</span>
-      </div>
-      <div class="stepper">
-        <label for="mix-metro">Metronome</label>
-        <input type="range" id="mix-metro" min="0" max="100" step="1" value="60">
-        <span class="val wide" id="mix-metro-val">60%</span>
-      </div>
-    </div>
-    <p class="hint">Synth plays a soft chord under each step, voiced to move as little as possible from chord to chord, changing chord with the guitar. Loop repeats the progression until you press Stop. While it loops you can change the tempo, drums, metronome, mix, or chord order, and the change takes effect on the next pass.</p>
-    <p class="hint">Tap any note to hear it, or tap a shape outline to hear it strummed from the low string up. Each individual chord's Play button strums one of its outlined shapes, nearest the anchor fret, so it follows your string set, zoom, and CAGED choices. If outlines are off, it picks a shape on any strings. Play progression plays your numbered steps in order, or all switched-on chords if no progression is set, with the drums and metronome (if switched on) keeping time at the same tempo and time signature. On iPad, make sure the silent switch is off.</p>
-    <p class="hint" id="sound-status" aria-live="polite"></p>
+    <details class="ctl-sec ctl-sub" data-sec="follow" data-g="follow">
+      <summary>Follow panel</summary>
+      <p class="ctl-label">Instrument</p>
+      <div class="keys" id="follow-inst" role="group" aria-label="Follow panel instrument"></div>
+      <p class="ctl-label">Size</p>
+      <div class="keys" id="follow-size" role="group" aria-label="Follow panel size"></div>
+      <p class="ctl-label">Horizontal</p>
+      <div class="keys" id="follow-h" role="group" aria-label="Follow panel horizontal position"></div>
+      <p class="ctl-label">Vertical</p>
+      <div class="keys" id="follow-v" role="group" aria-label="Follow panel vertical position"></div>
+    </details>
+  </details>
   </div>
     </aside>
     <div class="content">
+  <aside class="learn-card" id="learn-card" hidden aria-live="polite">
+    <div class="lc-head"><strong id="lc-title">Guide</strong><span class="sp"></span>
+      <button type="button" id="lc-full">Full guide</button>
+      <button type="button" id="lc-min" aria-expanded="true">Hide</button>
+      <button type="button" id="lc-close" aria-label="Turn off learning mode">&times;</button></div>
+    <div class="lc-body" id="lc-body"></div>
+  </aside>
   <div class="boards cols-1" id="boards">
   <section class="board" id="prog-section" hidden>
     <h2 id="prog-title"></h2>
@@ -751,14 +980,14 @@
     <p class="hint">Solid dots are the current chord. Dashed rings show the previous chord's shape, and notes with a dark ring are shared by both chords.</p>
   </section>
 
-  <section class="board">
+  <section class="board" data-show="scale" data-g="scaleboard">
     <h2 id="scale-title">Scale</h2>
     <button type="button" class="focus-btn" data-focus="scale" aria-pressed="false" aria-label="Focus view: enlarge the scale fretboard">Focus</button>
     <div id="scale"></div>
     <div class="chips" id="scale-chips"></div>
   </section>
 
-  <section class="board quiz-section">
+  <section class="board quiz-section" data-show="quiz" data-g="quiz">
     <button type="button" class="focus-btn quiz-focus" data-focus="quiz" aria-pressed="false" aria-label="Focus view: enlarge the quiz">Focus</button>
     <details class="quiz" id="quiz">
       <summary><h2>Quiz yourself</h2><span class="chev" aria-hidden="true">&#9654;</span></summary>
@@ -775,42 +1004,258 @@
     </details>
   </section>
 
-  <section class="board">
+  <section class="board" data-show="combined" data-g="groups">
     <h2 id="combined-title">Combined chords</h2>
     <button type="button" class="focus-btn" data-focus="combined" aria-pressed="false" aria-label="Focus view: enlarge the combined chords fretboard">Focus</button>
     <div id="combined"></div>
     <div class="chips" id="combined-chips"></div>
-    <p class="hint focus-hint">Tap a chord above to focus on it. Everything else fades. Tap it again to clear.</p>
   </section>
 
-  <section class="board">
+  <section class="board" data-show="major" data-g="groups">
     <h2 id="major-title">Major chords</h2>
     <button type="button" class="focus-btn" data-focus="major" aria-pressed="false" aria-label="Focus view: enlarge the major chords fretboard">Focus</button>
     <div id="major"></div>
     <div class="chips" id="major-chips"></div>
   </section>
 
-  <section class="board">
+  <section class="board" data-show="minor" data-g="groups">
     <h2 id="minor-title">Minor chords</h2>
     <button type="button" class="focus-btn" data-focus="minor" aria-pressed="false" aria-label="Focus view: enlarge the minor chords fretboard">Focus</button>
     <div id="minor"></div>
     <div class="chips" id="minor-chips"></div>
   </section>
 
-  <h2 class="group-title" id="singles-title">Individual chords</h2>
-  <div id="singles"></div>
+  <h2 class="group-title" id="singles-title" data-show="singles" data-g="singles">Individual chords</h2>
+  <!-- "All picked shapes" summary board is hidden for now. To bring it back, remove this HTML comment
+       and add 'sumboard' back to the guide's list (GUIDE_GROUPS). renderSumBoard does nothing while this is commented out.
+  <section class="board sum-board" id="sum-board" data-show="singles" data-g="sumboard" hidden>
+    <button type="button" class="focus-btn" data-focus="sumboard" aria-pressed="false" aria-label="Focus view: enlarge the picked shapes board">Focus</button>
+    <h2 class="single-title">All picked shapes</h2>
+    <div id="sum-board-fb"></div>
+    <div class="chips" id="sum-board-chips"></div>
+  </section>
+  -->
+  <div class="quick-bar" id="quick-bar" data-show="singles">
+    <div class="qb-group" data-g="shapes"><span class="qb-lbl" id="qb-lbl">String sets</span><div class="keys" id="qb-strings" role="group" aria-label="String sets"></div></div>
+    <div class="qb-group" data-g="size"><button type="button" class="key" id="qb-size" aria-label="Boards per row: tap to change">Boards per row: 1</button></div>
+    <div class="qb-group" data-g="vl"><button type="button" class="key" id="qb-vl">Voice lead all</button><button type="button" class="key" id="qb-clear" hidden>Clear picks</button></div>
+  </div>
+  <div class="pm-bar" id="pm-bar" data-show="singles" data-g="playmode" hidden></div>
+  <div id="singles" data-show="singles" data-g="singles"></div>
   </div>
     </div>
     <div class="scrim" id="scrim"></div>
   </div>
+  <button type="button" class="fab fab-play" id="fab-play" data-playing="false" data-g="sound">▶ Play progression</button>
   <button type="button" class="fab" id="fab" aria-expanded="true" aria-controls="panel">Hide controls</button>
 </main>
 
-<div class="focus" id="focus" data-size="large" data-h="center" data-v="middle" hidden role="dialog" aria-label="Focus view">
+<div class="guide-page" id="guide-page" hidden role="dialog" aria-label="User guide">
+  <div class="gp-bar"><strong>User guide</strong><span class="sp"></span><button type="button" class="key" id="guide-close">Back to fretboards</button></div>
+  <div class="gp-inner">
+    <nav class="gp-toc" id="gp-toc" aria-label="Guide contents"></nav>
+    <div class="gp-body" id="gp-body"></div>
+  </div>
+</div>
+<template id="guide-src">
+<section data-g="start"><h2>Getting started</h2>
+<p>Pick a tuning, a key and a mode, then switch chords on or off. Every fretboard follows those choices. Each chord has its own color; where two chords share a note, the dot is split between their colors.</p>
+<p>Controls are grouped into sections you can open and close. Most settings are buttons, one tap to change; the less-used Focus view, Follow panel and voice-leading options are dropdowns; settings where you can combine choices (chords, CAGED shapes, string sets, sections shown) are buttons. The sections run from setup (Tuning, Key &amp; scale, Chords displayed, Fretboard display options) to the <b>Song builder</b> (Progression builder, Voice leading, Play song, Drums, Mix), then Metronome and <b>Display options</b> (Main page view, Focus view, Follow panel). Use <b>Main page view</b> to hide boards you are not using. Turn on <b>Learning mode</b> to see the matching part of this guide whenever you make a selection.</p>
+</section>
+
+<section data-g="tuning"><h2>Tuning</h2>
+<p>Sets the open string pitches. Shapes, note names, sound and the quiz all follow the tuning, and string names are shown at the left of each board.</p>
+<ul><li><b>Drop tunings</b> (Drop D, Double drop D, Drop C) lower the bottom string for one-finger power chords and heavier riffs.</li>
+<li><b>Half and full step down</b> keep standard shapes but sound lower.</li>
+<li><b>Open tunings</b> (D, G, E, A, C) and <b>DADGAD</b> ring a chord on the open strings, good for slide and drones.</li>
+<li><b>All fourths</b> makes every string set the same, so a shape keeps its form anywhere.</li></ul>
+<p>CAGED shapes are built for standard tuning. They also work in Half step down and Full step down, where every shape is the same, and are hidden in the other tunings.</p>
+</section>
+
+<section data-g="key"><h2>Key and mode</h2>
+<p><b>Key</b> is the root note. <b>Mode</b> chooses which seven notes form the scale, and so which chords are built on each degree.</p>
+<ul><li><b>Major</b> (Ionian): bright, the standard major scale.</li>
+<li><b>Minor</b> (Aeolian): natural minor.</li>
+<li><b>Dorian</b>: minor with a raised 6th, jazzy and funky.</li>
+<li><b>Mixolydian</b>: major with a flat 7th, bluesy rock.</li>
+<li><b>Lydian</b>: major with a raised 4th, dreamy.</li>
+<li><b>Phrygian</b>: minor with a flat 2nd, dark and Spanish-sounding.</li>
+<li><b>Locrian</b>: diminished tonic, rarely used as a home key.</li></ul>
+</section>
+
+<section data-g="scale"><h2>Scale board notes</h2>
+<p>Chooses what the Scale board shows, and what the <b>Scale</b> background shows on the individual chord boards.</p>
+<ul><li><b>Full scale</b>: all seven notes of the mode.</li>
+<li><b>Pentatonic</b>: the five-note pentatonic that fits the mode (major or minor), so every note is in the key.</li>
+<li><b>Outside the mode</b>: root-based scales (major or minor pentatonic, blues) that can add notes not in the key. Those notes appear in teal.</li></ul>
+<p>A major pentatonic and its relative minor pentatonic share the same five notes. Pentatonic is unavailable for Locrian.</p>
+</section>
+
+<section data-g="view"><h2>Main page view</h2>
+<p>Hides or shows whole sections of the page: the Scale board, the Quiz, Combined chords, Major and Minor chord boards, and the Individual chords. Hidden sections keep their settings and come back exactly as they were. Playback, Follow and Focus still work with any section hidden.</p>
+</section>
+
+<section data-g="chords"><h2>Chords displayed</h2>
+<p>Each scale degree has a chord, named with a Roman numeral (upper case for major, lower case for minor). Tap a chord to switch it on or off. Switched-on chords appear on the group boards and, when no progression is set, as individual boards.</p>
+<p>In a major key, I, IV and V are major; ii, iii and vi are minor; vii° is diminished. The vii chord sits with the minor chords because it is degree 7.</p>
+<p>Numerals are measured against the major scale, the way most guitar teachers write them, so a flat in front shows a degree lowered from major: a minor key is i ii° bIII iv v bVI bVII, Mixolydian has a bVII, and Lydian a #iv°.</p>
+</section>
+
+<section data-g="display"><h2>Fretboard display options</h2>
+<p>Options for how every fretboard looks: shape type and string sets first, then dot labels, boards per row, CAGED shapes and zoom.</p>
+</section>
+
+<section data-g="labels"><h2>Dot labels</h2>
+<ul><li><b>Note names</b>: each dot shows its note.</li>
+<li><b>Intervals: Chord</b>: individual chord boards count from the chord's root (R, 3 or b3, 5), showing each note's job in the chord.</li>
+<li><b>Intervals: Scale</b>: every board counts from the key's root, showing each note's place in the key. In A major, Bm's notes are 2, 4 and 6; E7 is 5, 7, 2 and 4. A chord from outside the key shows its altered notes, such as the 7 (G#) of an E chord in A minor.</li>
+<li>The scale and chord-group boards count from the key's root in both interval options (1, b3, 5…).</li>
+<li><b>Fingering</b>: individual chord boards show a suggested fingering: 1 index, 2 middle, 3 ring, 4 pinky, 0 open. A barre shows the same number on each string it covers. Fingers follow the frets where they can (one finger per fret), so a note two frets above the barre takes the ring finger. Tap an outline to see that shape's fingering.</li></ul>
+<p>In a Focus panel, the <b>Labels</b> button cycles through the same four options.</p>
+</section>
+
+<section data-g="size"><h2>Boards per row</h2>
+<p>Smaller sizes put fretboards side by side so more fit on screen. Pair a small size with Zoom to keep notes readable.</p>
+</section>
+
+<section data-g="caged"><h2>CAGED shapes</h2>
+<p>Dashed bands on the individual chord boards mark where each open-chord shape (C, A, G, E, D) lands for that chord. Choose any combination to see how the forms connect up the neck. Notes outside the chosen bands fade.</p>
+<p>Minor chords use the minor forms (Am shape and so on). Am, Em and Dm are the common ones; Cm and Gm are awkward but shown to keep the pattern complete. Diminished chords are left out. Standard tuning only.</p>
+</section>
+
+<section data-g="shapes"><h2>Shapes and strings</h2>
+<p><b>Triads</b> outline three-note chords on three neighboring strings within a 4-fret stretch. Tap string sets (E A D, A D G, D G B, G B e) in any combination; <b>All</b> turns them all on and <b>Off</b> clears them.</p>
+<p><b>Full chords</b> outline complete playable shapes with the root in the bass, every chord tone, a 4-fret stretch and four fingers or fewer (a barre counts as one). The string buttons choose the lowest string you may use.</p>
+<p><b>Fade other notes</b> dims chord tones that are not part of an outlined shape, so the playable shapes stand out. Open strings count as fret 0, so they appear only near the nut.</p>
+</section>
+
+<section data-g="zoom"><h2>Zoom</h2>
+<p>Shows only a range of frets. Set the anchor fret and how many frets to include below and above it. Play buttons choose shapes nearest the anchor.</p>
+</section>
+
+<section data-g="prog"><h2>Progression builder</h2>
+<p>Build a song from the chords of the key. Tap chords one at a time, or choose from the Common progressions list to stack them (for example a verse and then a chorus). Adding a progression switches on any chord it needs.</p>
+<p>Tap a step in <b>Your progression</b> to change it to sus2, sus4, a 7th or a 9th, back to plain, or to remove it. It also offers the same root as a major, minor or dominant 7th chord from outside the key (marked *), such as the major V of a minor key. Sevenths and ninths are outlined as four-string shapes. The row under the steps holds Clear (back to the normal order), Repeat all (doubles the song) and Undo.</p>
+<p>With a progression set, the individual boards show each step in order and Play progression plays them.</p>
+</section>
+
+<section data-g="songs"><h2>Song search</h2>
+<p>Type a song, artist or saved title to load its chords, or type chord names such as <i>G D Em C</i> to fill the progression directly. Chords from outside the key (the E major in House of the Rising Sun, the B and Cm in Creep) are kept exactly as written and listed under the search box, with their numerals.</p>
+</section>
+
+<section data-g="vl"><h2>Voice leading</h2>
+<p>Voice leading has its own section in the controls, and works on any set of boards: your progression, or the chords in their normal order when no progression is set. <b>Voice lead all boards</b> (also above the boards) picks a shape for every board so the hand moves as little as possible over the whole progression. Board 1 keeps your pick, or takes the shape nearest the nut; the rest are planned together, so an easy change now never forces a big jump later. <b>Clear all picks</b> undoes it.</p>
+<ul><li><b>Movement</b>: Nearest moves the fewest semitones; Along neck stays on the same strings and slides; Across strings stays in one area and changes string sets.</li>
+<li><b>Pitch</b>: Any, Up or Down. Up and Down are kept on every change unless the neck runs out, and the note under the buttons says how many changes had to turn back. With Any, the last chord also leads smoothly back to chord 1 for looping.</li>
+<li><b>Show movement</b>: green rings mark notes that stay; arrows show where each note goes. Each board lists its moves, and the summary totals them.</li></ul>
+<p>Tap a shape outline on any board to pick that voicing for that board only.</p>
+</section>
+
+<section data-g="saved"><h2>Saved progressions</h2>
+<p>Type a title and tap Save to keep the current progression on this device. Saved progressions also appear in song search. Export copies them as text; paste that text and tap Import to restore or move them to another device.</p>
+</section>
+
+<section data-g="sound"><h2>Play song</h2>
+<p>Tap any note to hear it, or a shape outline to hear it strummed. Each board's Play button strums the outlined shape nearest the anchor fret. <b>Play progression</b> (also the floating button) plays your steps in order, or all switched-on chords if no progression is set.</p>
+<ul><li><b>Loop</b> repeats until Stop; changes take effect on the next pass.</li>
+<li><b>Synth</b> adds a soft pad chord voiced to move as little as possible.</li>
+<li><b>Drums</b> and <b>Metronome</b> keep time with playback.</li>
+<li><b>Follow</b> shows the previous, current and next chord in a floating panel.</li></ul>
+<p>On iPad, make sure the silent switch is off.</p>
+</section>
+
+<section data-g="tempo"><h2>Tempo and time signature</h2>
+<p>Tempo is in beats per minute. Beats per chord sets how long each chord lasts. In 6/8 a beat is a dotted quarter, so there are two beats in a bar.</p>
+</section>
+
+<section data-g="chordsound"><h2>Chord sound</h2>
+<p>Acoustic guitar, four electric amp tones (Crunch, Overdrive, Distortion, Palm mute) or Piano. Piano plays the voicing shown in the Follow panel's piano view.</p>
+</section>
+
+<section data-g="strum"><h2>Strumming</h2>
+<p>Strum speed sets the gap between strings. Patterns play during Play progression; a single board's Play button gives one strum. With piano, patterns play as chords, bass notes or arpeggios.</p>
+</section>
+
+<section data-g="drums"><h2>Drums</h2>
+<p>Switch the bass drum and snare on or off, and choose a pattern. Bars follow the time signature and continue across chord changes. The Drums switch under Play song turns them all on or off.</p>
+</section>
+
+<section data-g="metro"><h2>Metronome</h2>
+<p>Uses the tempo and time signature. The Metronome switch under Play song clicks along with playback; Start metronome clicks on its own. Options: accent beat 1, a count-in bar, subdivisions, and click sound. Tap tempo sets the tempo from your taps.</p>
+</section>
+
+<section data-g="mix"><h2>Mix</h2>
+<p>Sets the volume of chords, synth, drums and metronome. The chords level is applied after the amp, so it does not change the distortion.</p>
+</section>
+
+<section data-g="focus"><h2>Focus view</h2>
+<p>Tap <b>Focus</b> on any board to enlarge it in a floating panel, even during playback. Tap notes or outlines in the panel to hear them. The panel's buttons switch labels, the faded background, guitar or piano view, size and position. Tap Focus again or × to close.</p>
+</section>
+
+<section data-g="follow"><h2>Follow panel</h2>
+<p>While playback runs, shows the previous, current and next chord. Choose guitar or piano, a size, and a spot that keeps your board clear. Choices are remembered on this device.</p>
+</section>
+
+<section data-g="scaleboard"><h2>Scale board</h2>
+<p>Every note of the chosen scale across the neck. The root is orange and has a dark ring; notes outside the mode are teal.</p>
+</section>
+
+<section data-g="quiz"><h2>Quiz</h2>
+<ul><li><b>Name the note</b>: a dot appears; pick its name.</li>
+<li><b>Find the note</b>: tap where a named note is.</li>
+<li><b>Name the chord</b>: a chord shape from the key appears; pick its name. A miss brings the same shape back soon, then the same fingering at other positions.</li></ul>
+<p>The quiz follows the current key and tuning.</p>
+</section>
+
+<section data-g="groups"><h2>Combined, major and minor boards</h2>
+<p>Every switched-on chord on one neck, then the major and minor chords separately. Tap a chord tag under a board to focus on it and fade the rest; tap again to clear.</p>
+</section>
+
+<section data-g="singles"><h2>Individual chord boards</h2>
+<p>One board per chord, or per step when a progression is set. Outlines mark playable shapes; tap one to hear it and pick it as this board's voicing. Each board keeps its own pick.</p>
+<p>The bar above the boards repeats the <b>String sets</b> buttons and <b>Voice lead all</b> from the controls (plus Clear picks once anything is picked), so you can change them without opening the controls.</p>
+<p>The <b>Faded: Shapes / Faded: Scale</b> button next to Focus switches what the faded notes show (see Faded notes).</p>
+<p><b>Zoom</b> appears once a board has exactly one shape picked. It zooms that board to 8 frets with the shape centered (shapes near the nut show the nut and frets 1 to 8), so the shape and the notes around it are as large as possible. Only shapes that fit in the zoomed area are outlined. It switches off by itself if you clear the pick or pick a second shape, and comes back when you are down to one again.</p>
+<p>The line under each board shows the picked shape as tab (strings low to high, x = not played), how far the notes move from the previous chord in semitones (st), and how many shapes the board has. Tap it to open the details: the chord's notes and formula, the full movement from the previous chord, and every shape as a list you can pick from.</p>
+</section>
+
+<section data-g="sumboard"><h2>All picked shapes</h2>
+<p>Appears above the individual boards once every board has exactly one shape picked, whether you tapped them yourself or used Voice lead all boards. It shows every picked shape on one neck, numbered by step and zoomed to the frets they use, so you can see the whole path your hand travels. Notes shared by more than one chord are split between their colors.</p>
+</section>
+
+<section data-g="playmode"><h2>Jam mode</h2>
+<p>Once every individual board has exactly one shape picked (tap them yourself, or use Voice lead all boards), a <b>Jam Mode</b> button appears above the boards. It turns the boards into an instrument:</p>
+<ul><li>Each board's shape is locked in and zoomed to 8 frets around it, and only that shape is outlined.</li>
+<li>Only the individual chord boards are shown, and the controls close.</li>
+<li>Tap inside an outline (between the dots) to strum the chord. Tap any note, inside the shape or around it, to play just that note.</li>
+<li><b>Labels</b> cycles the dot labels (notes, chord intervals, scale intervals, fingering) without opening the controls.</li>
+<li><b>Faded: Scale (all)</b> shows the scale notes around every shape at once, for soloing over the chords. Each board's own Faded button still works too.</li></ul>
+<p><b>Exit</b> (or Escape) puts the page back as it was: the sections you had showing, each board's zoom, and the controls.</p>
+</section>
+
+<section data-g="faded"><h2>Faded notes</h2>
+<p>Tap the <b>Faded</b> button at the top of a board (or in its Focus panel) to switch. <b>Faded: Shapes</b> fades the chord's notes outside the outlined shapes, showing where else the chord can be played. <b>Faded: Scale</b> replaces them with every note of the scale in grey, so you can see the melody notes around a shape. It follows the Scale board setting (full scale, pentatonic or blues). Each board has its own setting.</p>
+</section>
+
+<section data-g="setup"><h2>Saving and sharing a setup</h2>
+<p>Everything you set up (tuning, key and mode, chords shown, display options, your progression and picked shapes, voice leading, Play song and drum settings, metronome, mix and which boards are shown) is kept in the page's address as you work.</p>
+<ul><li><b>Bookmark it</b> to come back to that exact setup. Bookmarks sync through your browser, and you can keep several (one per song or exercise).</li>
+<li><b>Copy setup link</b> copies the address, to send to someone or open on another device.</li>
+<li>Opening the page without a setup link brings back where you left off on this device.</li>
+<li><b>Reset to defaults</b> (tap twice) starts fresh. Saved progressions are kept.</li></ul>
+</section>
+
+<section data-g="ipad"><h2>iPad and phone tips</h2>
+<p>On narrow screens the controls open as a drawer; tap Controls to open and Done to close. A fretboard wider than the screen can be swiped sideways, or use Zoom. Turn off the silent switch to hear sound.</p>
+</section>
+</template>
+
+<div class="focus" id="focus" data-g="focus" data-size="large" data-h="center" data-v="middle" hidden role="dialog" aria-label="Focus view">
   <div class="focus-tools">
     <strong class="focus-title" id="focus-title"></strong>
     <span class="sp"></span>
     <button type="button" id="focus-label-btn" aria-label="Cycle the dot labels: note names, intervals, fingering">Labels: Notes</button>
+    <button type="button" id="focus-fade-btn" aria-label="Switch the faded notes between the chord's other shapes and the whole scale">Faded: Shapes</button>
     <button type="button" id="focus-inst-btn" aria-label="Switch this panel between guitar and piano">Piano view</button>
     <button type="button" id="focus-size-btn" aria-label="Change the size of this panel">Size: Large</button>
     <button type="button" id="focus-move-btn" aria-label="Move this panel to the next spot">Move</button>
@@ -818,7 +1263,7 @@
   </div>
   <div class="focus-body" id="focus-body"></div>
 </div>
-<div class="follow" id="follow" data-size="medium" data-h="center" data-v="bottom" hidden aria-label="Now playing">
+<div class="follow" id="follow" data-g="follow" data-size="medium" data-h="center" data-v="bottom" hidden aria-label="Now playing">
   <div class="follow-tools">
     <button type="button" id="follow-inst-btn" aria-label="Switch this panel between guitar and piano">Piano view</button>
     <button type="button" id="follow-size-btn" aria-label="Change the size of this panel">Size: Medium</button>
@@ -1006,18 +1451,33 @@
     const frs = [...new Set(notes.map(x => x.f))].sort((a, b) => a - b);
     // mode 0: every note its own finger (open-position shapes). mode 1: the index may bar the lowest fret.
     // mode 2: as 1, and neighboring strings at one fret may share a finger.
+    // Each group (one finger) is placed in fret order. Fingers then follow the frets: a note two frets above the
+    // index takes the ring finger, not the middle (Gm 355333 is 1-3-4-1-1-1), as long as enough fingers are left.
     const build = mode => {
       out.fill(0);
-      let finger = 0;
+      const groups = [];
       for (const fret of frs) {
         const idxs = notes.filter(x => x.f === fret).map(x => x.i).sort((a, b) => a - b);
         if (mode >= 1 && fret === lowest && frets.slice(idxs[0], idxs[idxs.length - 1] + 1).every(f => f >= fret)) {
-          finger++; idxs.forEach(i => { out[i] = finger; }); continue;
+          groups.push({ fret, idxs, barre: true }); continue;
         }
-        const groups = mode === 2 ? runsOf(idxs) : idxs.map(i => [i]);
-        for (const g of groups) { finger++; if (g.length > 1 && (finger >= 4 || g.length > 3)) return false; g.forEach(i => { out[i] = finger; }); }
+        (mode === 2 ? runsOf(idxs) : idxs.map(i => [i])).forEach(g => groups.push({ fret, idxs: g }));
       }
-      return finger <= 4;
+      const G = groups.length;
+      if (G > 4 || groups.some(g => g.idxs.length > 3 && !g.barre)) return false;
+      // highest finger each group may take: a partial barre (two or three strings) is never the pinky
+      const hi = new Array(G);
+      for (let k = G - 1; k >= 0; k--) hi[k] = Math.min(groups[k].idxs.length > 1 && !groups[k].barre ? 3 : 4, k === G - 1 ? 4 : hi[k + 1] - 1);
+      let prevF = 0;
+      for (let k = 0; k < G; k++) {
+        const lo = prevF + 1;
+        if (lo > hi[k]) return false;
+        const want = 1 + groups[k].fret - groups[0].fret;
+        const f = Math.min(Math.max(want, lo), hi[k]);
+        groups[k].idxs.forEach(i => { out[i] = f; });
+        prevF = f;
+      }
+      return true;
     };
     for (const mode of hasOpen ? [0, 1, 2] : [1, 2]) if (build(mode)) return out;
     return null;
@@ -1087,16 +1547,24 @@
   // Label for a CAGED shape: minor chords use the minor form, e.g. "Am"
   const shapeName = b => b.letter + (b.minor ? 'm' : '');
 
+  // Semitones the tuning sits from standard when every string moves together (0 standard, -1 half step down), else null
+  const STD_MIDI = [40, 45, 50, 55, 59, 64];
+  function cagedOffset() {
+    const mid = tuningNow().midi, off = mid[0] - STD_MIDI[0];
+    return mid.every((m, i) => m - STD_MIDI[i] === off) ? off : null;
+  }
   // mode is 'all' or a Set of letters (any combination of C, A, G, E, D)
   function cagedBands(chord, mode) {
-    if (tuningId !== 'standard') return [];   // the five CAGED forms are built for standard tuning
+    const off = cagedOffset();
+    if (off === null) return [];   // the five CAGED forms are built for standard tuning (or standard moved down, like Eb standard)
     if (chord.dim || (mode !== 'all' && (!mode || mode.size === 0))) return [];
     const bands = [];
     CAGED.filter(sh => mode === 'all' || mode.has(sh.letter)).forEach(sh => {
-      const base = (((chord.pcs[0] - sh.rootPc) % 12) + 12) % 12;
+      const base = (((chord.pcs[0] - sh.rootPc - off) % 12) + 24) % 12;
       for (let shift = base - 12; shift + sh.lo <= FRETS; shift += 12) {
         const lo = shift + sh.lo;
-        const hi = Math.min(shift + sh.hi, FRETS);
+        if (shift + sh.hi > FRETS) continue;   // the top of the neck cuts the shape off
+        const hi = shift + sh.hi;
         if (hi < 2 || hi - Math.max(lo, 0) < 1) continue; // too little of the shape fits on the neck
         bands.push({ letter: sh.letter, lo, hi, minor: chord.type === 'minor' });
       }
@@ -1135,7 +1603,7 @@
     const xNote = f => f === 0 ? L - 24 : xFret(f);
     const inView = f => f === 0 ? hasOpen : (f >= start && f <= hi);
     const yStr = i => T + (5 - i) * SS; // i = 0 is low E, drawn at the bottom
-    const style = win.zoomed ? ` style="max-width:${Math.round(W * 1.2)}px"` : '';
+    const style = win.zoomed && !win.fill ? ` style="max-width:${Math.round(W * 1.2)}px"` : '';
     let s = `<div class="fbwrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Fretboard diagram"${style}>`;
 
     s += `<rect x="${L}" y="${T - 14}" width="${cells * FW + extra}" height="${5 * SS + 28}" rx="4" fill="var(--wood)"/>`;
@@ -1233,6 +1701,7 @@
     const single = !!extras.chordKey;
     let badgeSvg = '';   // drawn after the notes so the count badge sits on top
     const pickItems = single ? items.filter(it => !it.faded && (extras.picks || []).includes(it.skey)) : [];
+    if (extras.playMode && pickItems.length) items.splice(0, items.length, ...pickItems);   // Jam mode: only the locked-in shape is outlined
     const shapeKeys = new Set();
     // Fingering labels (single chord boards only): the picked shapes, or else the shape Play would use
     const fingerAt = new Map();
@@ -1282,6 +1751,23 @@
       });
     }
 
+    // Summary board: each picked shape outlined in its chord color, with the step numbers that use it
+    if (extras.sumShapes) {
+      const placed = [];
+      extras.sumShapes.forEach(g => {
+        const xs = g.frets.map(xNote);
+        const x0 = Math.min(...xs) - R - 5, x1 = Math.max(...xs) + R + 5;
+        const y0 = yStr(g.low + g.frets.length - 1) - R - 5, y1 = yStr(g.low) + R + 5;
+        s += `<rect x="${x0}" y="${y0}" width="${x1 - x0}" height="${y1 - y0}" rx="16" fill="${g.color}" fill-opacity="0.1" stroke="${g.color}" stroke-width="3" pointer-events="none"/>`;
+        const label = g.steps.join(',');
+        const w = 10 + label.length * 7.5;
+        let bx = x0 + w / 2 - 4, by = y0 - 2;
+        while (placed.some(q => Math.abs(q.x - bx) < (q.w + w) / 2 + 2 && Math.abs(q.y - by) < 18)) bx += 8;
+        placed.push({ x: bx, y: by, w });
+        badgeSvg += `<g pointer-events="none"><rect x="${bx - w / 2}" y="${by - 9}" width="${w}" height="18" rx="9" fill="${g.color}" stroke="#fffdf8" stroke-width="1.5"/>` +
+          `<text x="${bx}" y="${by + 4}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="700" fill="#fff">${label}</text></g>`;
+      });
+    }
     // Previous chord's shape as hollow rings, so the hand move is visible
     if (extras.ghost) {
       const g = extras.ghost;
@@ -1302,14 +1788,23 @@
     for (let i = 0; i < 6; i++) {
       for (let f = hasOpen ? 0 : start; f <= hi; f++) {
         const pc = (TUNING[i] + f) % 12;
-        const owners = chords.filter((c, k) => active[k] && c.pcs.includes(pc));
-        if (!owners.length) continue;
+        const owners = extras.onlyPos ? (extras.onlyPos.get(i + ',' + f) || []) : chords.filter((c, k) => active[k] && c.pcs.includes(pc));
+        const scaleBg = extras.scaleBg && extras.scaleBg.has(pc);
+        if (!owners.length && !scaleBg) continue;
         const cx = xNote(f);
         const cy = yStr(i);
         const bandFaded = dimOutside && bands.length > 0 && !bands.some(b => f >= b.lo && f <= b.hi);
         const shapeFaded = (pickItems.length > 0 || (fingerShapes && fingerShapes.length > 0) || (fadeOthers && shapeSets.length > 0)) && !shapeKeys.has(i + ',' + f);
         const focusFaded = extras.focus && !owners.includes(extras.focus);
         const faded = bandFaded || shapeFaded || focusFaded;
+        if (extras.scaleBg && (faded || !owners.length)) {   // Scale background: every faded or outside note is a plain grey scale dot
+          if (!scaleBg) continue;   // a chord tone the chosen scale leaves out (a pentatonic has no 4th or 7th) is not drawn
+          s += `<g class="note scale-bg" data-s="${i}" data-f="${f}" opacity="0.42" style="cursor:pointer">`;
+          s += `<circle cx="${cx}" cy="${cy}" r="${R - 1}" fill="${extras.scaleOut && extras.scaleOut.has(pc) ? '#1f7a8c' : '#8b8578'}" stroke="#fffdf8" stroke-width="1.5"/>`;
+          s += `<text x="${cx}" y="${cy + 4}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="700" fill="#fff">${extras.scaleBg.get(pc) || pcNames[pc] || ''}</text>`;
+          s += '</g>';
+          continue;
+        }
         s += `<g class="note" data-s="${i}" data-f="${f}"${faded ? ' opacity="0.2"' : ''} style="cursor:pointer">`;
         if (owners.length === 1) {
           s += `<circle cx="${cx}" cy="${cy}" r="${R}" fill="${owners[0].color}"/>`;
@@ -1408,13 +1903,33 @@
   const toneCount = sh => new Set(sh.frets.map((f, j) => (TUNING[sh.low + j] + f) % 12)).size;
   const boxKeyOf = sh => [sh.low, sh.low + sh.frets.length - 1, Math.min(...sh.frets), Math.max(...sh.frets)].join();
   const MAJOR_STEPS = [0, 2, 4, 5, 7, 9, 11];
+  // Roman numeral for a chord on scale degree `deg` whose root is `semis` above the key's root. The numeral is
+  // measured against the major scale, as guitar teachers write it: bVII in Mixolydian, bIII bVI bVII in minor.
+  function romanOf(deg, semis, iv) {
+    let d = ((semis - MAJOR_STEPS[deg]) % 12 + 12) % 12;
+    if (d > 6) d -= 12;
+    let r = BASE_ROMAN[deg];
+    if (iv.includes(3) && !iv.includes(4)) r = r.toLowerCase();
+    if (iv.includes(6) && iv.includes(3) && !iv.includes(7)) r += '\u00b0';
+    if (iv.includes(8) && iv.includes(4) && !iv.includes(7)) r += '+';
+    return (d < 0 ? 'b'.repeat(-d) : '#'.repeat(d)) + r;
+  }
   const degLabel = (deg, semis) => {
     const d = semis - MAJOR_STEPS[deg];
     return (d < 0 ? 'b'.repeat(-d) : '#'.repeat(d)) + (deg + 1);
   };
   const modeSteps = () => (MODES.find(m => m.id === currentMode) || MODES[0]).steps;
+  // A note's degree in the key, from its spelling: in A major, B is 2 and G# is 7; in A minor, G is b7
+  function keyDegOf(name, pc) {
+    const d = (LETTERS.indexOf(name[0]) - LETTERS.indexOf(currentKey[0]) + 7) % 7;
+    let x = (((pc - currentRoot) - MAJOR_STEPS[d]) % 12 + 12) % 12;
+    if (x > 6) x -= 12;
+    return (x < 0 ? 'b'.repeat(-x) : '#'.repeat(x)) + (d + 1);
+  }
+  // Dot labels. 'intervals' (Intervals: Chord) counts each individual chord board from the chord's root;
+  // 'scaledeg' (Intervals: Scale) counts every board from the key's root. The scale and group boards always count from the key.
   function dotNames(single) {
-    if (labelMode !== 'intervals') {   // note names; the Fingering option names the notes wherever no fingering is shown
+    if (labelMode !== 'intervals' && labelMode !== 'scaledeg') {   // note names; the Fingering option names the notes wherever no fingering is shown
       if (single) {
         const nm = {};
         single.notes.forEach(n => { nm[n.pc] = n.name; });
@@ -1423,7 +1938,9 @@
       return pcNames;
     }
     const m = {};
-    if (single) {
+    if (single && labelMode === 'scaledeg') {
+      single.notes.forEach(n => { m[n.pc] = keyDegOf(n.name, n.pc); });
+    } else if (single) {
       const parts = single.formula.split(' ');
       single.pcs.forEach((pc, i) => { m[pc] = parts[i]; });
     } else {
@@ -1432,6 +1949,38 @@
     }
     return m;
   }
+  // Each individual chord board chooses what its faded background shows: 'shapes' (the chord's other
+  // notes, so you see its other shapes) or 'scale' (every note of the key, in grey). Keyed by board position.
+  const fadeView = {};
+  const fadeViewOf = pos => fadeView[pos] || 'shapes';
+  // Jam mode (internally playMode): every board's single picked shape is locked in and zoomed, and only the individual boards show.
+  // Tapping the outline plays the chord; tapping any note plays that note.
+  let playMode = false;
+  let playSaved = null;   // what Jam mode changed, put back on exit
+  // Per-board zoom: with exactly one shape picked, a board can zoom to 8 frets with that shape centered
+  const boardZoom = {};
+  function singlePick(pos, c) {
+    const ks = picksOf(posKeyOf(pos, c));
+    if (ks.length !== 1) return null;
+    const [low, fr] = ks[0].split(':');
+    return { low: Number(low), frets: fr.split(',').map(Number) };
+  }
+  function boardZoomWin(pos, c) {
+    if (!boardZoom[pos]) return null;
+    const sh = singlePick(pos, c);
+    if (!sh) return null;
+    const fretted = sh.frets.filter(f => f > 0);
+    const W = 8;
+    let lo, hi;
+    if (sh.frets.includes(0) || !fretted.length || Math.min(...fretted) <= 3) { lo = 0; hi = W; }   // near the nut: show it, with frets 1 to 8
+    else {
+      const mid = (Math.min(...fretted) + Math.max(...fretted)) / 2;
+      lo = Math.round(mid - (W - 1) / 2);
+      lo = Math.max(1, Math.min(lo, FRETS - W + 1));
+      hi = lo + W - 1;
+    }
+    return { lo, hi, zoomed: true, anchor: -1, fill: true };
+  }
   let stackSize = 3; // 3 = triads, 4 = 7th chords, 5 = 9th chords
   const active = [true, true, true, true, true, true, true];
 
@@ -1439,9 +1988,10 @@
   const CAGED_LETTERS = ['C', 'A', 'G', 'E', 'D'];
   const cagedSel = new Set(CAGED_LETTERS); // forms currently shown, in any combination
 
-  // 'off', 'all', or the index of the lowest string of a string set
-  let shapeMode = 3;
-  const shapeModeByType = { triad: 3, full: 0 }; // remembers each type's string choice when you switch
+  // Triads: a set of string sets, each named by the index of its lowest string, in any combination
+  // (empty means off). Full chords: 'off' or the lowest string you may play.
+  let shapeMode = new Set([3]);
+  const shapeModeByType = { triad: shapeMode, full: 0 }; // remembers each type's string choice when you switch
   let fadeOthers = true; // fade notes that are not part of an outlined shape
   // Fewest strings in a shape; string sets run from each possible lowest string up to the high e
   // A chord with four or more tones (a 7th or 9th) uses four-string shapes even in the triad view
@@ -1450,16 +2000,15 @@
     return chord ? (chord.pcs.length === 3 ? 3 : 4) : (stackSize === 3 ? 3 : 4);
   }
   function currentShapeSets(chord) {
-    if (shapeMode === 'off') return [];
     const maxLow = 6 - voiceCount(chord);
-    if (shapeType === 'full') {
+    if (shapeType !== 'full') return [...new Set([...shapeMode].map(l => Math.min(l, maxLow)))].sort((a, b) => a - b);
+    if (shapeMode === 'off') return [];
+    {
       // The buttons name the strings you may play. A shape can skip low strings it does not use,
       // so choosing E A D G B e allows every shape, and fewer strings allow only the shapes that fit.
       const from = shapeMode === 'all' ? 0 : Math.min(shapeMode, maxLow);
       return Array.from({ length: maxLow - from + 1 }, (_, i) => from + i);
     }
-    if (shapeMode === 'all') return Array.from({ length: maxLow + 1 }, (_, i) => i);
-    return [Math.min(shapeMode, maxLow)];
   }
 
   const FAMILY = {
@@ -1482,8 +2031,8 @@
   const FULL_TEXT = ['full chord shapes', 'An outline marks a complete chord shape: it starts on the root in the bass, covers every string from there up to the high e, includes every chord tone (a 7th or 9th chord may leave out its 5th), fits a 4-fret stretch, and needs four fingers or fewer (a barre counts as one). An open string counts as fret 0. The buttons name the strings you can play. A shape may skip low strings it does not use, so with all six strings selected you get every shape, from open forms at the nut to barre forms up the neck. Diminished chords only form 4-string shapes (D G B e), which are included whenever those strings are available.'];
   function updateShapeText() {
     const t = shapeType === 'full' ? FULL_TEXT : SHAPE_TEXT[stackSize];
-    document.getElementById('lbl-shapes').textContent = `Outline playable ${t[0]} on these strings`;
-    document.getElementById('hint-shapes').textContent = t[1] + ' Notes outside the outlines fade, so only the playable shapes stand out. Switch off Fade other notes to see every chord tone.';
+    document.getElementById('lbl-shapes').textContent = shapeType === 'full' ? 'Lowest string' : 'String sets';
+    document.getElementById('hint-shapes').textContent = t[1] + (shapeType === 'full' ? '' : ' Tap string sets to switch each one on or off, in any combination; All turns every set on and Off clears them.') + ' Notes outside the outlines fade, so only the playable shapes stand out. Switch off Fade other notes to see every chord tone.';
   }
 
   function board(list, bands = [], dimOutside = false, single = false, focus = null, pos = 0) {
@@ -1493,7 +2042,16 @@
       extras.chordKey = posKeyOf(pos, list[0]);
       extras.pos = pos;
       extras.picks = picksOf(extras.chordKey);
-      extras.motion = motionFor(pos);
+      extras.motion = playMode ? null : motionFor(pos);
+      if (playMode) { bands = []; dimOutside = false; extras.playMode = true; }   // just the shape and the notes around it
+      const zw = boardZoomWin(pos, list[0]);
+      if (zw) extras.win = zw;
+      if (fadeViewOf(pos) === 'scale') {
+        const c = list[0], IV = ['R', 'b2', '2', 'b3', '3', '4', 'b5', '5', 'b6', '6', 'b7', '7'];
+        const sb = scaleBoardNotes();   // the scale chosen for the Scale board: full mode, pentatonic or blues
+        extras.scaleBg = new Map(sb.notes.map(n => [n.pc, labelMode === 'intervals' ? IV[(n.pc - c.pcs[0] + 12) % 12] : labelMode === 'scaledeg' ? keyDegOf(n.name, n.pc) : n.name]));
+        extras.scaleOut = new Set(sb.out.map(n => n.pc));   // notes outside the key (such as the blue note) keep their teal
+      }
     }
     if (focus) extras.focus = focus;
     return fretboard(list, list.map(() => true), dotNames(single && list.length === 1 ? list[0] : null),
@@ -1540,7 +2098,27 @@
   // Variants of a scale chord that a progression step can use. 7 and 9 follow the key (Imaj7, ii m7,
   // V7 ...); dom7 and dom9 are the dominant versions rock and blues put on a major I or IV.
   const MOD_ORDER = ['sus2', 'sus4', '7', 'dom7', '9', 'dom9'];
+  // Chords from outside the key (the major V in a minor key, a borrowed bVII, the B and Cm in "Creep") are steps with
+  // mod 'x:<root>:<kind>', for example 'x:E:' (E major) or 'x:F#:7'. They keep the colour of the nearest scale degree.
+  const X_KINDS = { '': [0, 4, 7], m: [0, 3, 7], dim: [0, 3, 6], aug: [0, 4, 8], sus2: [0, 2, 7], sus4: [0, 5, 7],
+    '7': [0, 4, 7, 10], maj7: [0, 4, 7, 11], m7: [0, 3, 7, 10], m7b5: [0, 3, 6, 10] };
+  const X_LETTER = { 0: 0, 2: 1, 3: 2, 4: 2, 5: 3, 6: 4, 7: 4, 8: 4, 10: 6, 11: 6 };   // which letter above the root spells each interval
+  const X_LABEL = { 0: 'R', 2: '2', 3: 'b3', 4: '3', 5: '4', 6: 'b5', 7: '5', 8: '#5', 10: 'b7', 11: '7' };
+  const pcOfName = nm => (LETTER_PC[nm[0]] + [...nm.slice(1)].reduce((a, ch) => a + (ch === '#' ? 1 : ch === 'b' ? -1 : 0), 0) + 12) % 12;
+  const isXMod = mod => typeof mod === 'string' && /^x:[A-G](#|b)?:(|m|dim|aug|sus2|sus4|7|maj7|m7|m7b5)$/.test(mod);
+  function buildOutside(base, mod) {
+    const [, rn, kind] = mod.split(':');
+    const iv = X_KINDS[kind];
+    const rpc = pcOfName(rn);
+    const root = { name: rn, pc: rpc };
+    const notes = iv.map(v => v === 0 ? root : spellNote(root, X_LETTER[v], (rpc + v) % 12));
+    const letterDeg = (LETTERS.indexOf(rn[0]) - LETTERS.indexOf(currentKey[0]) + 7) % 7;
+    return { ...base, name: rn + kind, notes, pcs: notes.map(n => n.pc), type: iv.includes(4) || kind.startsWith('sus') ? 'major' : 'minor',
+      dim: kind === 'dim' || kind === 'm7b5', formula: iv.map(v => X_LABEL[v]).join(' '), mod, variant: true, outside: true, base,
+      roman: romanOf(letterDeg, (rpc - currentRoot + 12) % 12, iv) };
+  }
   function buildVariant(base, mod) {
+    if (isXMod(mod)) return buildOutside(base, mod);
     const root = base.notes[0], r = root.pc, d = base.deg;
     const label = v => INTERVAL_LABEL[v] || String(v);
     let notes, name, formula, type = base.type, dim = base.dim;
@@ -1666,7 +2244,7 @@
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'chip' + (st.idx === selStep ? ' sel' : '');
-      b.innerHTML = `<span class="dot" style="background:${c.color}"></span><span>${pos + 1}. ${st.deg + 1} ${c.name}</span>`;
+      b.innerHTML = `<span class="dot" style="background:${c.color}"></span><span>${pos + 1}. ${c.roman} ${c.name}</span>`;
       b.setAttribute('aria-label', `Step ${pos + 1}, ${c.name}. Tap to change or remove it.`);
       if (st.idx === selStep) b.setAttribute('aria-current', 'true');
       b.addEventListener('click', () => {
@@ -1675,79 +2253,48 @@
       });
       list.appendChild(b);
     });
-    if (progSeq.length) {
-      const clear = document.createElement('button');
-      clear.type = 'button';
-      clear.className = 'key';
-      clear.textContent = 'Clear';
-      clear.addEventListener('click', () => {
-        snapProg();
-        progSeq = [];
-        selStep = null;
-        drawSeq();
-        renderAll();
-      });
-      list.appendChild(clear);
-    }
-    if (progSeq.length) {
-      const rep2 = document.createElement('button');
-      rep2.type = 'button';
-      rep2.className = 'key';
-      rep2.textContent = 'Repeat all';
-      rep2.disabled = progSeq.length * 2 > SEQ_MAX;
-      rep2.addEventListener('click', () => {
-        if (progSeq.length * 2 > SEQ_MAX) return;
-        snapProg();
-        progSeq = progSeq.concat(progSeq.map(st => ({ ...st })));
-        drawSeq();
-        renderAll();
-      });
-      list.appendChild(rep2);
-    }
-    document.getElementById('vl-opts').hidden = !progSeq.length;
+    // Clear, Repeat all and Undo sit in their own row under the progression; Voice leading has its own section
+    document.getElementById('seq-clear').disabled = !progSeq.length;
+    document.getElementById('seq-repeat').disabled = !progSeq.length || progSeq.length * 2 > SEQ_MAX;
+    document.getElementById('seq-undo').disabled = !progUndo.length;
+    document.getElementById('seq-clearpicks').disabled = !Object.keys(picks).length;
     drawVlOptions();
-    if (progSeq.length) {
-      const vl = document.createElement('button');
-      vl.type = 'button';
-      vl.className = 'key';
-      vl.id = 'seq-vl';
-      vl.textContent = 'Voice lead all boards';
-      vl.addEventListener('click', voiceLeadAll);
-      list.appendChild(vl);
-      if (Object.keys(picks).length) {
-        const cp = document.createElement('button');
-        cp.type = 'button';
-        cp.className = 'key';
-        cp.id = 'seq-clearpicks';
-        cp.textContent = 'Clear all picks';
-        cp.addEventListener('click', () => {
-          picks = {};
-          vlApplied = false;
-          drawSeq();
-          renderAll();
-          document.getElementById('vl-note').textContent = 'All shape picks cleared.';
-        });
-        list.appendChild(cp);
-      }
-    }
-    if (progUndo.length) {
-      const undo = document.createElement('button');
-      undo.type = 'button';
-      undo.className = 'key';
-      undo.textContent = 'Undo';
-      undo.addEventListener('click', () => {
-        const prev = progUndo.pop();
-        if (prev.root !== undefined && (prev.root !== currentRoot || prev.mode !== currentMode)) setScale(prev.root, prev.mode);
-        progSeq = prev;
-        selStep = null;
-        drawSeq();
-        renderAll();
-      });
-      list.appendChild(undo);
-    }
     drawPresets();
     drawStepEditor();
   }
+
+  document.getElementById('seq-clear').addEventListener('click', () => {
+    if (!progSeq.length) return;
+    snapProg();
+    progSeq = [];
+    selStep = null;
+    drawSeq();
+    renderAll();
+  });
+  document.getElementById('seq-repeat').addEventListener('click', () => {
+    if (!progSeq.length || progSeq.length * 2 > SEQ_MAX) return;
+    snapProg();
+    progSeq = progSeq.concat(progSeq.map(st => ({ ...st })));
+    drawSeq();
+    renderAll();
+  });
+  document.getElementById('seq-undo').addEventListener('click', () => {
+    if (!progUndo.length) return;
+    const prev = progUndo.pop();
+    if (prev.root !== undefined && (prev.root !== currentRoot || prev.mode !== currentMode)) setScale(prev.root, prev.mode);
+    progSeq = prev;
+    selStep = null;
+    drawSeq();
+    renderAll();
+  });
+  document.getElementById('seq-vl').addEventListener('click', () => voiceLeadAll());
+  document.getElementById('seq-clearpicks').addEventListener('click', () => {
+    picks = {};
+    vlApplied = false;
+    drawSeq();
+    renderAll();
+    document.getElementById('vl-note').textContent = 'All shape picks cleared.';
+  });
 
   // The row under the song: change the selected step to a sus, 7th or 9th chord, or remove it
   function drawStepEditor() {
@@ -1762,11 +2309,21 @@
     const base = chords[st.deg];
     document.getElementById('seq-edit-label').textContent = `Step ${pos + 1}: change the ${base.roman} chord`;
     const choices = [{ mod: null, chord: base }].concat(modsFor(st.deg).map(m => ({ mod: m, chord: chordFor(st.deg, m) })));
+    // The same root as a major, minor or dominant 7th chord even when the key does not have it (the V in a minor key)
+    ['', 'm', '7'].forEach(k => {
+      const mod = 'x:' + base.notes[0].name + ':' + k;
+      if (/##|bb/.test(base.notes[0].name)) return;
+      const ch = chordFor(st.deg, mod);
+      const same = choices.some(x => x.chord.pcs.length === ch.pcs.length && x.chord.pcs.every(v => ch.pcs.includes(v)));
+      if (!same) choices.push({ mod, chord: ch });
+    });
+    if (isXMod(st.mod) && !choices.some(x => x.mod === st.mod)) choices.push({ mod: st.mod, chord: chordFor(st.deg, st.mod) });
     choices.forEach(({ mod, chord }) => {
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'key';
-      b.textContent = chord.name;
+      b.textContent = chord.name + (chord.outside ? ' *' : '');
+      if (chord.outside) b.title = `${chord.name} (${chord.roman}) is outside the key`;
       b.setAttribute('aria-pressed', String((st.mod || null) === mod));
       b.addEventListener('click', () => {
         if ((st.mod || null) === mod) return;
@@ -1888,7 +2445,7 @@
       else if (/^m(add9|6|11)$/.test(q)) { iv = CHORD_KINDS.m; simp = 'added note dropped'; }
       else return null;
     }
-    return { src: String(raw).trim(), pc, iv, simp };
+    return { src: String(raw).trim(), pc, iv, simp, root: m[1] + m[2] };
   }
 
   // Fit a parsed chord onto the current key: an exact match if the key has it, otherwise the nearest
@@ -1926,6 +2483,22 @@
     let step = offKey ? null : find(deg, c0.iv);
     let note = null;
     if (!step) {
+      // Not in the key as written: use the chord itself, outside the key (spelled as the key spells its root, if it can)
+      const want = c0.iv.slice().sort((a, b) => a - b).join();
+      let kind = Object.keys(X_KINDS).find(k => X_KINDS[k].slice().sort((a, b) => a - b).join() === want);
+      if (kind === undefined && c0.iv.length > 3) {   // a 9th: keep the 7th chord under it
+        const no9 = c0.iv.filter(v => v !== 2).sort((a, b) => a - b).join();
+        kind = Object.keys(X_KINDS).find(k => X_KINDS[k].slice().sort((a, b) => a - b).join() === no9);
+        if (kind !== undefined) note = { kind: 'simplified', why: '9th dropped' };
+      }
+      if (kind !== undefined) {
+        const inKey = scaleNotes.find(n => n.pc === c0.pc);
+        const rn = inKey && !/##|bb/.test(inKey.name) ? inKey.name : (c0.root || ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'][c0.pc]);
+        step = { deg, mod: 'x:' + rn + ':' + kind };
+        note = note || { kind: 'outside' };
+      }
+    }
+    if (!step) {
       // Drop 7ths and 9ths, then try the plain triad of that root
       const tri = c0.iv.length > 3 ? c0.iv.filter(v => v !== 2 && v !== 10 && v !== 11) : c0.iv;
       if (!offKey) step = find(deg, tri);
@@ -1939,17 +2512,18 @@
   }
 
   function resolveChordList(text) {
-    const steps = [], simplified = [], approx = [];
+    const steps = [], simplified = [], approx = [], outside = [];
     for (const tok of text.split(/[\s,|]+/).filter(Boolean)) {
       const p = parseChordName(tok);
       if (!p) return { error: tok };
       const r = resolveChord(p);
       steps.push(r.step);
       const used = stepChord(r.step).name;
+      if (r.note && r.note.kind === 'outside') outside.push(`${used} (${stepChord(r.step).roman})`);
       if (r.note && r.note.kind === 'approx') approx.push(`${p.src} → ${used}`);
       else if (p.simp || (r.note && r.note.kind === 'simplified')) simplified.push(`${p.src} → ${used}`);
     }
-    return { steps, simplified, approx };
+    return { steps, simplified, approx, outside };
   }
 
   const uniq = a => [...new Set(a)];
@@ -1968,16 +2542,17 @@
     const rootPc = parseChordName(song.key).pc;
     snapProg(true);
     if (currentRoot !== rootPc || currentMode !== song.mode) setScale(rootPc, song.mode);
-    const simplified = [], approx = [], steps = [];
+    const simplified = [], approx = [], steps = [], outside = [];
     for (const [, text] of song.sec) {
       const r = resolveChordList(text);
       r.steps.forEach(st => steps.push(st));
-      simplified.push(...r.simplified); approx.push(...r.approx);
+      simplified.push(...r.simplified); approx.push(...r.approx); outside.push(...r.outside);
     }
     finishLoad(steps);
     const parts = [`Loaded ${song.t} in ${currentScale}: ${song.sec.map(s => s[0]).join(', ')} (${progSeq.length} steps).`];
     if (song.capo) parts.push(`These are the chord shapes; with a capo on fret ${song.capo} they sound ${song.capo} semitone${song.capo > 1 ? 's' : ''} higher.`);
     if (song.note) parts.push(song.note);
+    if (outside.length) parts.push(`From outside the key: ${uniq(outside).join(', ')}.`);
     if (simplified.length) parts.push(`Simplified: ${uniq(simplified).join(', ')}.`);
     if (approx.length) parts.push(`Not in this key, so the closest key chord was used: ${uniq(approx).join(', ')}.`);
     parts.push(song.chk ? 'Compared with a published chord lesson, but recordings vary, so check by ear.' : 'Written from memory and not checked against a source. Check by ear.');
@@ -1990,6 +2565,7 @@
     snapProg();
     finishLoad(r.steps);
     const parts = [`Filled in ${progSeq.length} chords in ${currentScale} (the key was left as it is).`];
+    if (r.outside.length) parts.push(`From outside the key: ${uniq(r.outside).join(', ')}.`);
     if (r.simplified.length) parts.push(`Simplified: ${uniq(r.simplified).join(', ')}.`);
     if (r.approx.length) parts.push(`Not in this key, so the closest key chord was used: ${uniq(r.approx).join(', ')}.`);
     document.getElementById('song-note').textContent = parts.join(' ');
@@ -2034,7 +2610,7 @@
   function validSaved(r) {
     return r && typeof r.title === 'string' && r.title.trim() && Number.isInteger(r.root) && r.root >= 0 && r.root < 12 &&
       MODES.some(m => m.id === r.mode) && Array.isArray(r.steps) && r.steps.length > 0 && r.steps.length <= SEQ_MAX &&
-      r.steps.every(st => st && Number.isInteger(st.deg) && st.deg >= 0 && st.deg < 7 && (st.mod === null || MOD_ORDER.includes(st.mod)));
+      r.steps.every(st => st && Number.isInteger(st.deg) && st.deg >= 0 && st.deg < 7 && (st.mod === null || MOD_ORDER.includes(st.mod) || isXMod(st.mod)));
   }
   const sameTitle = (a, b) => a.trim().toLowerCase() === b.trim().toLowerCase();
   function saveCurrent() {
@@ -2200,28 +2776,34 @@
     });
   })();
 
+  // Common progressions as one dropdown: choosing one adds it to the end of the progression, then the box resets
   function drawPresets() {
-    const wrap = document.getElementById('seq-presets');
-    wrap.innerHTML = '';
+    const sel = document.getElementById('seq-presets');
     const list = presetList();
-    if (!list.length) {
-      wrap.innerHTML = '<span class="empty">The tonic chord of this mode is diminished, so common rock and pop progressions do not apply. Try another mode.</span>';
-      return;
-    }
-    list.forEach(pr => {
-      const roman = pr.d.map(i => chords[i].roman).join('\u2013');
-      const names = pr.d.length > 6 ? '12 bars' : pr.d.map(i => chords[i].name).join(' ');
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'chip';
-      b.innerHTML = `<span>${pr.d.length > 6 ? '12-bar blues' : roman}</span><span class="nt">${names}</span>`;
-      b.title = pr.note;
-      b.setAttribute('aria-label', `Add ${roman} (${pr.d.map(i => chords[i].name).join(', ')}) to the progression. ${pr.note}`);
-      b.disabled = pr.d.length > SEQ_MAX - progSeq.length;
-      b.addEventListener('click', () => addPreset(pr));
-      wrap.appendChild(b);
+    sel.innerHTML = '';
+    const head = document.createElement('option');
+    head.value = '';
+    head.textContent = list.length ? 'Add a common progression\u2026' : 'None for this mode (its tonic is diminished)';
+    sel.appendChild(head);
+    sel.disabled = !list.length;
+    list.forEach((pr, i) => {
+      const roman = pr.d.length > 6 ? '12-bar blues' : pr.d.map(k => chords[k].roman).join('\u2013');
+      const names = pr.d.length > 6 ? [...new Set(pr.d.map(k => chords[k].name))].join(' ') : pr.d.map(k => chords[k].name).join(' ');
+      const o = document.createElement('option');
+      o.value = String(i);
+      o.textContent = `${roman}  \u00b7  ${names}`;
+      o.title = pr.note;
+      o.disabled = pr.d.length > SEQ_MAX - progSeq.length;
+      sel.appendChild(o);
     });
+    sel.value = '';
+    sel._list = list;
   }
+  document.getElementById('seq-presets').addEventListener('change', e => {
+    const sel = e.target, pr = sel._list && sel._list[Number(sel.value)];
+    sel.value = '';
+    if (pr) addPreset(pr);
+  });
 
   // A short name for a shape: the CAGED form whose box holds all of its notes, if CAGED is showing one
   function shapeLabel(sh, bands) {
@@ -2232,7 +2814,9 @@
   // The line that says which shapes are picked (with their fingering), plus a collapsible list of every
   // shape on the board. Shapes nested inside a bigger outline are easy to miss, so the list lets you pick
   // any of them, and more than one.
-  function shapeCaption(c, pos) {
+  // Everything about a board except the fretboard itself, folded into one Details line under the board:
+  // the summary shows the picked shape and the hand move from the previous chord, the rest opens on tap.
+  function boardMore(c, pos) {
     const ctx = boardContext(c);
     const shapes = highlightedShapes(c, ctx.bands, ctx.dim);
     const key = posKeyOf(pos, c);
@@ -2241,16 +2825,18 @@
     let line = '';
     if (picked.length === 1) {
       const same = shapes.filter(sh => boxKeyOf(sh) === boxKeyOf(picked[0])).sort((x, y) => toneCount(y) - toneCount(x));
-      line = `<p class="shape-pick">Shape${same.length > 1 ? ` ${same.indexOf(picked[0]) + 1} of ${same.length}` : ''}: <strong>${tabOf(picked[0])}</strong> (x = not played, strings low to high). ` +
-        `Tap its outline ${same.length > 1 ? 'for the next one' : 'again to clear'}. Play strums this shape. Tap another outline, or use the list below, to pick more than one.</p>`;
+      line = `<p class="shape-pick">${same.length > 1 ? `Shape ${same.indexOf(picked[0]) + 1} of ${same.length} in this outline: tap it for the next.` : 'Tap the outline again to clear.'} Tap others to pick more.</p>`;
     } else if (picked.length > 1) {
-      line = `<p class="shape-pick">${picked.length} shapes picked: ${picked.map(sh => `<strong>${tabOf(sh)}</strong>`).join(' &middot; ')}. Play and the progression use whichever is nearest the previous chord.</p>`;
-    } else {
-      const counts = {};
-      shapes.forEach(sh => { const k = boxKeyOf(sh); counts[k] = (counts[k] || 0) + 1; });
-      if (Object.values(counts).some(n => n > 1)) line = '<p class="shape-pick">A number on an outline means that many shapes share it. Tap the outline to pick one, or open the list below.</p>';
+      line = `<p class="shape-pick">Play uses the picked shape nearest the previous chord.</p>`;
+    } else if (shapes.some(sh => shapes.filter(x => boxKeyOf(x) === boxKeyOf(sh)).length > 1)) {
+      line = '<p class="shape-pick">A number on an outline: that many shapes share it. Tap to step through.</p>';
     }
-    if (!shapes.length) return line;
+    const mo = motionFor(pos);
+    const sum = [];
+    if (picked.length === 1) sum.push(`<b>${tabOf(picked[0])}</b>`);
+    else if (picked.length > 1) sum.push(`${picked.length} picked`);
+    if (mo) sum.push(`${mo.total} st ${mo.loop ? 'looping from' : 'from'} ${esc(mo.fromName)}`);
+    sum.push(`${shapes.length} shape${shapes.length === 1 ? '' : 's'}`);
     const sorted = shapes.slice().sort((x, y) => x.low - y.low || Math.min(...x.frets) - Math.min(...y.frets) || toneCount(y) - toneCount(x));
     const chips = sorted.map(sh => {
       const on = picksOf(key).includes(keyOf(sh));
@@ -2259,9 +2845,115 @@
         `<span>${tabOf(sh)}</span>${lab ? `<span class="nt">${lab}</span>` : ''}</button>`;
     }).join('');
     const clear = picked.length ? `<button type="button" class="chip shape-chip" data-chordkey="${key}" data-clear="1">Clear picks</button>` : '';
-    return line + `<details class="shape-list" data-chordkey="${key}"${openShapeLists.has(key) ? ' open' : ''}>` +
-      `<summary>Shapes on this board (${shapes.length})${picked.length ? `, ${picked.length} picked` : ''}</summary>` +
-      `<div class="chips">${chips}${clear}</div></details>`;
+    return `<details class="shape-list bd-more" data-chordkey="${key}" data-g="singles"${openShapeLists.has(key) ? ' open' : ''}>` +
+      `<summary>${sum.join(' &middot; ')}</summary>` +
+      `<p class="chord-sub">${c.notes.map(n => n.name).join(' ')} (${c.formula})</p>` +
+      motionLine(pos) + line +
+      (shapes.length ? `<div class="chips">${chips}${clear}</div>` : '') + `</details>`;
+  }
+
+  // Jam mode is offered once every individual board has exactly one shape picked
+  const playReady = list => list.length > 0 && list.every((c, pos) => singlePick(pos, c));
+  function drawPlayBar(list) {
+    const bar = document.getElementById('pm-bar');
+    if (!bar) return;
+    if (playMode && !playReady(list)) { setTimeout(() => exitPlayMode(), 0); }   // a pick or the chords changed underneath it
+    const ready = playReady(list);
+    bar.hidden = !(ready || playMode);
+    bar.classList.toggle('on', playMode);
+    if (!playMode) {
+      bar.innerHTML = `<button type="button" class="key pm-enter" id="pm-enter">Jam mode</button>`;
+      return;
+    }
+    const allScale = list.every((c, pos) => fadeViewOf(pos) === 'scale');
+    bar.innerHTML = `<strong>Jam mode</strong><span class="pm-tip">Tap an outline for the chord, a note for the note</span><span class="sp"></span>` +
+      `<button type="button" class="key" id="pm-labels" aria-label="Dot labels: tap to change">Labels: ${FOCUS_LABEL_NAMES[labelMode]}</button>` +
+      `<button type="button" class="key" id="pm-scale" aria-pressed="${allScale}">Faded: ${allScale ? 'Scale' : 'Shapes'} (all)</button>` +
+      `<button type="button" class="key" id="pm-exit">Exit</button>`;
+  }
+  function enterPlayMode() {
+    if (playMode || !playReady(boardChords)) return;
+    playSaved = { views: Object.assign({}, viewOn), zoom: Object.assign({}, boardZoom), controls: controlsOpen };
+    playMode = true;
+    Object.keys(viewOn).forEach(k => { viewOn[k] = k === 'singles'; });
+    applyViews();
+    boardChords.forEach((c, pos) => { boardZoom[pos] = true; });
+    document.body.classList.add('play-mode');
+    setControls(false);
+    renderAll();
+    const t = document.getElementById('singles-title');
+    if (t && t.scrollIntoView) t.scrollIntoView({ block: 'start' });
+  }
+  function exitPlayMode() {
+    if (!playMode) return;
+    playMode = false;
+    document.body.classList.remove('play-mode');
+    if (playSaved) {
+      Object.assign(viewOn, playSaved.views);
+      applyViews();
+      Object.keys(boardZoom).forEach(k => delete boardZoom[k]);
+      Object.assign(boardZoom, playSaved.zoom);
+      setControls(playSaved.controls);
+      playSaved = null;
+    }
+    renderAll();
+  }
+  document.getElementById('pm-bar').addEventListener('click', e => {
+    if (e.target.closest('#pm-enter')) enterPlayMode();
+    else if (e.target.closest('#pm-exit')) exitPlayMode();
+    else if (e.target.closest('#pm-labels')) {   // the same cycle as the Focus panel's Labels button
+      const order = LABEL_OPTIONS.map(o => o[1]);
+      labelMode = order[(order.indexOf(labelMode) + 1) % order.length];
+      syncLabelMode();
+      renderAll();
+    }
+    else if (e.target.closest('#pm-scale')) {
+      const toScale = !boardChords.every((c, pos) => fadeViewOf(pos) === 'scale');
+      boardChords.forEach((c, pos) => { fadeView[pos] = toScale ? 'scale' : 'shapes'; });
+      renderAll();
+    }
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && playMode && !focusTarget) exitPlayMode(); });
+
+  // When every individual board has exactly one shape picked, one board above them shows all of those
+  // shapes together, numbered by step, zoomed to the frets they use.
+  function renderSumBoard(list) {
+    const sec = document.getElementById('sum-board');
+    if (!sec) return;
+    const picked = list.map((c, pos) => {
+      const ks = picksOf(posKeyOf(pos, c));
+      if (ks.length !== 1) return null;
+      const [low, fr] = ks[0].split(':');
+      return { c, pos, low: Number(low), frets: fr.split(',').map(Number), skey: ks[0] };
+    });
+    const ok = list.length >= 2 && picked.every(Boolean);
+    sec.hidden = !ok;
+    if (!ok) { document.getElementById('sum-board-fb').innerHTML = ''; return; }
+    const all = picked.flatMap(p => p.frets);
+    let lo = Math.max(0, Math.min(...all) - 1), hi = Math.min(FRETS, Math.max(...all) + 1);
+    if (lo <= 2) lo = 0;
+    while (hi - lo < 5) { if (hi < FRETS) hi++; else lo--; }
+    const onlyPos = new Map(), names = {};
+    picked.forEach(p => {
+      p.c.notes.forEach(n => { if (!(n.pc in names)) names[n.pc] = n.name; });
+      p.frets.forEach((f, j) => {
+        const k = (p.low + j) + ',' + f;
+        const arr = onlyPos.get(k) || [];
+        if (!arr.includes(p.c)) arr.push(p.c);
+        onlyPos.set(k, arr);
+      });
+    });
+    const groups = new Map();   // one outline per distinct shape, numbered with every step that uses it
+    picked.forEach(p => {
+      const gk = p.c.name + '|' + p.skey;
+      if (!groups.has(gk)) groups.set(gk, { color: p.c.color, low: p.low, frets: p.frets, steps: [] });
+      groups.get(gk).steps.push(p.pos + 1);
+    });
+    const uniq = [...new Set(list)];
+    document.getElementById('sum-board-fb').innerHTML = fretboard(uniq, uniq.map(() => true), names, [], [], false,
+      { win: { lo, hi, zoomed: true, anchor: lo }, onlyPos, sumShapes: [...groups.values()] });
+    document.getElementById('sum-board-chips').innerHTML = picked.map(p =>
+      `<span class="tag"><span class="dot" style="background:${p.c.color}"></span><span>${p.pos + 1}. ${p.c.name} <b>${tabOf({ low: p.low, frets: p.frets })}</b></span></span>`).join('');
   }
 
   function renderSingles(selected) {
@@ -2275,9 +2967,11 @@
       ? `Individual chords in ${currentScale}: ${eff.map(st => st.deg + 1).join('\u2013')}`
       : `Individual chords in ${currentScale}`;
     const playAll = document.getElementById('play-prog');
-    if (playAll) playAll.textContent = seqMode ? 'Play progression' : 'Play chords';
+    if (playAll) playAll.textContent = seqMode ? 'Play song' : 'Play chords';
     if (!list.length) {
       wrap.innerHTML = '<p class="empty">No chords selected. Turn on a chord above.</p>';
+      renderSumBoard([]);
+      drawPlayBar([]);
       return;
     }
     const live = new Set(list.map((c, pos) => posKeyOf(pos, c)));
@@ -2287,14 +2981,22 @@
       const sec = document.createElement('section');
       sec.className = 'board';
       sec.innerHTML =
-        `<button type="button" class="play" data-chord="${c.deg}" data-mod="${c.mod || ''}" aria-label="Play ${c.name}">\u25b6 Play</button>` +
+        `<div class="bd-head">` +
+        `<h2 class="single-title" data-title="${prefix}${c.roman}: ${c.name}"><span class="dot" style="background:${c.color}"></span>${prefix}${c.roman}: ${c.name}<span class="sub-notes">${c.notes.map(n => n.name).join(' ')}</span></h2>` +
+        `<div class="bd-tools">` +
+        `<button type="button" class="fv-btn" data-pos="${pos}" data-g="faded" aria-pressed="${fadeViewOf(pos) === 'scale'}" aria-label="Faded notes: switch between the chord's other shapes and the scale">Faded: ${fadeViewOf(pos) === 'scale' ? 'Scale' : 'Shapes'}</button>` +
+        (singlePick(pos, c) ? `<button type="button" class="fv-btn bz-btn" data-zoompos="${pos}" data-g="singles" aria-pressed="${!!boardZoom[pos]}" aria-label="Zoom this board to 8 frets around the picked shape">Zoom</button>` : '') +
         `<button type="button" class="focus-btn" data-focus="single:${pos}" aria-pressed="${focusTarget === 'single:' + pos}" aria-label="Focus view: enlarge the ${c.name} fretboard">Focus</button>` +
-        `<h2 class="single-title"><span class="dot" style="background:${c.color}"></span>${prefix}${c.roman}: ${c.name}</h2>` +
-        `<p class="chord-sub">${c.notes.map(n => n.name).join(' ')} (${c.formula})</p>` +
-        shapeCaption(c, pos) + motionLine(pos) +
-        board([c], boardContext(c).bands, boardContext(c).dim, true, null, pos);
+        `<button type="button" class="play" data-chord="${c.deg}" data-mod="${c.mod || ''}" aria-label="Play ${c.name}">\u25b6 Play</button>` +
+        `</div></div>` +
+        board([c], boardContext(c).bands, boardContext(c).dim, true, null, pos) +
+        boardMore(c, pos);
       wrap.appendChild(sec);
     });
+    renderSumBoard(list);
+    drawPlayBar(list);
+    const qc = document.getElementById('qb-clear');
+    if (qc) qc.hidden = !Object.keys(picks).length;
   }
 
   // What the Scale board shows. steps are semitones from the root; degs are the scale-degree
@@ -2324,8 +3026,15 @@
       if (diff > 6) diff -= 12;
       if (diff < -6) diff += 12;
       const acc = diff === 0 ? '' : diff === 1 ? '#' : diff === -1 ? 'b' : diff === 2 ? '##' : 'bb';
-      return { name: letter + acc, pc };
+      return { name: acc.length === 2 ? simpleName(pc, acc[0]) : letter + acc, pc };
     });
+  }
+  // A double sharp or flat is spelled on the neighbouring letter instead: the blue note of Db blues is G, not Abb
+  function simpleName(pc, dir) {
+    const nat = LETTERS.find(l => LETTER_PC[l] === pc);
+    if (nat) return nat;
+    const l = LETTERS.find(x => (LETTER_PC[x] + (dir === '#' ? 1 : -1) + 12) % 12 === pc);
+    return l + dir;
   }
   const outsideOf = notes => notes.filter(n => !currentPcSet().has(n.pc));
   const currentPcSet = () => new Set(scaleNotes.map(n => n.pc));
@@ -2363,7 +3072,7 @@
       b.disabled = !!disabled;
       if (title) b.title = title;
       b.setAttribute('aria-pressed', String(id === scaleType));
-      b.addEventListener('click', () => { scaleType = id; drawScaleButtons(); renderScale(); });
+      b.addEventListener('click', () => { scaleType = id; drawScaleButtons(); renderAll(); });   // the chord boards' Scale background follows it too
       parent.appendChild(b);
     };
     mk(wrap, 'full', 'Full scale');
@@ -2381,7 +3090,7 @@
     const outPcs = new Set(out.map(n => n.pc));
     const inner = notes.slice(1).filter(n => !outPcs.has(n.pc));
     const names = {};            // dot labels follow this board's own spelling
-    if (labelMode === 'intervals') {
+    if (labelMode === 'intervals' || labelMode === 'scaledeg') {
       const degs = sel.def ? sel.def.degs : notes.map((n, i) => i);
       const stp = sel.def ? sel.def.steps : modeSteps();
       notes.forEach((n, i) => { names[n.pc] = degLabel(degs[i], stp[i]); });
@@ -2481,10 +3190,7 @@
       const fifth = (scale[(deg + 4) % 7].pc - scale[deg].pc + 12) % 12; // 6 = diminished, 7 = perfect, 8 = augmented
       const dim = third === 3 && fifth === 6;
       const aug = third === 4 && fifth === 8;
-      let roman = BASE_ROMAN[deg];
-      if (third === 3) roman = roman.toLowerCase();
-      if (dim) roman += '\u00b0';
-      if (aug) roman += '+';
+      const roman = romanOf(deg, mode.steps[deg], [0, third, fifth]);
       return {
         deg,
         roman,
@@ -2565,20 +3271,37 @@
     const options = [['Off', 'off']];
     for (let low = 0; low <= 6 - n; low++) options.push([stringNames().slice(low, shapeType === 'full' ? 6 : low + n).join(' '), low]);
     if (shapeType !== 'full') options.push(['All', 'all']); // for full chords the first button already allows every shape
-    if (shapeType === 'full' && shapeMode === 'all') shapeMode = 0;
-    if (typeof shapeMode === 'number') shapeMode = Math.min(shapeMode, 6 - n);
+    const multi = shapeType !== 'full';   // triad string sets can be combined
+    if (multi && !(shapeMode instanceof Set)) shapeMode = new Set(typeof shapeMode === 'number' ? [shapeMode] : []);
+    if (!multi && (shapeMode instanceof Set || shapeMode === 'all')) shapeMode = shapeMode instanceof Set && shapeMode.size ? Math.min(...shapeMode) : 0;
+    if (multi) shapeMode = new Set([...shapeMode].map(l => Math.min(l, 6 - n)));
+    else if (typeof shapeMode === 'number') shapeMode = Math.min(shapeMode, 6 - n);
+    const lows = options.filter(o => typeof o[1] === 'number').map(o => o[1]);
+    const pressed = value => {
+      if (!multi) return value === shapeMode;
+      if (value === 'off') return shapeMode.size === 0;
+      if (value === 'all') return lows.every(l => shapeMode.has(l));
+      return shapeMode.has(value);
+    };
+    const refresh = () => shapesWrap.querySelectorAll('.key').forEach((btn, i) => {
+      if (i < options.length) btn.setAttribute('aria-pressed', String(pressed(options[i][1])));
+    });
     shapesWrap.innerHTML = '';
     options.forEach(([label, value]) => {
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'key';
       b.textContent = label;
-      b.setAttribute('aria-pressed', String(value === shapeMode));
+      b.setAttribute('aria-pressed', String(pressed(value)));
       b.addEventListener('click', () => {
-        shapeMode = value;
-        shapesWrap.querySelectorAll('.key').forEach((btn, i) => {
-          if (i < options.length) btn.setAttribute('aria-pressed', String(options[i][1] === shapeMode));
-        });
+        if (!multi) shapeMode = value;
+        else if (value === 'off') shapeMode = new Set();
+        else if (value === 'all') shapeMode = new Set(lows);
+        else {   // toggle this string set on or off
+          shapeMode = new Set(shapeMode);
+          if (shapeMode.has(value)) shapeMode.delete(value); else shapeMode.add(value);
+        }
+        refresh();
         renderAll();
       });
       shapesWrap.appendChild(b);
@@ -2610,7 +3333,6 @@
       shapeModeByType[shapeType] = shapeMode;   // remember this type's string choice
       shapeType = value;
       shapeMode = shapeModeByType[value];
-      if (value === 'full' && shapeMode === 'all') shapeMode = 0;
       stypeWrap.querySelectorAll('.key').forEach((btn, i) => {
         btn.setAttribute('aria-pressed', String(STYPE_OPTIONS[i][1] === shapeType));
       });
@@ -2835,9 +3557,9 @@
   zoomWrap.appendChild(zoomToggle);
 
   const STEPPERS = [
-    { key: 'anchor', label: 'Anchor fret', min: 0, max: FRETS },
-    { key: 'below',  label: 'Frets below', min: 0, max: 12 },
-    { key: 'above',  label: 'Frets above', min: 0, max: 12 },
+    { key: 'anchor', label: 'Anchor', min: 0, max: FRETS },
+    { key: 'below',  label: 'Below', min: 0, max: 12 },
+    { key: 'above',  label: 'Above', min: 0, max: 12 },
   ];
   const valEls = {};
 
@@ -2860,13 +3582,13 @@
     const minus = document.createElement('button');
     minus.type = 'button';
     minus.textContent = '\u2212';
-    minus.setAttribute('aria-label', `Decrease ${st.label.toLowerCase()}`);
+    minus.setAttribute('aria-label', `Decrease ${st.key === 'anchor' ? 'anchor fret' : 'frets ' + st.label.toLowerCase()}`);
     const val = document.createElement('span');
     val.className = 'val';
     const plus = document.createElement('button');
     plus.type = 'button';
     plus.textContent = '+';
-    plus.setAttribute('aria-label', `Increase ${st.label.toLowerCase()}`);
+    plus.setAttribute('aria-label', `Increase ${st.key === 'anchor' ? 'anchor fret' : 'frets ' + st.label.toLowerCase()}`);
     valEls[st.key] = val;
     const bump = d => {
       zoom[st.key] = Math.min(st.max, Math.max(st.min, zoom[st.key] + d));
@@ -2882,7 +3604,7 @@
   zoomToggle.addEventListener('click', () => { zoom.on = !zoom.on; syncZoom(); });
 
   // Board size: how many fretboards sit side by side
-  const SIZE_OPTIONS = [['1 across', 1], ['2 across', 2], ['3 across', 3], ['4 across', 4]];
+  const SIZE_OPTIONS = [['1', 1], ['2', 2], ['3', 3], ['4', 4]];
   let boardCols = 1;
   const sizeWrap = document.getElementById('bsize');
   SIZE_OPTIONS.forEach(([label, value]) => {
@@ -2902,13 +3624,14 @@
   });
 
   // Dot labels: note names or intervals
-  const LABEL_OPTIONS = [['Note names', 'names'], ['Intervals', 'intervals'], ['Fingering', 'fingers']];
+  const LABEL_OPTIONS = [['Note names', 'names'], ['Intervals: Chord', 'intervals'], ['Intervals: Scale', 'scaledeg'], ['Fingering', 'fingers']];
   const LABEL_HINTS = {
     names: 'Dots show note names.',
-    intervals: 'Dots show each note’s job. The scale and chord-group boards count from the key’s root: 1 is the tonic, b3 a flat third, 5 the fifth, and so on. Each individual chord board counts from that chord’s own root: R, 3 or b3, 5. The root of the scale board and of each individual chord has a dark ring.',
+    intervals: 'Each individual chord board counts from the chord’s own root: R, 3 or b3, 5. The scale and chord-group boards count from the key’s root.',
+    scaledeg: 'Every board counts from the key’s root, so each chord tone shows its place in the scale: in A major, Bm shows 2 4 6.',
     fingers: 'Dots show a suggested fingering on each individual chord board and in the Follow and Focus panels: 1 is the index finger, 2 middle, 3 ring, 4 pinky, and 0 an open string. A barre shows the same number on every string it covers. Tap a shape outline to see that shape’s fingering; with none picked, the board shows the shape Play would use and fades the rest. The scale and chord-group boards, which show many shapes at once, keep note names.',
   };
-  const FOCUS_LABEL_NAMES = { names: 'Notes', intervals: 'Intervals', fingers: 'Fingering' };
+  const FOCUS_LABEL_NAMES = { names: 'Notes', intervals: 'Chord intervals', scaledeg: 'Scale intervals', fingers: 'Fingering' };
   const labelWrap = document.getElementById('labelmode');
   function syncLabelMode() {
     labelWrap.querySelectorAll('.key').forEach((btn, i) => btn.setAttribute('aria-pressed', String(LABEL_OPTIONS[i][1] === labelMode)));
@@ -2944,10 +3667,11 @@
     quiz.sr = {};
     tuningSel.value = t.id;
     const std = t.id === 'standard';
+    const cagedOk = cagedOffset() !== null;
     document.getElementById('tuning-hint').textContent = (std ? '' : `Low to high: ${t.strings.join(' ')}. `) + t.note +
       (std ? '' : ' Shapes, note names and sound all follow the tuning.');
-    document.getElementById('caged-wrap').hidden = !std;
-    document.getElementById('caged-off').hidden = std;
+    document.getElementById('caged-wrap').hidden = !cagedOk;
+    document.getElementById('caged-off').hidden = cagedOk;
     drawShapeButtons();
     setScale(currentRoot, currentMode);   // redraws every board, clears picks, and starts a new quiz question
   }
@@ -2978,10 +3702,7 @@
     const iv = notes.map(n => (n.pc - notes[0].pc + 12) % 12);
     const third = iv[1], fifth = iv[2];
     const dim = third === 3 && fifth === 6, aug = third === 4 && fifth === 8;
-    let roman = BASE_ROMAN[deg];
-    if (third === 3) roman = roman.toLowerCase();
-    if (dim) roman += '\u00b0';
-    if (aug) roman += '+';
+    const roman = romanOf(deg, modeSteps()[deg], [0, third, fifth]);
     return { deg, roman, name: notes[0].name + (QUALITY[iv.join(',')] || ''), notes, pcs: notes.map(n => n.pc), color: DEG_COLORS[deg],
       type: third === 4 ? 'major' : 'minor', dim, formula: iv.map(v => INTERVAL_LABEL[v] || v).join(' ') };
   }
@@ -3626,8 +4347,8 @@
 
   // Voice leading: pick one shape on every individual board so the hand moves as little as possible from
   // one chord to the next. The first board keeps a shape you already picked, or else takes the shape
-  // nearest the nut. Each later board takes, from the shapes it shows, the cheapest one after the shape
-  // before it. Picks on later boards are replaced.
+  // nearest the nut. The rest of the progression is planned as a whole: of every combination of the shapes
+  // the boards show, it takes the one with the least total cost. Picks on later boards are replaced.
   //   Movement  Nearest: fewest frets moved on the strings both shapes use.
   //             Along the neck: stay on the same strings and slide along the frets.
   //             Across the strings: stay in the same fret area and change string sets.
@@ -3664,19 +4385,21 @@
     a.forEach((x, i) => { if (!(mask & (1 << i))) voices.push({ from: x, to: null, d: 0 }); });
     return voices;
   }
-  function describeMotion(voices) {
+  function describeMotion(voices, fromNames, toNames) {
     const matched = voices.filter(v => v.from && v.to);
     const stay = matched.filter(v => v.d === 0).length;
     const moves = matched.filter(v => v.d !== 0);
     const parts = [];
     if (stay) parts.push(`${stay} note${stay === 1 ? '' : 's'} stay`);
-    moves.forEach(v => parts.push(`${noteLabel(v.from.midi)} ${v.d > 0 ? 'up' : 'down'} ${Math.abs(v.d)} to ${noteLabel(v.to.midi)}`));
+    moves.forEach(v => parts.push(`${noteLabel(v.from.midi, fromNames)} ${v.d > 0 ? 'up' : 'down'} ${Math.abs(v.d)} to ${noteLabel(v.to.midi, toNames)}`));
     const added = voices.filter(v => !v.from).length, dropped = voices.filter(v => !v.to).length;
     if (added) parts.push(`${added} new`);
     if (dropped) parts.push(`${dropped} dropped`);
     return { text: parts.join(', '), total: matched.reduce((t, v) => t + Math.abs(v.d), 0), stay, moved: moves.length };
   }
-  const noteLabel = midi => { const pc = ((midi % 12) + 12) % 12; return pcNames[pc] || ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'][pc]; };
+  // A note is named as its own chord spells it (Bb in C7, not A#), then as the key spells it
+  const noteLabel = (midi, names) => { const pc = ((midi % 12) + 12) % 12; return (names && names[pc]) || pcNames[pc] || ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'][pc]; };
+  const namesOf = c => { const m = {}; (c && c.notes || []).forEach(n => { m[n.pc] = n.name; }); return m; };
   // The shape on board `pos` when exactly one is picked there
   function singlePickAt(pos) {
     const c = boardChords[pos];
@@ -3699,7 +4422,7 @@
     const prev = singlePickAt(prevPos), cur = singlePickAt(pos);
     if (!prev || !cur) return null;
     const voices = matchVoices(prev, cur);
-    return { prev, cur, voices, loop, fromName: boardChords[prevPos].name, ...describeMotion(voices) };
+    return { prev, cur, voices, loop, fromName: boardChords[prevPos].name, ...describeMotion(voices, namesOf(boardChords[prevPos]), namesOf(boardChords[pos])) };
   }
   function motionLine(pos) {
     const mo = motionFor(pos);
@@ -3725,7 +4448,7 @@
       `<p class="hint"><strong>${total}</strong> semitone${total === 1 ? '' : 's'} in all, an average of ${(total / rows.length).toFixed(1)} per chord change. ` +
       `On the boards, a green ring is a note that stays, and a dashed amber ring with an arrow is where a note comes from and how far it moves.</p>`;
   }
-  const VL_MOVES = [['near', 'Nearest'], ['along', 'Along the neck'], ['across', 'Across the strings']];
+  const VL_MOVES = [['near', 'Nearest'], ['along', 'Along neck'], ['across', 'Across strings']];
   const VL_PITCH = [['any', 'Any'], ['up', 'Up'], ['down', 'Down']];
   let vlMove = 'near', vlPitch = 'any', vlApplied = false;
   let boardChords = [];
@@ -3765,56 +4488,76 @@
       const dMean = Math.abs(meanOf(sh) - meanOf(from));
       let cost = 1.5 * (c.pcs.length - toneCount(sh));
       if (vlMove === 'along') cost += (n ? sum / n : dMean + 2) + 0.3 * dMean + 6 * Math.abs(sh.low - from.low);
-      else if (vlMove === 'across') cost += 2 * dMean + (sh.low === from.low ? 2.5 : 0) + 0.2 * Math.abs(sh.low - from.low);
+      else if (vlMove === 'across') cost += 2 * dMean + (sh.low === from.low ? 6 : 0) + 0.2 * Math.abs(sh.low - from.low);
       else {   // Nearest: the semitones each note moves (the same count the movement summary shows), plus a little for hand position
         let st = 0;
         matchVoices(from, sh).forEach(v => { st += v.from && v.to ? Math.abs(v.d) : 6; });
         cost += st / Math.max(from.frets.length, sh.frets.length) + 0.5 * dMean + 0.25 * Math.abs(sh.low - from.low);
       }
       const dp = pitchOf(sh) - pitchOf(from);
-      if (vlPitch === 'up') cost += dp > 0 ? 0.3 * dp : 6 + 0.8 * -dp;
-      if (vlPitch === 'down') cost += dp < 0 ? 0.3 * -dp : 6 + 0.8 * dp;
+      // Up / Down is close to a rule: a change the other way costs far more than any amount of hand movement,
+      // so it only happens when no path through the whole progression can avoid it (the neck runs out)
+      if (vlPitch === 'up') cost += dp > 0 ? 0.3 * dp : 100 + 0.8 * -dp;
+      if (vlPitch === 'down') cost += dp < 0 ? 0.3 * -dp : 100 + 0.8 * dp;
       return cost;
     };
-    const lowsSeen = new Set(), allLows = new Set();
+    const costCache = new Map();
+    const mc = (from, sh, c) => {
+      const k = keyOf(from) + '>' + keyOf(sh) + '|' + chordKeyOf(c);
+      if (!costCache.has(k)) costCache.set(k, moveCost(from, sh, c));
+      return costCache.get(k);
+    };
+    // The whole progression is planned at once (not one board at a time): every combination of shapes is weighed,
+    // so an easy change now never forces a big jump later. With Pitch on Any, the last chord must also lead back to board 1.
+    const allLows = new Set();
+    const stages = [];
     list.forEach((c, pos) => {
       const ctx = boardContext(c);
       const shapes = highlightedShapes(c, ctx.bands, ctx.dim);
-      if (!shapes.length) return;   // nothing to pick here, so the next board leads from the last shape
-      let chosen = null;
-      if (!prev) {
-        const kept = shapes.filter(sh => picksOf(posKeyOf(pos, c)).includes(keyOf(sh))).sort((x, y) => meanOf(x) - meanOf(y))[0];
-        if (kept) { chosen = kept; first = 'board 1 kept the shape you picked'; }
-        else if (vlPitch === 'down') {   // coming down needs room, so start around the 12th fret
-          const v = pickVoicing(c, 12, ctx.bands, ctx.dim, pos);
-          chosen = shapes.find(sh => keyOf(sh) === keyOf(v));
-          first = 'board 1 starts around the 12th fret so there is room to come down';
-        } else {
-          const v = pickVoicing(c, 0, ctx.bands, ctx.dim, pos);
-          chosen = shapes.find(sh => keyOf(sh) === keyOf(v));
-          first = 'board 1 starts with the shape nearest the nut';
-        }
-      } else {
-        let bestCost = Infinity;
-        // With Pitch on Any the song is treated as a loop: the last board also has to lead back into board 1
-        const lastBoard = pos === list.length - 1 || list.slice(pos + 1).every(cc => !highlightedShapes(cc, boardContext(cc).bands, boardContext(cc).dim).length);
-        const wrapTo = lastBoard && vlPitch === 'any' && boards >= 1 ? firstShape : null;
-        shapes.forEach(sh => {
-          let cost = moveCost(prev, sh, c);
-          if (wrapTo) cost += moveCost(sh, wrapTo, list[firstPos]);
-          if (cost < bestCost) { bestCost = cost; chosen = sh; }
-        });
-        if (wrapTo) looped = true;
-        const dp = pitchOf(chosen) - pitchOf(prev);
-        if ((vlPitch === 'up' && dp <= 0) || (vlPitch === 'down' && dp >= 0)) unmet++;
-      }
-      next[posKeyOf(pos, c)] = [keyOf(chosen)];
-      lowsSeen.add(chosen.low);
-      if (!firstShape) { firstShape = chosen; firstPos = pos; }
       shapes.forEach(sh => allLows.add(sh.low));
-      prev = chosen;
-      boards++;
+      if (shapes.length) stages.push({ c, pos, ctx, shapes });   // a board with nothing to pick is skipped
     });
+    if (stages.length) {
+      const st0 = stages[0], c0 = st0.c;
+      let chosen0 = st0.shapes.filter(sh => picksOf(posKeyOf(st0.pos, c0)).includes(keyOf(sh))).sort((x, y) => meanOf(x) - meanOf(y))[0];
+      if (chosen0) first = 'board 1 kept the shape you picked';
+      else {
+        const v = pickVoicing(c0, vlPitch === 'down' ? 12 : 0, st0.ctx.bands, st0.ctx.dim, st0.pos);
+        chosen0 = st0.shapes.find(sh => keyOf(sh) === keyOf(v)) || st0.shapes[0];
+        first = vlPitch === 'down' ? 'board 1 starts around the 12th fret so there is room to come down' : 'board 1 starts with the shape nearest the nut';
+      }
+      firstShape = chosen0; firstPos = st0.pos;
+      const wrap = vlPitch === 'any' && stages.length >= 2;
+      // cost[i][j]: the cheapest way to reach shape j of stage i; from[i][j]: the shape before it
+      let cost = [[0]], from = [[-1]];
+      const pickedAt = [[chosen0]];
+      for (let i = 1; i < stages.length; i++) {
+        const { c, shapes } = stages[i];
+        const prevShapes = pickedAt[i - 1];
+        const ci = [], fi = [];
+        shapes.forEach(sh => {
+          let best = Infinity, arg = 0;
+          prevShapes.forEach((ps, k) => { const v = cost[i - 1][k] + mc(ps, sh, c); if (v < best) { best = v; arg = k; } });
+          if (wrap && i === stages.length - 1) best += mc(sh, chosen0, c0);
+          ci.push(best); fi.push(arg);
+        });
+        cost.push(ci); from.push(fi); pickedAt.push(shapes);
+      }
+      const last = cost.length - 1;
+      let j = cost[last].indexOf(Math.min(...cost[last]));
+      const path = [];
+      for (let i = last; i >= 0; i--) { path[i] = pickedAt[i][j]; j = from[i][j]; }
+      looped = wrap;
+      path.forEach((sh, i) => {
+        next[posKeyOf(stages[i].pos, stages[i].c)] = [keyOf(sh)];
+        if (i > 0) {
+          const dp = pitchOf(sh) - pitchOf(path[i - 1]);
+          if ((vlPitch === 'up' && dp <= 0) || (vlPitch === 'down' && dp >= 0)) unmet++;
+        }
+        boards++;
+      });
+      prev = path[path.length - 1];
+    }
     picks = next;
     vlApplied = boards > 0;
     drawSeq();
@@ -3823,8 +4566,8 @@
       (vlPitch === 'up' ? ', rising' : vlPitch === 'down' ? ', falling' : '');
     note.textContent = `Voice leading applied to ${boards} board${boards === 1 ? '' : 's'} (${how}); ${first || 'no board had a shape to pick'}.` +
       (looped ? ' The last chord also leads back into chord 1, so the song loops smoothly.' : '') +
-      (unmet ? ` ${unmet} chord${unmet === 1 ? '' : 's'} could not ${vlPitch === 'up' ? 'rise' : 'fall'} any further on the neck and took the smallest step.` : '') +
-      (vlMove !== 'near' && allLows.size === 1 ? ' Only one string set is on, so there is nothing to move between: under Shapes, choose All (or, for full chords, the lowest string option) to let the voicings change strings.' : '') +
+      (unmet ? ` The neck runs out before the progression ends, so ${unmet} chord change${unmet === 1 ? '' : 's'} had to step ${vlPitch === 'up' ? 'down' : 'up'} (the fewest possible).` : '') +
+      (vlMove !== 'near' && allLows.size === 1 ? ' Only one string set is on, so there is nothing to move between: under Shapes, switch on more string sets or All (or, for full chords, the lowest string option) to let the voicings change strings.' : '') +
       ' Tap a shape on any board to change it.';
   }
 
@@ -4086,7 +4829,7 @@
   const DRUM_BY_METER = {
     '4/4': [
       { id: 'rock', label: 'Rock', kick: [1, 0, 1, 0], snare: [0, 1, 0, 1], note: 'Bass drum on beats 1 and 3, snare on 2 and 4.' },
-      { id: 'four', label: 'Four on the floor', kick: [1, 1, 1, 1], snare: [0, 1, 0, 1], note: 'Bass drum on every beat, snare on 2 and 4.' },
+      { id: 'four', label: '4 on the floor', kick: [1, 1, 1, 1], snare: [0, 1, 0, 1], note: 'Bass drum on every beat, snare on 2 and 4.' },
       { id: 'half', label: 'Half time', kick: [1, 0, 0, 0], snare: [0, 0, 1, 0], note: 'Bass drum on beat 1, snare on 3, for a slow, heavy feel.' },
     ],
     '3/4': [
@@ -4317,6 +5060,10 @@
 
   function syncTempo() {
     document.getElementById('tempo-val').textContent = `${tempo.bpm} BPM`;
+    // Play Song and Metronome each have a tempo slider; both show the one tempo
+    ['tempo', 'metro-tempo'].forEach(id => { const el = document.getElementById(id); if (el && Number(el.value) !== tempo.bpm) el.value = tempo.bpm; });
+    const mv = document.getElementById('metro-tempo-val');
+    if (mv) mv.textContent = `${tempo.bpm} BPM`;
     document.getElementById('beats-val').textContent = String(tempo.beats);
     const bars = Number((tempo.beats / curMeter().beats).toFixed(2));
     document.getElementById('tempo-note').textContent =
@@ -4460,7 +5207,8 @@
       marks[m] = { colors: [chord.color], label: names[pc] !== undefined ? names[pc] : '', root: pc === chord.pcs[0] };
     });
     const svg = pianoSvg(PIANO_LO, PIANO_HI, marks, { kw: 20, h: 64, r: 7.5, fs: 8, aria: `${chord.name} on the piano` });
-    const spelled = pv.notes.map(m => { const nm = (chord.notes.find(n => n.pc === m % 12) || {}).name || ''; return nm + (Math.floor(m / 12) - 1); }).join(' ');
+    // The octave belongs to the letter: Cb4 sounds as B3, and B#3 as C4
+    const spelled = pv.notes.map(m => { const nm = (chord.notes.find(n => n.pc === m % 12) || {}).name || ''; const acc = [...nm.slice(1)].reduce((t, ch) => t + (ch === '#' ? 1 : -1), 0); return nm + (Math.floor((m - acc) / 12) - 1); }).join(' ');
     return svg + `<p class="fsub">${esc(OCT_NAMES[pv.inv] || '')} · ${esc(spelled)}</p>`;
   }
   // Marks for the enlarged piano: every key whose note belongs to the chords (or scale) on that board
@@ -4472,6 +5220,7 @@
       const c = btn ? chordFor(Number(btn.dataset.chord), btn.dataset.mod || null) : null;
       set = c ? [c] : [];
     } else if (target === 'combined') set = chords.filter((c, i) => active[i]);
+    else if (target === 'sumboard') set = [...new Set(boardChords)];
     else if (target === 'major' || target === 'minor') set = chords.filter((c, i) => active[i] && c.type === target);
     // Tapping a chord in the legend focuses on it: its notes stay, notes only other chords use fade (as on the guitar boards)
     const focusC = set && focusDeg !== null && set.includes(chords[focusDeg]) ? chords[focusDeg] : null;
@@ -4634,6 +5383,12 @@
     const chipEl = e.target.closest('.shape-chip');
     if (chipEl) { tapShapeChip(chipEl); return; }
     const pickEl = e.target.closest('.shape[data-chordkey]');
+    if (pickEl && playMode) {   // the shape is locked: tapping it plays the picked shape
+      const ck = pickEl.getAttribute('data-chordkey');
+      const k = (picksOf(ck)[0] || pickEl.getAttribute('data-keys').split(' ')[0]).split(':');
+      if (soundOn && ensureAudio()) strum(Number(k[0]), k[1].split(',').map(Number), ac.currentTime + 0.02, pickEl.closest('section.board'));
+      return;
+    }
     if (pickEl) { tapShape(pickEl); return; }
     const btn = e.target.closest('[data-chord]');
     const noteEl = e.target.closest('.note');
@@ -4722,6 +5477,10 @@
   const tempoEl = document.getElementById('tempo');
   tempoEl.addEventListener('input', () => {
     tempo.bpm = Math.min(200, Math.max(40, Number(tempoEl.value) || 80));
+    syncTempo();
+  });
+  document.getElementById('metro-tempo').addEventListener('input', e => {
+    tempo.bpm = Math.min(200, Math.max(40, Number(e.target.value) || 80));
     syncTempo();
   });
   document.getElementById('beats-minus').addEventListener('click', () => { tempo.beats = Math.max(1, tempo.beats - 1); syncTempo(); });
@@ -4991,7 +5750,7 @@
   });
   applyFollow();
   // ---- Focus view: an enlarged copy of one fretboard, kept up to date as the page changes ----
-  const FOCUS_ROOTS = { scale: 'scale', combined: 'combined', major: 'major', minor: 'minor' };
+  const FOCUS_ROOTS = { scale: 'scale', combined: 'combined', major: 'major', minor: 'minor', sumboard: 'sum-board-fb' };
   function focusSource(target) {
     if (!target) return null;
     if (target.startsWith('single:')) {
@@ -5030,6 +5789,7 @@
       document.getElementById('focus-title').textContent = 'Quiz yourself';
       instBtn.hidden = true;
       document.getElementById('focus-label-btn').hidden = true;
+      document.getElementById('focus-fade-btn').hidden = true;
       document.getElementById('focus').hidden = false;
       document.querySelectorAll('.focus-btn').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.focus === focusTarget)));
       return;
@@ -5038,6 +5798,9 @@
     instBtn.hidden = false;
     // The label button is for the individual chord boards, on the guitar view (piano keys show note names or intervals only)
     document.getElementById('focus-label-btn').hidden = !(focusTarget.startsWith('single:') && focusCfg.inst === 'guitar');
+    const ffb = document.getElementById('focus-fade-btn');
+    ffb.hidden = !(focusTarget.startsWith('single:') && focusCfg.inst === 'guitar');
+    if (!ffb.hidden) ffb.textContent = 'Faded: ' + (fadeViewOf(Number(focusTarget.slice(7))) === 'scale' ? 'Scale' : 'Shapes');
     const src = focusSource(focusTarget);
     if (!src || !src.wrap) { closeFocus(); return; }
     const el = document.getElementById('focus');
@@ -5045,7 +5808,7 @@
     focusObs.forEach(o => o.disconnect());
     focusObs = [];
     const h2 = src.sec.querySelector('h2');
-    document.getElementById('focus-title').textContent = h2 ? h2.textContent : 'Fretboard';
+    document.getElementById('focus-title').textContent = h2 ? (h2.dataset.title || h2.textContent) : 'Fretboard';
     body.textContent = '';
     if (src.sub) { const sub = src.sub.cloneNode(true); body.appendChild(sub); }
     if (focusCfg.inst === 'piano') {
@@ -5161,6 +5924,26 @@
     syncLabelMode();
     renderAll();   // the same setting as Dot labels in the controls, so every board follows it
   });
+  document.getElementById('focus-fade-btn').addEventListener('click', () => {
+    if (!focusTarget || !focusTarget.startsWith('single:')) return;
+    const pos = Number(focusTarget.slice(7));
+    fadeView[pos] = fadeViewOf(pos) === 'scale' ? 'shapes' : 'scale';
+    renderAll();
+  });
+  document.getElementById('singles').addEventListener('click', e => {
+    const z = e.target.closest('.bz-btn');
+    if (z) {
+      const zp = Number(z.dataset.zoompos);
+      boardZoom[zp] = !boardZoom[zp];
+      renderAll();
+      return;
+    }
+    const b = e.target.closest('.fv-btn');
+    if (!b) return;
+    const pos = Number(b.dataset.pos);
+    fadeView[pos] = b.dataset.view || (fadeViewOf(pos) === 'scale' ? 'shapes' : 'scale');   // the toggle above each board
+    renderAll();
+  });
   document.getElementById('focus-inst-btn').addEventListener('click', () => {
     focusCfg.inst = focusCfg.inst === 'piano' ? 'guitar' : 'piano';
     applyFocusCfg();
@@ -5254,12 +6037,471 @@
     else if (wideQuery.addListener) wideQuery.addListener(onChange);
   }
   fabEl.addEventListener('click', () => setControls(!controlsOpen));
+  // Floating Play: the same as Play progression (or Stop while something is sounding), so you can hear a change without scrolling
+  const fabPlay = document.getElementById('fab-play');
+  const isPlaying = () => loopTimer !== null || liveSources.size > 0;
+  fabPlay.addEventListener('click', () => {
+    if (isPlaying()) stopAll(); else playProgression();
+    setTimeout(syncFabPlay, 60);
+  });
+  function syncFabPlay() {
+    const on = isPlaying();
+    const word = effectiveSeq().length ? 'Play progression' : 'Play chords';
+    fabPlay.dataset.playing = String(on);
+    fabPlay.textContent = on ? '\u25a0 Stop' : '\u25b6 ' + word;
+  }
+  setInterval(syncFabPlay, 300);
+  syncFabPlay();
   document.getElementById('scrim').addEventListener('click', () => setControls(false));
   document.getElementById('panel-close').addEventListener('click', () => setControls(false));
 
   drawShapeButtons();
   setScale(9, 'major');
   syncZoom();
+
+  // ---- Panel sections: open and closed state is remembered on this device ----
+  const secEls = Array.from(document.querySelectorAll('#panel details.ctl-sec'));
+  const secCollapseBtn = document.getElementById('sec-collapse');
+  try {
+    const saved = JSON.parse(localStorage.getItem('panel-secs') || 'null');
+    if (saved) secEls.forEach(d => { if (d.dataset.sec in saved) d.open = !!saved[d.dataset.sec]; });
+  } catch (e) { /* storage unavailable */ }
+  function syncSecs() {
+    const st = {};
+    secEls.forEach(d => { st[d.dataset.sec] = d.open; });
+    try { localStorage.setItem('panel-secs', JSON.stringify(st)); } catch (e) { /* ignore */ }
+    secCollapseBtn.textContent = secEls.some(d => d.open) ? 'Collapse all' : 'Expand all';
+  }
+  secEls.forEach(d => d.addEventListener('toggle', syncSecs));
+  secCollapseBtn.addEventListener('click', () => {
+    const open = !secEls.some(d => d.open);
+    secEls.forEach(d => { d.open = open; });
+    syncSecs();
+  });
+  syncSecs();
+
+  // ---- Main page view: hide whole sections of the main view ----
+  const VIEWS = [['scale', 'Scale'], ['quiz', 'Quiz'], ['combined', 'Combined'], ['major', 'Major chords'], ['minor', 'Minor chords'], ['singles', 'Individual']];
+  const viewOn = {};
+  VIEWS.forEach(([id]) => { viewOn[id] = true; });
+  try { Object.assign(viewOn, JSON.parse(localStorage.getItem('views') || '{}')); } catch (e) { /* storage unavailable */ }
+  const viewRow = document.getElementById('view-row');
+  function applyViews() {
+    VIEWS.forEach(([id]) => document.querySelectorAll(`[data-show="${id}"]`).forEach(el => el.classList.toggle('view-off', !viewOn[id])));
+    viewRow.querySelectorAll('.key').forEach(b => b.setAttribute('aria-pressed', String(!!viewOn[b.dataset.v])));
+    try { localStorage.setItem('views', JSON.stringify(viewOn)); } catch (e) { /* ignore */ }
+  }
+  VIEWS.forEach(([id, label]) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'key'; b.dataset.v = id; b.textContent = label;
+    b.addEventListener('click', () => { viewOn[id] = !viewOn[id]; applyViews(); });
+    viewRow.appendChild(b);
+  });
+  applyViews();
+
+  // ---- User guide: a full page of its own (opened with #guide in the address), and Learning mode,
+  // which shows the part of the guide for whatever you last touched ----
+  const guideSrc = document.getElementById('guide-src').content;
+  const guideSec = id => guideSrc.querySelector(`section[data-g="${id}"]`);
+  const GUIDE_GROUPS = [['Basics', ['start', 'setup', 'ipad']], ['Controls', ['tuning', 'key', 'scale', 'view', 'chords', 'display', 'labels', 'size', 'caged', 'shapes', 'zoom', 'prog', 'songs', 'vl', 'saved', 'sound', 'tempo', 'chordsound', 'strum', 'drums', 'metro', 'mix', 'focus', 'follow']],
+    ['The boards', ['scaleboard', 'quiz', 'groups', 'singles', 'playmode', 'faded']]];
+  const guidePage = document.getElementById('guide-page');
+  (function buildGuide() {
+    const toc = document.getElementById('gp-toc'), body = document.getElementById('gp-body');
+    GUIDE_GROUPS.forEach(([name, ids]) => {
+      const h = document.createElement('b'); h.textContent = name; toc.appendChild(h);
+      ids.forEach(id => {
+        const sec = guideSec(id);
+        if (!sec) return;
+        const a = document.createElement('a');
+        a.href = '#guide-' + id; a.textContent = sec.querySelector('h2').textContent;
+        toc.appendChild(a);
+        const c = sec.cloneNode(true);
+        c.id = 'guide-' + id;
+        body.appendChild(c);
+      });
+    });
+  })();
+  // Changing the address can be refused when the page runs inside a sandboxed preview (such as a file
+  // preview in a chat app), where the page has no real address. Then the address is simply left alone.
+  let addressLocked = false;
+  function setAddress(hash) {
+    if (addressLocked || !history.replaceState) return;
+    try { history.replaceState(null, '', location.pathname + location.search + hash); }
+    catch (e) { addressLocked = true; }
+  }
+  const hasRealAddress = () => /^(https?|file):$/.test(location.protocol) && !addressLocked;
+  function openGuide(id) {
+    guidePage.hidden = false;
+    guidePage.querySelectorAll('section.hl').forEach(x => x.classList.remove('hl'));
+    const target = id && document.getElementById('guide-' + id);
+    if (target) { target.classList.add('hl'); target.scrollIntoView({ block: 'start' }); }
+    else guidePage.scrollTop = 0;
+  }
+  function closeGuide() {
+    guidePage.hidden = true;
+    if (location.hash.startsWith('#guide')) setAddress('');
+  }
+  function guideFromHash() {
+    const h = location.hash;
+    if (h === '#guide') openGuide(null);
+    else if (h.startsWith('#guide-')) openGuide(h.slice(7));
+  }
+  window.addEventListener('hashchange', guideFromHash);
+  guideFromHash();
+  ['guide-open'].forEach(id => document.getElementById(id).addEventListener('click', () => {
+    try { if (location.hash !== '#guide') location.hash = 'guide'; } catch (e) { /* a sandboxed preview may not allow it */ }
+    openGuide(null);
+  }));
+  document.getElementById('guide-close').addEventListener('click', closeGuide);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !guidePage.hidden) closeGuide(); });
+
+  // The live explanation of the current choice, kept by the controls (hidden in the panel to save space)
+  const EXPLAIN = { tuning: ['tuning-hint'], key: ['mode-hint'], scale: ['scaletype-hint', 'scaletype-warn'], chords: ['chord-hint'], labels: ['labelmode-hint'],
+    shapes: ['hint-shapes'], tempo: ['tempo-note'], chordsound: ['chordsound-note'], strum: ['strum-note'], drums: ['drum-note'], metro: ['metro-note'] };
+  const learnCard = document.getElementById('learn-card'), learnBtn = document.getElementById('learn-toggle');
+  let learnOn = false, learnId = 'start', learnMin = false;
+  try { learnOn = localStorage.getItem('learn') === '1'; } catch (e) { /* storage unavailable */ }
+  function drawLearn() {
+    learnBtn.setAttribute('aria-pressed', String(learnOn));
+    learnCard.hidden = !learnOn;
+    if (!learnOn) return;
+    const sec = guideSec(learnId) || guideSec('start');
+    document.getElementById('lc-title').textContent = sec.querySelector('h2').textContent;
+    const body = document.getElementById('lc-body');
+    body.textContent = '';
+    Array.from(sec.children).forEach(ch => { if (ch.tagName !== 'H2') body.appendChild(ch.cloneNode(true)); });
+    const now = (EXPLAIN[learnId] || []).map(id => document.getElementById(id)).filter(el => el && !el.hidden && el.textContent.trim());
+    if (now.length) {
+      const box = document.createElement('div');
+      box.className = 'lc-now';
+      box.innerHTML = '<b>Your current choice</b>';
+      now.forEach(el => { const p = document.createElement('p'); p.style.margin = '4px 0 0'; p.textContent = el.textContent; box.appendChild(p); });
+      body.appendChild(box);
+    }
+    learnCard.classList.toggle('min', learnMin);
+    const mb = document.getElementById('lc-min');
+    mb.textContent = learnMin ? 'Show' : 'Hide';
+    mb.setAttribute('aria-expanded', String(!learnMin));
+  }
+  function setLearn(on) {
+    learnOn = on;
+    try { localStorage.setItem('learn', on ? '1' : '0'); } catch (e) { /* ignore */ }
+    drawLearn();
+  }
+  learnBtn.addEventListener('click', () => { learnMin = false; setLearn(!learnOn); });
+  document.getElementById('lc-close').addEventListener('click', () => setLearn(false));
+  document.getElementById('lc-min').addEventListener('click', () => { learnMin = !learnMin; drawLearn(); });
+  document.getElementById('lc-full').addEventListener('click', () => { try { location.hash = 'guide-' + learnId; } catch (e) { /* sandboxed preview */ } openGuide(learnId); });
+  function learnFrom(e) {
+    if (!learnOn || !e.target.closest) return;
+    if (e.target.closest('#learn-card, #guide-page, .panel-tools, .panel-head')) return;
+    for (let el = e.target.closest('[data-g]'); el; el = el.parentElement && el.parentElement.closest('[data-g]')) {
+      if (guideSec(el.dataset.g)) {
+        const id = el.dataset.g;
+        setTimeout(() => { learnId = id; learnMin = false; drawLearn(); }, 0);   // after the control has updated its explanation
+        return;
+      }
+    }
+  }
+  document.addEventListener('click', learnFrom, true);   // capture: read the target before a control redraws itself
+  document.addEventListener('change', learnFrom, true);
+  drawLearn();
+
+  // ---- Single-choice button rows shown as dropdowns, to save space. The buttons stay (hidden) and do the
+  // work: the dropdown clicks the matching button, and follows them when anything else changes the choice. ----
+  function proxySelect(ids, label) {
+    const groups = ids.map(id => document.getElementById(id)).filter(Boolean);
+    if (!groups.length) return;
+    const sel = document.createElement('select');
+    sel.className = 'tuning-select proxy-select';
+    sel.setAttribute('aria-label', label);
+    const btns = () => groups.flatMap((g, gi) => Array.from(g.querySelectorAll('button')).map(b => ({ b, gi })));
+    let sig = '';
+    function sync() {
+      const list = btns();
+      const nsig = list.map(x => x.gi + ':' + x.b.textContent + ':' + x.b.disabled + ':' + x.b.hidden).join('|');
+      if (nsig !== sig) {
+        sig = nsig;
+        sel.innerHTML = '';
+        let parent = sel;
+        let lastG = -1;
+        list.forEach((x, i) => {
+          if (x.gi !== lastG && x.gi > 0) {   // a second row (Outside the mode) becomes its own group in the list
+            parent = document.createElement('optgroup');
+            parent.label = groups[x.gi].dataset.optlabel || groups[x.gi].getAttribute('aria-label') || '';
+            sel.appendChild(parent);
+          }
+          lastG = x.gi;
+          if (x.b.hidden) return;
+          const o = document.createElement('option');
+          o.value = String(i);
+          o.textContent = x.b.textContent.trim();
+          o.disabled = x.b.disabled;
+          parent.appendChild(o);
+        });
+        const none = document.createElement('option');
+        none.value = ''; none.hidden = true; none.disabled = true; none.textContent = '—';
+        sel.insertBefore(none, sel.firstChild);
+      }
+      const on = list.findIndex(x => x.b.getAttribute('aria-pressed') === 'true');
+      sel.value = on >= 0 ? String(on) : '';
+      sel.hidden = groups.every(g => g.hidden);
+    }
+    sel.addEventListener('change', () => {
+      const x = btns()[Number(sel.value)];
+      if (x) x.b.click();
+      sync();
+    });
+    groups.forEach(g => g.classList.add('proxied'));
+    // Put the dropdown on the same line as its label
+    const first = groups[0], lab = first.previousElementSibling;
+    if (lab && lab.classList.contains('ctl-label')) {
+      const line = document.createElement('div');
+      line.className = 'sel-line';
+      lab.parentNode.insertBefore(line, lab);
+      line.appendChild(lab);
+      line.appendChild(sel);
+    } else first.parentNode.insertBefore(sel, first);
+    let queued = false;
+    const mo = new MutationObserver(() => { if (!queued) { queued = true; Promise.resolve().then(() => { queued = false; sync(); }); } });
+    groups.forEach(g => mo.observe(g, { subtree: true, childList: true, attributes: true, attributeFilter: ['aria-pressed', 'disabled', 'hidden'], characterData: true }));
+    sync();
+  }
+  // (Fretboard display, Sound, Drums and Metronome choices are buttons: they change often, and a button is one tap.)
+  [[['focus-inst'], 'Focus instrument'], [['focus-size'], 'Focus size'], [['focus-h'], 'Focus horizontal position'], [['focus-v'], 'Focus vertical position'],
+   [['follow-inst'], 'Follow instrument'], [['follow-size'], 'Follow size'], [['follow-h'], 'Follow horizontal position'], [['follow-v'], 'Follow vertical position']]
+    .forEach(([ids, label]) => proxySelect(ids, label));
+
+  // ---- Quick bar above the individual boards: string sets (the same buttons as in the controls) and Voice lead all ----
+  (function quickBar() {
+    const src = document.getElementById('shapes'), wrap = document.getElementById('qb-strings');
+    function sync() {
+      const bs = Array.from(src.querySelectorAll('button')).filter(b => !/fade/i.test(b.textContent));
+      wrap.innerHTML = '';
+      bs.forEach(b => {
+        const q = document.createElement('button');
+        q.type = 'button'; q.className = 'key'; q.textContent = b.textContent;
+        q.setAttribute('aria-pressed', b.getAttribute('aria-pressed') || 'false');
+        q.disabled = b.disabled;
+        q.addEventListener('click', () => b.click());
+        wrap.appendChild(q);
+      });
+      document.getElementById('qb-lbl').textContent = document.getElementById('lbl-shapes').textContent;
+    }
+    let queued = false;
+    const mo = new MutationObserver(() => { if (!queued) { queued = true; Promise.resolve().then(() => { queued = false; sync(); }); } });
+    mo.observe(src, { subtree: true, childList: true, attributes: true, attributeFilter: ['aria-pressed', 'disabled'] });
+    mo.observe(document.getElementById('lbl-shapes'), { childList: true, characterData: true, subtree: true });
+    sync();
+    document.getElementById('qb-vl').addEventListener('click', () => voiceLeadAll());
+    document.getElementById('qb-clear').addEventListener('click', () => {
+      picks = {};
+      vlApplied = false;
+      drawSeq();
+      renderAll();
+      document.getElementById('vl-note').textContent = 'All shape picks cleared.';
+    });
+  })();
+
+  // ---- Setup in the address: the whole setup is kept in the URL (#s=...) as you work, so a bookmark or a
+  // shared link brings it back exactly. The last setup is also remembered on this device. ----
+  const SETUP_VER = 1;
+  function setupState() {
+    return {
+      v: SETUP_VER, t: tuningId, r: currentRoot, m: currentMode, st: scaleType, a: active.map(x => x ? 1 : 0).join(''),
+      c: [...cagedSel], sh: shapeType, sm: shapeMode instanceof Set ? [...shapeMode] : shapeMode,
+      smt: shapeModeByType.triad instanceof Set ? [...shapeModeByType.triad] : shapeModeByType.triad, smf: shapeModeByType.full,
+      fo: fadeOthers ? 1 : 0, l: labelMode, bc: boardCols, z: [zoom.on ? 1 : 0, zoom.anchor, zoom.below, zoom.above],
+      p: progSeq.map(st => st.mod ? [st.deg, st.mod] : [st.deg]), pk: picks, fv: fadeView, bz: boardZoom,
+      vl: [vlMove, vlPitch, vlShow ? 1 : 0], tp: [tempo.bpm, tempo.beats, tempo.meter], cs: chordSound.inst,
+      ss: strumCfg.speed, sp: strumPat.id, dr: [drums.on ? 1 : 0, drums.kick ? 1 : 0, drums.snare ? 1 : 0, drums.pattern],
+      pad: pad.on ? 1 : 0, lp: loop.on ? 1 : 0, so: soundOn ? 1 : 0, fl: follow.on ? 1 : 0,
+      me: [metro.on ? 1 : 0, metro.accent ? 1 : 0, metro.count ? 1 : 0, metro.sub, metro.sound],
+      mx: [mix.guitar, mix.pad, mix.drums, mix.metro].map(x => Math.round(x * 100)),
+      vw: viewOn, fc: { size: focusCfg.size, h: focusCfg.h, v: focusCfg.v, inst: focusCfg.inst },
+      fp: { size: follow.size, h: follow.h, v: follow.v, inst: follow.inst },
+    };
+  }
+  const encodeSetup = o => btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const decodeSetup = code => JSON.parse(decodeURIComponent(escape(atob(code.replace(/-/g, '+').replace(/_/g, '/')))));
+  function setToggle(id, on, word) {
+    const b = document.getElementById(id);
+    if (!b) return;
+    b.setAttribute('aria-pressed', String(on));
+    if (word) b.textContent = `${word} ${on ? 'on' : 'off'}`;
+  }
+  function applySetup(o) {
+    if (!o || typeof o !== 'object') return false;
+    const step = f => { try { f(); } catch (e) { /* one bad field never stops the rest */ } };
+    const isStr = x => typeof x === 'string', isNum = x => typeof x === 'number' && isFinite(x);
+    step(() => { if (isStr(o.t) && TUNINGS.some(t => t.id === o.t) && o.t !== tuningId) { tuningSel.value = o.t; tuningSel.dispatchEvent(new Event('change')); } });
+    step(() => { if (isNum(o.r) && o.r >= 0 && o.r < 12 && MODES.some(m => m.id === o.m)) setScale(o.r, o.m); });
+    step(() => { if (isStr(o.st)) { const b = document.querySelector(`#scaletype [data-type="${o.st}"], #scaleoutside [data-type="${o.st}"]`); if (b && !b.disabled && b.getAttribute('aria-pressed') !== 'true') b.click(); } });
+    step(() => { if (isStr(o.a) && /^[01]{7}$/.test(o.a)) { [...o.a].forEach((x, i) => { active[i] = x === '1'; }); drawChordChips(); } });
+    step(() => {
+      const toMode = (v, multi) => multi ? new Set((Array.isArray(v) ? v : []).filter(x => Number.isInteger(x) && x >= 0 && x <= 3)) : (v === 'off' || (Number.isInteger(v) && v >= 0 && v <= 3) ? v : 0);
+      if (o.smt !== undefined) shapeModeByType.triad = toMode(o.smt, true);
+      if (o.smf !== undefined) shapeModeByType.full = toMode(o.smf, false);
+      if (o.sh === 'triad' || o.sh === 'full') {
+        shapeType = o.sh;
+        shapeMode = o.sm !== undefined ? toMode(o.sm, shapeType !== 'full') : shapeModeByType[shapeType];
+        shapeModeByType[shapeType] = shapeMode;
+        stypeWrap.querySelectorAll('.key').forEach((btn, i) => btn.setAttribute('aria-pressed', String(STYPE_OPTIONS[i][1] === shapeType)));
+      }
+      if (o.fo !== undefined) fadeOthers = !!o.fo;
+      drawShapeButtons();
+      updateShapeText();
+    });
+    step(() => { if (Array.isArray(o.c)) { cagedSel.clear(); o.c.filter(l => CAGED_LETTERS.includes(l)).forEach(l => cagedSel.add(l)); syncCaged(); } });
+    step(() => { if (LABEL_OPTIONS.some(x => x[1] === o.l)) { labelMode = o.l; syncLabelMode(); } });
+    step(() => { if (SIZE_OPTIONS.some(x => x[1] === o.bc) && o.bc !== boardCols) sizeWrap.querySelectorAll('.key')[SIZE_OPTIONS.findIndex(x => x[1] === o.bc)].click(); });
+    step(() => {
+      if (Array.isArray(o.p)) {
+        progSeq = o.p.filter(x => Array.isArray(x) && Number.isInteger(x[0]) && x[0] >= 0 && x[0] < 7 && (x[1] === undefined || MOD_ORDER.includes(x[1]) || isXMod(x[1])))
+          .slice(0, SEQ_MAX).map(x => ({ deg: x[0], mod: x[1] || null }));
+        selStep = null;
+        drawSeq();
+      }
+    });
+    step(() => { if (Array.isArray(o.vl)) { if (VL_MOVES.some(x => x[0] === o.vl[0])) vlMove = o.vl[0]; if (VL_PITCH.some(x => x[0] === o.vl[1])) vlPitch = o.vl[1]; vlShow = !!o.vl[2]; drawVlOptions(); } });
+    step(() => { if (o.fv && typeof o.fv === 'object') Object.entries(o.fv).forEach(([k, v]) => { if (v === 'scale' || v === 'shapes') fadeView[k] = v; }); });
+    step(() => { if (o.bz && typeof o.bz === 'object') Object.entries(o.bz).forEach(([k, v]) => { boardZoom[k] = !!v; }); });
+    step(() => { if (Array.isArray(o.z) && o.z.length === 4 && o.z.slice(1).every(isNum)) { zoom.on = !!o.z[0]; zoom.anchor = Math.max(0, Math.min(FRETS, o.z[1])); zoom.below = Math.max(0, Math.min(12, o.z[2])); zoom.above = Math.max(0, Math.min(12, o.z[3])); syncZoom(); } });
+    step(() => { renderAll(); if (o.pk && typeof o.pk === 'object') { const pk = {}; Object.entries(o.pk).forEach(([k, v]) => { if (Array.isArray(v)) pk[k] = v.filter(isStr); }); picks = pk; drawSeq(); renderAll(); } });
+    // Play song and the rest
+    step(() => { if (Array.isArray(o.tp)) { if (isNum(o.tp[0])) { tempoEl.value = o.tp[0]; tempoEl.dispatchEvent(new Event('input')); } if (isNum(o.tp[1])) { tempo.beats = Math.max(1, Math.min(8, o.tp[1])); syncTempo(); } const mb = document.querySelector(`#meter-row [data-meter="${o.tp[2]}"]`); if (mb && mb.getAttribute('aria-pressed') !== 'true') mb.click(); } });
+    step(() => { if (isStr(o.cs) && (o.cs === 'guitar' || o.cs === 'piano' || TONES[o.cs]) && o.cs !== chordSound.inst) { const b = document.querySelector(`#chordsound-row [data-id="${o.cs}"]`); if (b) b.click(); } });
+    step(() => { if (isNum(o.ss)) { strumEl.value = o.ss; strumEl.dispatchEvent(new Event('input')); } });
+    step(() => { if (isStr(o.sp)) { const b = document.querySelector(`#strum-patterns [data-strum="${o.sp}"]`); if (b) b.click(); } });
+    step(() => {
+      if (!Array.isArray(o.dr)) return;
+      drums.on = !!o.dr[0]; setToggle('drums-toggle', drums.on, 'Drums');
+      drums.kick = !!o.dr[1]; setToggle('drum-kick', drums.kick);
+      drums.snare = !!o.dr[2]; setToggle('drum-snare', drums.snare);
+      const b = document.querySelector(`#drum-patterns [data-pattern="${o.dr[3]}"]`); if (b) b.click();
+    });
+    step(() => { if (o.pad !== undefined) { pad.on = !!o.pad; setToggle('pad-toggle', pad.on, 'Synth'); } });
+    step(() => { if (o.lp !== undefined) { loop.on = !!o.lp; setToggle('loop-toggle', loop.on, 'Loop'); } });
+    step(() => { if (o.so !== undefined) { soundOn = !!o.so; setToggle('sound-toggle', soundOn, 'Sound'); } });
+    step(() => { if (o.fl !== undefined && !!o.fl !== follow.on) setFollow(!!o.fl); });
+    step(() => {
+      if (!Array.isArray(o.me)) return;
+      metro.on = !!o.me[0]; setToggle('metro-toggle', metro.on, 'Metronome');
+      document.getElementById('metro-opts').classList.toggle('off', !metro.on);
+      metro.accent = !!o.me[1]; setToggle('metro-accent', metro.accent);
+      metro.count = !!o.me[2]; setToggle('metro-count', metro.count);
+      [['metro-sub', o.me[3], 'sub'], ['metro-sound', o.me[4], 'sound']].forEach(([id, v, key]) => {
+        if (!isStr(v) || !document.querySelector(`#${id} [data-id="${v}"]`)) return;
+        metro[key] = v;
+        document.querySelectorAll(`#${id} .key`).forEach(x => x.setAttribute('aria-pressed', String(x.dataset.id === v)));
+      });
+      syncMetroNote();
+    });
+    step(() => { if (Array.isArray(o.mx)) ['guitar', 'pad', 'drums', 'metro'].forEach((k, i) => { if (!isNum(o.mx[i])) return; const el = document.getElementById('mix-' + k); el.value = Math.max(0, Math.min(100, o.mx[i])); el.dispatchEvent(new Event('input')); }); });
+    step(() => { if (o.vw && typeof o.vw === 'object') { VIEWS.forEach(([id]) => { if (id in o.vw) viewOn[id] = !!o.vw[id]; }); applyViews(); } });
+    step(() => { if (o.fc && typeof o.fc === 'object') { ['size', 'h', 'v', 'inst'].forEach(k => { if (isStr(o.fc[k]) && document.querySelector(`#focus-${k} [data-id="${o.fc[k]}"]`)) focusCfg[k] = o.fc[k]; }); applyFocusCfg(); } });
+    step(() => { if (o.fp && typeof o.fp === 'object') { ['size', 'h', 'v', 'inst'].forEach(k => { if (isStr(o.fp[k]) && document.querySelector(`#follow-${k} [data-id="${o.fp[k]}"]`)) follow[k] = o.fp[k]; }); applyFollow(); } });
+    return true;
+  }
+  // Restore: a setup link wins, otherwise the last setup on this device
+  (function restoreSetup() {
+    let code = null;
+    if (location.hash.startsWith('#s=')) code = location.hash.slice(3);
+    else { try { code = localStorage.getItem('last-setup'); } catch (e) { /* storage unavailable */ } }
+    if (!code) return;
+    try { applySetup(decodeSetup(code)); } catch (e) { /* a damaged link just opens the default page */ }
+  })();
+  let lastSetup = '';
+  function saveSetup() {
+    if (playMode) return;   // Jam mode is a temporary view; the setup behind it is what gets kept
+    let code;
+    try { code = encodeSetup(setupState()); } catch (e) { return; }
+    if (code === lastSetup && (location.hash === '#s=' + code || location.hash.startsWith('#guide'))) return;
+    lastSetup = code;
+    try { localStorage.setItem('last-setup', code); } catch (e) { /* ignore */ }
+    if (!location.hash.startsWith('#guide')) setAddress('#s=' + code);
+  }
+  // Kept up to date right after every change (and on a timer, for anything that changes on its own)
+  ['click', 'input', 'change', 'keyup'].forEach(ev => document.addEventListener(ev, () => { saveSetup(); setTimeout(saveSetup, 0); }));
+  window.addEventListener('pagehide', saveSetup);
+  setInterval(saveSetup, 1000);
+  saveSetup();
+  const copyBtn = document.getElementById('setup-copy');
+  copyBtn.addEventListener('click', () => {
+    saveSetup();
+    if (!hasRealAddress()) {   // inside a sandboxed preview there is no address to share
+      copyBtn.textContent = 'Open the page itself to copy';
+      setTimeout(() => { copyBtn.textContent = 'Copy setup link'; }, 2500);
+      return;
+    }
+    const url = location.href.split('#')[0] + '#s=' + lastSetup;
+    const done = ok => { copyBtn.textContent = ok ? 'Link copied' : 'Copy failed'; setTimeout(() => { copyBtn.textContent = 'Copy setup link'; }, 2000); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(() => done(true), () => done(fallbackCopy(url)));
+    else done(fallbackCopy(url));
+  });
+  function fallbackCopy(text) {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    ta.remove();
+    return ok;
+  }
+  const resetBtn = document.getElementById('setup-reset');
+  let resetArmed = null;
+  resetBtn.addEventListener('click', () => {
+    if (!resetArmed) {   // two taps, so a stray tap never wipes a setup
+      resetBtn.textContent = 'Tap again to reset';
+      resetArmed = setTimeout(() => { resetArmed = null; resetBtn.textContent = 'Reset to defaults'; }, 3000);
+      return;
+    }
+    clearTimeout(resetArmed);
+    ['last-setup', 'views', 'chord-sound', 'focus-panel', 'follow-panel', 'panel-secs', 'learn'].forEach(k => { try { localStorage.removeItem(k); } catch (e) { /* ignore */ } });
+    try { location.replace(location.pathname + location.search); } catch (e) { location.reload(); }
+  });
+
+  // ---- Boards per row, cycled from the bar above the individual boards (1, 2, 3, 4, then back to 1) ----
+  (function sizeCycle() {
+    const btn = document.getElementById('qb-size');
+    const sync = () => { btn.textContent = 'Boards per row: ' + boardCols; };
+    btn.addEventListener('click', () => {
+      const i = SIZE_OPTIONS.findIndex(x => x[1] === boardCols);
+      sizeWrap.querySelectorAll('.key')[(i + 1) % SIZE_OPTIONS.length].click();
+      sync();
+    });
+    new MutationObserver(sync).observe(sizeWrap, { subtree: true, attributes: true, attributeFilter: ['aria-pressed'] });
+    sync();
+  })();
+
+  // ---- Title case for every button label and heading ("Sound On", "Voice Lead All Boards"). Musical text is
+  // left alone: Roman numerals (ii, bvii°), chord and note names, the high e string, shape tabs and the line under each board. ----
+  (function titleCase() {
+    const PICK = 'button, summary, h1, h2, h3, .ctl-label, .qb-lbl, option, optgroup, .pm-bar strong';
+    const SKIP = 'svg, .shape-chip[data-skey], .bd-more > summary, .nt, .sub-notes, .chord-sub, #song-results, .tag, textarea, input, .fsub';
+    const ROMAN = /^[b#]*(i|ii|iii|iv|v|vi|vii)[°ø+]?$/i;
+    const fix = str => str.replace(/(^|[\s(\/–-])([a-z][A-Za-z'°ø+]*)/g, (m, pre, w) => (w === 'e' || w === 'x' || w === 'iPad' || ROMAN.test(w)) ? m : pre + w[0].toUpperCase() + w.slice(1));
+    function doNode(t) {
+      const el = t.parentElement;
+      if (!el || !el.closest(PICK) || el.closest(SKIP)) return;
+      const v = fix(t.nodeValue);
+      if (v !== t.nodeValue) t.nodeValue = v;
+    }
+    function walk(root) {
+      if (root.nodeType === 3) { doNode(root); return; }
+      if (root.nodeType !== 1 || root.closest && root.closest('svg')) return;
+      if (root.tagName === 'OPTGROUP') { const l = fix(root.label); if (l !== root.label) root.label = l; }
+      const tw = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      let n; while ((n = tw.nextNode())) doNode(n);
+      if (root.querySelectorAll) root.querySelectorAll('optgroup').forEach(g => { const l = fix(g.label); if (l !== g.label) g.label = l; });
+    }
+    walk(document.body);
+    new MutationObserver(list => list.forEach(m => {
+      if (m.type === 'characterData') doNode(m.target);
+      else m.addedNodes.forEach(walk);
+    })).observe(document.body, { subtree: true, childList: true, characterData: true });
+  })();
 </script>
 </body>
 </html>
