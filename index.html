@@ -571,6 +571,12 @@
   #chord-major, #chord-minor { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   #seq-pick, #seq-list { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   #seq-actions, #vl-move, #vl-pitch { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  #chord-in-row { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 6px; }
+  textarea.chord-in { display: block; width: 100%; box-sizing: border-box; resize: vertical; min-height: 44px; max-height: 240px; font: 15px/1.35 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  #seq-pick .pick-sub { grid-column: 1 / -1; margin: 4px 0 0; font: 700 10px system-ui, -apple-system, "Segoe UI", sans-serif; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .key-suggest { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 0 0 8px; padding: 8px 10px; background: #f3ebdc; border-radius: 8px; font: 13px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .key-suggest[hidden] { display: none; }
+  .key-suggest .key { padding: 4px 10px; font-size: 12px; }
   #vl-actions, #vl-show { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   #seq-list .empty, #seq-pick .empty { grid-column: 1 / -1; white-space: normal; }
   #caged { grid-template-columns: repeat(7, minmax(0, 1fr)); }
@@ -578,10 +584,19 @@
   #shapes .key:last-child { grid-column: 1 / -1; }
   #sound-row2, #play-row, #drum-row, #metro-row, #metro-opts, #saved-box .keys, #labelmode, #stype, #strum-patterns { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   #bsize, #meter-row, #metro-sub, #metro-sound { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  #capo { grid-template-columns: 1.6fr repeat(7, minmax(0, 1fr)); }
   #metro-sound, #metro-sub { grid-template-columns: repeat(4, minmax(max-content, 1fr)); }
   #metro-sound .key, #metro-sub .key { padding-left: 6px; padding-right: 6px; }
   @media (max-width: 420px) { #metro-sound { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   #chordsound-row, #drum-patterns { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  #strum-step-opts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  #strum-step-grid.preset .ss-val { opacity: 0.6; }
+  #strum-step-grid { gap: 3px; margin-bottom: 6px; }
+  #strum-step-grid .ss-step { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 3px 0 5px; }
+  #strum-step-grid .ss-count { font-size: 10px; color: var(--muted); line-height: 1; }
+  #strum-step-grid .ss-and .ss-count { opacity: 0.7; }
+  #strum-step-grid .ss-val { font-size: 16px; font-weight: 700; line-height: 1.1; }
+  #strum-step-grid .ss-step:not(.ss-and) { background: #f7f0e3; }
   .save-row .key { padding: 6px 12px; }
   .panel .zoom-row .key { padding: 6px 10px; }
   .quick-bar .key { padding: 4px 9px; font-size: 12px; border-radius: 8px; }
@@ -670,6 +685,8 @@
     <summary>Tuning</summary>
     <select id="tuning" class="tuning-select" aria-labelledby="tuning-label"></select>
     <p class="ctl-label sr-only" id="tuning-label">Tuning</p>
+    <p class="ctl-label">Capo</p>
+    <div class="keys" id="capo" role="group" aria-label="Capo fret"></div>
     <p class="hint explain" id="tuning-hint"></p>
   </details>
 
@@ -749,9 +766,20 @@
     <details class="ctl-sec ctl-sub" data-sec="prog" data-g="prog">
       <summary>Progression builder</summary>
       <div data-g="songs">
-      <input id="song-q" class="song-q" type="search" placeholder="Song, artist, saved title or chords" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" role="combobox" aria-expanded="false" aria-controls="song-results" aria-label="Search for a song">
+      <p class="ctl-label">Search songs or saved</p>
+      <input id="song-q" class="song-q" type="search" placeholder="Song, artist or saved title" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" role="combobox" aria-expanded="false" aria-controls="song-results" aria-label="Search for a song">
       <div id="song-results" role="listbox" aria-label="Matching songs"></div>
       <p class="hint" id="song-note" aria-live="polite"></p>
+      </div>
+      <div data-g="chordin">
+      <p class="ctl-label">Type or paste chords</p>
+      <textarea id="chord-in" class="song-q chord-in" rows="2" placeholder="G D Em C · I V vi IV · 1 5 6 4 · or paste a chord sheet" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Chords to put in the progression"></textarea>
+      <div class="keys" id="chord-in-row" role="group" aria-label="Use the typed chords">
+        <button type="button" class="key" id="chord-replace">Replace</button>
+        <button type="button" class="key" id="chord-add">Add</button>
+      </div>
+      <p class="hint" id="chord-note" aria-live="polite"></p>
+      <div class="key-suggest" id="key-suggest" hidden></div>
       </div>
       <p class="ctl-label">Add a chord</p>
       <div class="chips" id="seq-pick" role="group" aria-label="Add a chord to the progression"></div>
@@ -859,6 +887,14 @@
         </div>
       </div>
       <div class="keys" id="strum-patterns" role="group" aria-label="Strumming pattern"></div>
+      <div id="strum-steps" class="strum-steps">
+        <div class="keys" id="strum-step-grid" role="group" aria-label="Custom strumming steps"></div>
+        <div class="keys" id="strum-step-opts" role="group" aria-label="Custom pattern options">
+          <button type="button" class="key" id="strum-lock" aria-pressed="false">Lock off</button>
+          <button type="button" class="key" id="strum-chop" aria-pressed="false">Chop off</button>
+          <button type="button" class="key" id="strum-clear">Clear steps</button>
+        </div>
+      </div>
       <p class="hint explain" id="strum-note"></p>
       </div>
       <p class="hint" id="sound-status" aria-live="polite"></p>
@@ -1069,6 +1105,7 @@
 <ul><li><b>Drop tunings</b> (Drop D, Double drop D, Drop C) lower the bottom string for one-finger power chords and heavier riffs.</li>
 <li><b>Half and full step down</b> keep standard shapes but sound lower.</li>
 <li><b>Open tunings</b> (D, G, E, A, C) and <b>DADGAD</b> ring a chord on the open strings, good for slide and drones.</li>
+<li><b>Capo</b> (1 to 7) clamps every string at that fret. The key and chord names stay what you hear, and each board's heading adds the shape to play (with capo 2, an A chord says "play G"). The capo is drawn as a dark bar where the nut was; fret numbers and inlay dots match the real neck, while shapes, CAGED labels and tab count frets from the capo, the way capo charts do. A pasted chord sheet that says "Capo 2" sets the capo and loads its shapes as the chords you hear.</li>
 <li><b>All fourths</b> makes every string set the same, so a shape keeps its form anywhere.</li></ul>
 <p>CAGED shapes are built for standard tuning. They also work in Half step down and Full step down, where every shape is the same, and are hidden in the other tunings.</p>
 </section>
@@ -1141,7 +1178,16 @@
 </section>
 
 <section data-g="songs"><h2>Song search</h2>
-<p>Type a song, artist or saved title to load its chords, or type chord names such as <i>G D Em C</i> to fill the progression directly. Chords from outside the key (the E major in House of the Rising Sun, the B and Cm in Creep) are kept exactly as written and listed under the search box, with their numerals.</p>
+<p>Type a song, artist or saved title to load its chords. Chords from outside the key (the E major in House of the Rising Sun, the B and Cm in Creep) are kept exactly as written, listed under the search box with their numerals, and offered under Add a chord.</p>
+</section>
+
+<section data-g="chordin"><h2>Type or paste chords</h2>
+<p>Type or paste a progression and tap <b>Replace</b> (or press Enter) to make it the progression, or <b>Add</b> to put it on the end, so you can build a long song a section at a time. Spaces, commas, bars, dashes and arrows between chords all work, so text copied from a website such as <i>Gm - Bb - F - C</i> or <i>Gm–Bb–F–C</i> loads as it is.</p>
+<p>You can paste a whole <b>chord sheet</b>, with chords on their own lines above the lyrics. Only the lines made entirely of chords are used, in order; lyric lines (including lines that repeat the chords inside the words, such as "(E major) …"), section labels such as [Verse] or Chorus:, N.C. and repeat marks such as x2 are skipped, and the note under the box says how many lines were skipped. Repeats are not expanded, so paste a section twice (or use Add) to play it twice.</p>
+<p>Numbers and Roman numerals are read in the current key: <i>1 5 6 4</i> gives the chords on those degrees (in A major: A E F#m D; in A minor: Am Em F Dm). With numerals, upper case is major and lower case minor, b or # in front lowers or raises the degree (bVII), and °, °7, ø, +, 7, maj7, 6, sus2 or sus4 after it sets the chord (V7, vii°, ii7). Numerals are measured against the major scale, so in a minor key type i iv v or i bVI bVII. You can mix numerals and chord names.</p>
+<p>Chord names it reads: major, m, 7, maj7, m7, sus2, sus4, dim (or °), dim7 (or °7), m7b5 (or ø), aug (or +), aug7, 6 and m6. 9ths, 11ths and 13ths, add9 and slash chords (D/F#) are simplified, and the note under the box lists what changed. Each chord is one step; to hold a chord twice as long, enter it twice. A progression holds up to 48 steps.</p>
+<p><b>Chords outside the key</b> are kept as written and appear under Add a chord in their own <b>Outside the key</b> row, so you can tap them into the song again.</p>
+<p><b>Key suggestion</b>: if the chords fit another key better than the one selected, a note says so, such as "These chords fit G Dorian best (the notes of F major)", with a button to switch. Switching keeps the same chords: those the new key has become ordinary key chords, and any still outside it stay in the Outside the key row. Every chord whose notes are all in a key counts for it, and a key whose home chord starts or ends the progression counts extra.</p>
 </section>
 
 <section data-g="vl"><h2>Voice leading</h2>
@@ -1175,6 +1221,11 @@
 
 <section data-g="strum"><h2>Strumming</h2>
 <p>Strum speed sets the gap between strings. Patterns play during Play progression; a single board's Play button gives one strum. With piano, patterns play as chords, bass notes or arpeggios.</p>
+<p>The step row under the patterns always shows the pattern being played, one step per eighth note (8 in 4/4, 6 in 3/4 and 6/8, 4 in 2/4), with the counts above (1 &amp; 2 &amp;…). Tap any step to change it, cycling ↓ down, ↑ up, – rest and B bass note; that switches to <b>Custom</b>, starting from the steps you were looking at.</p>
+<ul><li><b>Lock</b> off: choosing a preset copies it into Custom, so Custom is always ready to tweak the last preset you picked.</li>
+<li><b>Lock</b> on: Custom holds your pattern. You can try presets and come back to it by choosing Custom.</li>
+<li><b>Chop</b> makes every strum short and muted, like the reggae pattern. <b>Clear steps</b> sets every step to rest.</li></ul>
+<p>Changes are heard on the next pass when looping, and each time signature keeps its own Custom pattern.</p>
 </section>
 
 <section data-g="drums"><h2>Drums</h2>
@@ -1298,7 +1349,13 @@
   ];
   let tuningId = 'standard';
   const tuningNow = () => TUNINGS.find(t => t.id === tuningId) || TUNINGS[0];
-  const FRETS = 22; // standard electric guitar neck
+  const NECK = 22;    // standard electric guitar neck
+  // Capo: everything (shapes, CAGED, voice leading, fingering, tab) works in frets counted from the capo, as if it
+  // were the nut, and the open strings sound capo semitones higher. Only the drawn fret numbers and inlay dots use
+  // the real fret, so the board matches the guitar's neck.
+  let capo = 0;
+  const CAPO_MAX = 7;
+  let FRETS = NECK;   // frets above the capo
 
   // Key button label, root pitch class (the note names are chosen automatically per mode)
   const KEYS = [
@@ -1552,7 +1609,7 @@
   const STD_MIDI = [40, 45, 50, 55, 59, 64];
   function cagedOffset() {
     const mid = tuningNow().midi, off = mid[0] - STD_MIDI[0];
-    return mid.every((m, i) => m - STD_MIDI[i] === off) ? off : null;
+    return mid.every((m, i) => m - STD_MIDI[i] === off) ? off + capo : null;
   }
   // mode is 'all' or a Set of letters (any combination of C, A, G, E, D)
   function cagedBands(chord, mode) {
@@ -1616,10 +1673,10 @@
       s += `<rect x="${ax}" y="${T - 14}" width="${aw}" height="${5 * SS + 28}" fill="#2b2a27" fill-opacity="0.07" pointer-events="none"/>`;
     }
 
-    [3, 5, 7, 9, 15, 17, 19, 21].filter(f => f >= start && f <= hi).forEach(f => {
+    [3, 5, 7, 9, 15, 17, 19, 21].map(f => f - capo).filter(f => f >= start && f <= hi).forEach(f => {
       s += `<circle cx="${xFret(f)}" cy="${T + 2.5 * SS}" r="5" fill="#cbbb9c"/>`;
     });
-    [12, 24].filter(f => f >= start && f <= hi).forEach(f => {
+    [12, 24].map(f => f - capo).filter(f => f >= start && f <= hi).forEach(f => {
       s += `<circle cx="${xFret(f)}" cy="${T + 1.5 * SS}" r="5" fill="#cbbb9c"/>`;
       s += `<circle cx="${xFret(f)}" cy="${T + 3.5 * SS}" r="5" fill="#cbbb9c"/>`;
     });
@@ -1628,7 +1685,10 @@
       const x = L + (f - start + 1) * FW;
       s += `<line x1="${x}" y1="${T - 14}" x2="${x}" y2="${T + 5 * SS + 14}" stroke="#a89a80" stroke-width="2"/>`;
     }
-    if (hasOpen) {
+    if (hasOpen && capo) {   // the capo stands in for the nut
+      s += `<rect x="${L - 7}" y="${T - 18}" width="10" height="${5 * SS + 36}" rx="3" fill="#3b3833"/>`;
+      s += `<text x="${L - 24}" y="${T + 5 * SS + 36}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="700" fill="#3b3833">Capo ${capo}</text>`;
+    } else if (hasOpen) {
       s += `<rect x="${L - 5}" y="${T - 14}" width="6" height="${5 * SS + 28}" fill="#f6f1e7" stroke="#a89a80"/>`;
     } else {
       s += `<line x1="${L}" y1="${T - 14}" x2="${L}" y2="${T + 5 * SS + 14}" stroke="#a89a80" stroke-width="2"/>`;
@@ -1641,7 +1701,7 @@
 
     for (let f = start; f <= hi; f++) {
       const isAnchor = win.zoomed && f === win.anchor;
-      s += `<text x="${xFret(f)}" y="${T + 5 * SS + 36}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" ${isAnchor ? 'font-weight="700" fill="#2b2a27"' : 'fill="#7a7466"'}>${f}</text>`;
+      s += `<text x="${xFret(f)}" y="${T + 5 * SS + 36}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" ${isAnchor ? 'font-weight="700" fill="#2b2a27"' : 'fill="#7a7466"'}>${f + capo}</text>`;
     }
 
     // CAGED bands, clipped to the visible window
@@ -2085,6 +2145,9 @@
     if (withKey) { snap.root = currentRoot; snap.mode = currentMode; }   // a song load can change the key, so Undo puts that back too
     progUndo.push(snap); if (progUndo.length > 60) progUndo.shift(); }
   let selStep = null;           // index in progSeq of the step open in the editor, or null
+  // A chip's colour dot: hollow for a chord from outside the key, so it is not mistaken for the key chord of that colour
+  const dotHtml = c => c && c.outside ? `<span class="dot" style="background:transparent;box-shadow:inset 0 0 0 2px ${c.color}"></span>` : `<span class="dot" style="background:${c.color}"></span>`;
+  let extraNames = [];          // chords outside the key that you typed or a song used, by name (offered under Add a chord)
 
   // Spell a note a given number of letters above the root, so sus and added tones are named correctly
   function spellNote(root, letterSteps, pc) {
@@ -2102,20 +2165,27 @@
   // Chords from outside the key (the major V in a minor key, a borrowed bVII, the B and Cm in "Creep") are steps with
   // mod 'x:<root>:<kind>', for example 'x:E:' (E major) or 'x:F#:7'. They keep the colour of the nearest scale degree.
   const X_KINDS = { '': [0, 4, 7], m: [0, 3, 7], dim: [0, 3, 6], aug: [0, 4, 8], sus2: [0, 2, 7], sus4: [0, 5, 7],
-    '7': [0, 4, 7, 10], maj7: [0, 4, 7, 11], m7: [0, 3, 7, 10], m7b5: [0, 3, 6, 10] };
+    '7': [0, 4, 7, 10], maj7: [0, 4, 7, 11], m7: [0, 3, 7, 10], m7b5: [0, 3, 6, 10],
+    dim7: [0, 3, 6, 9], '6': [0, 4, 7, 9], m6: [0, 3, 7, 9], aug7: [0, 4, 8, 10] };
   const X_LETTER = { 0: 0, 2: 1, 3: 2, 4: 2, 5: 3, 6: 4, 7: 4, 8: 4, 10: 6, 11: 6 };   // which letter above the root spells each interval
   const X_LABEL = { 0: 'R', 2: '2', 3: 'b3', 4: '3', 5: '4', 6: 'b5', 7: '5', 8: '#5', 10: 'b7', 11: '7' };
   const pcOfName = nm => (LETTER_PC[nm[0]] + [...nm.slice(1)].reduce((a, ch) => a + (ch === '#' ? 1 : ch === 'b' ? -1 : 0), 0) + 12) % 12;
-  const isXMod = mod => typeof mod === 'string' && /^x:[A-G](#|b)?:(|m|dim|aug|sus2|sus4|7|maj7|m7|m7b5)$/.test(mod);
+  const isXMod = mod => typeof mod === 'string' && /^x:[A-G](#|b)?:(|m|dim|aug|sus2|sus4|7|maj7|m7|m7b5|dim7|6|m6|aug7)$/.test(mod);
   function buildOutside(base, mod) {
     const [, rn, kind] = mod.split(':');
     const iv = X_KINDS[kind];
     const rpc = pcOfName(rn);
     const root = { name: rn, pc: rpc };
-    const notes = iv.map(v => v === 0 ? root : spellNote(root, X_LETTER[v], (rpc + v) % 12));
+    // A 9-semitone note is a 6th in 6 chords but a diminished 7th in dim7 (Bbb in Cdim7, written A to keep it readable)
+    const letterOf = v => v === 9 ? (kind === 'dim7' ? 6 : 5) : X_LETTER[v];
+    const notes = iv.map(v => {
+      if (v === 0) return root;
+      const n = spellNote(root, letterOf(v), (rpc + v) % 12);
+      return /##|bb/.test(n.name) ? { name: simpleName(n.pc, n.name.slice(-1)), pc: n.pc } : n;
+    });
     const letterDeg = (LETTERS.indexOf(rn[0]) - LETTERS.indexOf(currentKey[0]) + 7) % 7;
     return { ...base, name: rn + kind, notes, pcs: notes.map(n => n.pc), type: iv.includes(4) || kind.startsWith('sus') ? 'major' : 'minor',
-      dim: kind === 'dim' || kind === 'm7b5', formula: iv.map(v => X_LABEL[v]).join(' '), mod, variant: true, outside: true, base,
+      dim: kind === 'dim' || kind === 'm7b5' || kind === 'dim7', formula: iv.map(v => v === 9 ? (kind === 'dim7' ? 'bb7' : '6') : X_LABEL[v]).join(' '), mod, variant: true, outside: true, base,
       roman: romanOf(letterDeg, (rpc - currentRoot + 12) % 12, iv) };
   }
   function buildVariant(base, mod) {
@@ -2232,6 +2302,38 @@
       pick.appendChild(b);
     });
     if (!anyOn) pick.innerHTML = '<span class="empty">Switch on chords above to add them here.</span>';
+    // Chords you typed or a song brought in that are outside the key get their own row; any that the key
+    // has (after you switch key) go back to being ordinary key chords above
+    const outs = [];
+    extraNames.forEach(nm => {
+      const pp = parseChordName(nm);
+      if (!pp) return;
+      const r = resolveChord(pp);
+      if (r && r.note && r.note.kind === 'outside') outs.push(r.step);
+    });
+    if (outs.length) {
+      const lab = document.createElement('span');
+      lab.className = 'pick-sub';
+      lab.textContent = 'Outside the key';
+      pick.appendChild(lab);
+      outs.forEach(step => {
+        const c = stepChord(step);
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'chip';
+        b.innerHTML = `${dotHtml(c)}<span>${c.roman} ${c.name}</span>`;
+        b.setAttribute('aria-label', `Add ${c.name} (${c.roman}, outside the key) to the progression`);
+        b.addEventListener('click', () => {
+          if (progSeq.length >= SEQ_MAX) return;
+          snapProg();
+          if (!active[step.deg]) { active[step.deg] = true; drawChordChips(); }
+          progSeq.push({ deg: step.deg, mod: step.mod });
+          drawSeq();
+          renderAll();
+        });
+        pick.appendChild(b);
+      });
+    }
 
     const eff = effectiveSeq();
     if (!eff.length) {
@@ -2245,7 +2347,7 @@
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'chip' + (st.idx === selStep ? ' sel' : '');
-      b.innerHTML = `<span class="dot" style="background:${c.color}"></span><span>${pos + 1}. ${c.roman} ${c.name}</span>`;
+      b.innerHTML = `${dotHtml(c)}<span>${pos + 1}. ${c.roman} ${c.name}</span>`;
       b.setAttribute('aria-label', `Step ${pos + 1}, ${c.name}. Tap to change or remove it.`);
       if (st.idx === selStep) b.setAttribute('aria-current', 'true');
       b.addEventListener('click', () => {
@@ -2268,9 +2370,11 @@
     if (!progSeq.length) return;
     snapProg();
     progSeq = [];
+    extraNames = [];
     selStep = null;
     drawSeq();
     renderAll();
+    hideKeySuggest();
   });
   document.getElementById('seq-repeat').addEventListener('click', () => {
     if (!progSeq.length || progSeq.length * 2 > SEQ_MAX) return;
@@ -2431,6 +2535,10 @@
     '7': [0, 4, 7, 10], maj7: [0, 4, 7, 11], M7: [0, 4, 7, 11], m7: [0, 3, 7, 10], min7: [0, 3, 7, 10],
     '9': [0, 2, 4, 7, 10], maj9: [0, 2, 4, 7, 11], m9: [0, 2, 3, 7, 10],
     dim: [0, 3, 6], aug: [0, 4, 8], m7b5: [0, 3, 6, 10],
+    // more symbols for the same chords, and chords used in jazz-flavoured songs (Jingle Bell Rock's Ebdim7)
+    '\u00b0': [0, 3, 6], o: [0, 3, 6], '+': [0, 4, 8], '\u00f8': [0, 3, 6, 10], '\u00f87': [0, 3, 6, 10], 'm7-5': [0, 3, 6, 10],
+    dim7: [0, 3, 6, 9], '\u00b07': [0, 3, 6, 9], o7: [0, 3, 6, 9],
+    '6': [0, 4, 7, 9], m6: [0, 3, 7, 9], min6: [0, 3, 7, 9], aug7: [0, 4, 8, 10], '+7': [0, 4, 8, 10], '7#5': [0, 4, 8, 10],
   };
   function parseChordName(raw) {
     const m = /^([A-G])([#b]?)(.*)$/.exec(String(raw).trim());
@@ -2442,12 +2550,44 @@
     let iv = CHORD_KINDS[q];
     if (!iv) {
       if (q === '7sus4' || q === '7sus') { iv = CHORD_KINDS.sus4; simp = '7th dropped'; }
-      else if (/^(add9|add2|6|2|5)$/.test(q)) { iv = CHORD_KINDS['']; simp = 'added note dropped'; }
-      else if (/^m(add9|6|11)$/.test(q)) { iv = CHORD_KINDS.m; simp = 'added note dropped'; }
+      else if (/^(add9|add2|2|5|6\/9|69)$/.test(q)) { iv = CHORD_KINDS['']; simp = 'added note dropped'; }
+      else if (/^m(add9|11)$/.test(q)) { iv = CHORD_KINDS.m; simp = 'added note dropped'; }
+      else if (/^(13|11|7b9|7#9|9sus4)$/.test(q)) { iv = CHORD_KINDS['7']; simp = 'extension dropped'; }
+      else if (/^(maj13|maj11|M9|maj9)$/.test(q)) { iv = CHORD_KINDS.maj7; simp = 'extension dropped'; }
+      else if (/^(m13|m11|min9)$/.test(q)) { iv = CHORD_KINDS.m7; simp = 'extension dropped'; }
       else return null;
     }
     return { src: String(raw).trim(), pc, iv, simp, root: m[1] + m[2] };
   }
+
+  // Numbers and Roman numerals typed in the search box, read in the current key:
+  //   1 5 6 4    the chords of the key's degrees (in A minor, 6 is F)
+  //   I V vi IV  numerals as the app writes them, measured against the major scale: upper case major, lower case
+  //              minor, with b or # in front (bVII), and °, °7, ø, +, 7, maj7, 6, sus2, sus4 after (V7, vii°, ii7)
+  const ROMAN_DEG = { i: 0, ii: 1, iii: 2, iv: 3, v: 4, vi: 5, vii: 6 };
+  function parseNumeral(raw) {
+    const t = String(raw).trim().replace(/\u266d/g, 'b').replace(/\u266f/g, '#');
+    if (/^[1-7]$/.test(t)) {
+      const c = chords[Number(t) - 1];
+      return { src: t, pc: c.pcs[0], iv: c.pcs.map(x => (x - c.pcs[0] + 12) % 12), simp: null, root: c.notes[0].name };
+    }
+    const m = /^([b#]?)(VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)(.*)$/.exec(t);
+    if (!m) return null;
+    const upper = m[2] === m[2].toUpperCase();
+    const suf = m[3].replace(/^o/, '\u00b0').replace(/^dim7$/, '\u00b07').replace(/^dim$/, '\u00b0');
+    const KIND = { '': upper ? '' : 'm', '7': upper ? '7' : 'm7', maj7: 'maj7', M7: 'maj7', '\u00b0': 'dim', '\u00b07': 'dim7', '\u00f8': 'm7b5', '\u00f87': 'm7b5',
+      m7b5: 'm7b5', '+': 'aug', '+7': 'aug7', '6': upper ? '6' : 'm6', sus2: 'sus2', sus4: 'sus4', sus: 'sus4' };
+    const kind = KIND[suf];
+    if (kind === undefined) return null;
+    const d = ROMAN_DEG[m[2].toLowerCase()];
+    const acc = m[1] === 'b' ? -1 : m[1] === '#' ? 1 : 0;
+    const pc = (currentRoot + MAJOR_STEPS[d] + acc + 12) % 12;
+    const letter = LETTERS[(LETTERS.indexOf(currentKey[0]) + d) % 7];
+    let diff = ((pc - LETTER_PC[letter]) % 12 + 12) % 12; if (diff > 6) diff -= 12;
+    const root = Math.abs(diff) <= 1 ? letter + (diff === 1 ? '#' : diff === -1 ? 'b' : '') : simpleName(pc, diff > 0 ? '#' : 'b');
+    return { src: t, pc, iv: X_KINDS[kind].slice(), simp: null, root };
+  }
+  const parseToken = t => parseChordName(t) || parseNumeral(t);
 
   // Fit a parsed chord onto the current key: an exact match if the key has it, otherwise the nearest
   // chord of the key, with the reason, so nothing is silently wrong.
@@ -2496,7 +2636,9 @@
         const inKey = scaleNotes.find(n => n.pc === c0.pc);
         const rn = inKey && !/##|bb/.test(inKey.name) ? inKey.name : (c0.root || ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'][c0.pc]);
         step = { deg, mod: 'x:' + rn + ':' + kind };
-        note = note || { kind: 'outside' };
+        // a 6 chord built only from key notes (D6 in D) is not "outside", just a chord the key has no button for
+        const pcsOf = X_KINDS[kind].map(v => (c0.pc + v) % 12);
+        if (!note && pcsOf.some(x => !scaleNotes.some(n => n.pc === x))) note = { kind: 'outside' };
       }
     }
     if (!step) {
@@ -2512,19 +2654,31 @@
     return { step, note };
   }
 
+  // Split typed or pasted chords. Dashes and arrows between chords are separators (Gm - Bb - F - C,
+  // Gm–Bb–F–C, G → D); a dash right after a chord letter with nothing after it is still the old minor sign (C-).
+  function chordTokens(text) {
+    const t = String(text).replace(/[\u2192>]/g, ' ').replace(/(^|\s)[-\u2013\u2014]+(?=\s|$)/g, ' ');
+    const out = [];
+    t.split(/[\s,|]+/).filter(Boolean).forEach(tok => {
+      if (parseToken(tok) || !/[-\u2013\u2014]/.test(tok)) { out.push(tok); return; }
+      const parts = tok.split(/[-\u2013\u2014]+/).filter(Boolean);
+      if (parts.length && parts.every(x => parseToken(x))) out.push(...parts); else out.push(tok);
+    });
+    return out;
+  }
   function resolveChordList(text) {
-    const steps = [], simplified = [], approx = [], outside = [];
-    for (const tok of text.split(/[\s,|]+/).filter(Boolean)) {
-      const p = parseChordName(tok);
+    const steps = [], simplified = [], approx = [], outside = [], outsideNames = [];
+    for (const tok of chordTokens(text)) {
+      const p = parseToken(tok);
       if (!p) return { error: tok };
       const r = resolveChord(p);
       steps.push(r.step);
       const used = stepChord(r.step).name;
-      if (r.note && r.note.kind === 'outside') outside.push(`${used} (${stepChord(r.step).roman})`);
+      if (r.note && r.note.kind === 'outside') { outside.push(`${used} (${stepChord(r.step).roman})`); outsideNames.push(used); }
       if (r.note && r.note.kind === 'approx') approx.push(`${p.src} → ${used}`);
       else if (p.simp || (r.note && r.note.kind === 'simplified')) simplified.push(`${p.src} → ${used}`);
     }
-    return { steps, simplified, approx, outside };
+    return { steps, simplified, approx, outside, outsideNames };
   }
 
   const uniq = a => [...new Set(a)];
@@ -2540,18 +2694,25 @@
   }
 
   function loadSong(song) {
-    const rootPc = parseChordName(song.key).pc;
+    // A capo song lists the shapes: set the capo and load the key and chords that sound
+    const cn = song.capo && song.capo <= CAPO_MAX ? song.capo : 0;
+    const up = t => cn ? chordTokens(t).map(x => parseChordName(x) ? transposeName(x, cn) : x).join(' ') : t;
+    if (cn && cn !== capo) setCapo(cn);
+    const rootPc = parseChordName(cn ? transposeName(song.key, cn) : song.key).pc;
     snapProg(true);
     if (currentRoot !== rootPc || currentMode !== song.mode) setScale(rootPc, song.mode);
-    const simplified = [], approx = [], steps = [], outside = [];
+    const simplified = [], approx = [], steps = [], outside = [], songOutside = [];
     for (const [, text] of song.sec) {
-      const r = resolveChordList(text);
+      const r = resolveChordList(up(text));
       r.steps.forEach(st => steps.push(st));
       simplified.push(...r.simplified); approx.push(...r.approx); outside.push(...r.outside);
+      r.outsideNames.forEach(n => { if (!songOutside.includes(n)) songOutside.push(n); });
     }
+    extraNames = songOutside.slice();
     finishLoad(steps);
     const parts = [`Loaded ${song.t} in ${currentScale}: ${song.sec.map(s => s[0]).join(', ')} (${progSeq.length} steps).`];
-    if (song.capo) parts.push(`These are the chord shapes; with a capo on fret ${song.capo} they sound ${song.capo} semitone${song.capo > 1 ? 's' : ''} higher.`);
+    if (cn) parts.push(`Played with a capo on fret ${cn}, so the capo is set and the chords load as you hear them; each board names the shape to play.`);
+    else if (song.capo) parts.push(`These are the chord shapes; with a capo on fret ${song.capo} they sound ${song.capo} semitone${song.capo > 1 ? 's' : ''} higher.`);
     if (song.note) parts.push(song.note);
     if (outside.length) parts.push(`From outside the key: ${uniq(outside).join(', ')}.`);
     if (simplified.length) parts.push(`Simplified: ${uniq(simplified).join(', ')}.`);
@@ -2572,6 +2733,133 @@
     document.getElementById('song-note').textContent = parts.join(' ');
   }
 
+  // A pasted chord sheet (chords on their own lines over lyrics) is read by its chord lines only. Lyric lines,
+  // lines that repeat the chords inside words ("(E major) Blue Ridge…"), section labels ([Verse], Chorus:) and
+  // repeat marks (x2) are skipped. Text on one line is used as it is.
+  const SHEET_LABEL = /^\s*[\[(]?\s*(intro|verse|pre-?chorus|chorus|bridge|outro|solo|interlude|instrumental|refrain|coda|hook|ending|tag|riff)\b[^\])]*[\])]?\s*:?/i;
+  const SHEET_CAPO = /^\s*capo\b\D{0,12}(\d{1,2})/i;
+  function sheetChords(text) {
+    let lines = String(text).split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    if (lines.length < 2) return { text, lines: 1, skipped: 0 };
+    let sheetCapo = null;   // "Capo 2", "Capo: 2nd fret", "Capo on 3" — the chords are then the shapes played above it
+    lines = lines.filter(l => { const m = l.match(SHEET_CAPO); if (m && sheetCapo === null) { sheetCapo = Number(m[1]); return false; } return true; });
+    const keep = [];
+    lines.forEach(l => {
+      const body = l.replace(SHEET_LABEL, '').replace(/\(?\s*x\s*\d+\s*\)?\s*$/i, '').replace(/\bN\.?C\.?\b/g, ' ').trim();
+      if (body && chordTokens(body).every(t => parseToken(t))) keep.push(body);
+    });
+    if (!keep.length) return { text: lines.join(' '), lines: lines.length, skipped: 0, capo: sheetCapo };
+    return { text: keep.join(' '), lines: keep.length, skipped: lines.length - keep.length, capo: sheetCapo };
+  }
+  // ---- Type or paste chords: Replace fills the progression, Add puts them on the end ----
+  // Chord name moved by n semitones (root and slash bass), spelled the way chord sheets usually spell guitar shapes
+  const SHAPE_ROOTS = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
+  const ACC = { '#': 1, '\u266f': 1, 'b': -1, '\u266d': -1, '': 0 };
+  const moveRoot = (l, a, n) => SHAPE_ROOTS[((LETTER_PC[l] + ACC[a] + n) % 12 + 24) % 12];
+  function transposeName(name, n) {
+    return String(name).replace(/^([A-G])([#b\u266f\u266d]?)/, (m, l, a) => moveRoot(l, a, n))
+      .replace(/\/([A-G])([#b\u266f\u266d]?)$/, (m, l, a) => '/' + moveRoot(l, a, n));
+  }
+  // With a capo on, the shape to play for a sounding chord
+  const capoShape = c => capo ? transposeName(c.name, -capo) : '';
+  function useTypedChords(mode) {
+    const inp = document.getElementById('chord-in'), note = document.getElementById('chord-note');
+    const sheet = sheetChords(inp.value.trim());
+    let text = sheet.text.trim();
+    if (!text) { note.textContent = 'Type some chords first, such as G D Em C.'; return; }
+    // A sheet that names a capo lists the shapes played above it: set the capo and load the chords that sound
+    let capoNote = '';
+    if (sheet.capo !== null && sheet.capo !== undefined) {
+      if (sheet.capo > CAPO_MAX) capoNote = `The sheet says capo ${sheet.capo}; this tool goes up to capo ${CAPO_MAX}, so its chords were used as written.`;
+      else {
+        const n = sheet.capo, toks = chordTokens(text);
+        const firstShape = toks.find(t => parseChordName(t));
+        text = toks.map(t => parseChordName(t) ? transposeName(t, n) : t).join(' ');
+        if (n !== capo) setCapo(n);
+        capoNote = n ? `The sheet says capo ${n}, so the capo is set to ${n} and its shapes load as the chords you hear${firstShape ? ` (${firstShape} sounds as ${transposeName(firstShape, n)})` : ''}.` : '';
+      }
+    }
+    const r = resolveChordList(text);
+    if (r.error) { note.textContent = `"${r.error}" is not a chord name I can read.`; return; }
+    if (!r.steps.length) return;
+    snapProg();
+    const steps = mode === 'add' ? progSeq.concat(r.steps) : r.steps;
+    const cut = steps.length > SEQ_MAX;
+    extraNames = mode === 'add' ? uniq(extraNames.concat(r.outsideNames)) : uniq(r.outsideNames);
+    finishLoad(steps);
+    const parts = [mode === 'add' ? `Added ${r.steps.length} chords (${progSeq.length} steps in all).` : `Filled in ${progSeq.length} chords in ${currentScale}.`];
+    if (capoNote) parts.push(capoNote);
+    if (sheet.skipped) parts.push(`Read ${sheet.lines} chord line${sheet.lines === 1 ? '' : 's'} and skipped ${sheet.skipped} line${sheet.skipped === 1 ? '' : 's'} of lyrics and labels.`);
+    if (cut) parts.push(`A progression holds ${SEQ_MAX} steps, so the rest were left off.`);
+    if (r.outside.length) parts.push(`From outside the key: ${uniq(r.outside).join(', ')}.`);
+    if (r.simplified.length) parts.push(`Simplified: ${uniq(r.simplified).join(', ')}.`);
+    if (r.approx.length) parts.push(`Not in this key, so the closest key chord was used: ${uniq(r.approx).join(', ')}.`);
+    note.textContent = parts.join(' ');
+    suggestKey();
+  }
+  document.getElementById('chord-replace').addEventListener('click', () => useTypedChords('replace'));
+  document.getElementById('chord-add').addEventListener('click', () => useTypedChords('add'));
+  // Enter uses the chords (Shift+Enter starts a new line); pasting a whole sheet keeps its lines
+  document.getElementById('chord-in').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); useTypedChords('replace'); } });
+
+  // Suggest the key the progression's chords fit best: every chord whose notes are all in a key counts for it,
+  // and a key whose home chord starts or ends the progression gets a bonus (songs usually begin or end at home)
+  function keyFit(chs, root, mode) {
+    const set = mode.steps.map(x => (root + x) % 12);
+    let sc = chs.filter(c => c.pcs.every(x => set.includes(x))).length;
+    const minorHome = mode.steps[2] === 3;
+    const isHome = c => c.pcs[0] === root && (c.pcs.includes((root + (minorHome ? 3 : 4)) % 12));
+    if (isHome(chs[0])) sc += 0.6;
+    if (isHome(chs[chs.length - 1])) sc += 0.4;
+    if (mode.id === 'major' || mode.id === 'minor') sc += 0.1;
+    return sc;
+  }
+  function hideKeySuggest() { const box = document.getElementById('key-suggest'); box.hidden = true; box.textContent = ''; }
+  function suggestKey() {
+    const box = document.getElementById('key-suggest');
+    const chs = progSeq.map(st => stepChord(st)).filter(Boolean);
+    if (chs.length < 2) { hideKeySuggest(); return; }
+    const cands = [];
+    for (let r = 0; r < 12; r++) MODES.filter(m => m.id !== 'locrian').forEach(m => cands.push({ r, m, sc: keyFit(chs, r, m) }));
+    cands.sort((a, b) => b.sc - a.sc);
+    const best = cands[0];
+    const cur = keyFit(chs, currentRoot, MODES.find(m => m.id === currentMode));
+    if ((best.r === currentRoot && best.m.id === currentMode) || best.sc <= cur + 0.05) { hideKeySuggest(); return; }
+    // When the current key already holds every chord, only suggest another home note if the progression both
+    // starts and ends on it (a verse that just starts on the V chord stays in its key)
+    const curSet = MODES.find(m => m.id === currentMode).steps.map(x => (currentRoot + x) % 12);
+    if (chs.every(c => c.pcs.every(x => curSet.includes(x))) && !(chs[0].pcs[0] === best.r && chs[chs.length - 1].pcs[0] === best.r)) { hideKeySuggest(); return; }
+    const nameOf = c => `${spellScale(c.r, c.m.steps).name} ${c.m.word}`;
+    let also = '';
+    if (best.m.id !== 'major' && best.m.id !== 'minor') {   // a mode: name the major key with the same notes
+      const set = best.m.steps.map(x => (best.r + x) % 12).sort((a, b) => a - b).join();
+      const maj = MODES.find(m => m.id === 'major');
+      for (let r = 0; r < 12; r++) if (maj.steps.map(x => (r + x) % 12).sort((a, b) => a - b).join() === set) also = ` (the notes of ${spellScale(r, maj.steps).name} major)`;
+    }
+    box.innerHTML = '';
+    const t = document.createElement('span');
+    t.textContent = `These chords fit ${nameOf(best)} best${also}.`;
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'key'; b.textContent = `Switch to ${nameOf(best)}`;
+    b.addEventListener('click', () => switchKeyKeepChords(best.r, best.m.id));
+    box.append(t, b);
+    box.hidden = false;
+  }
+  // Change key but keep the same chords (by name): chords the new key has become ordinary key chords,
+  // and any still outside it stay in the "Outside the key" row
+  function switchKeyKeepChords(root, modeId) {
+    const names = progSeq.map(st => stepChord(st).name);
+    snapProg(true);
+    setScale(root, modeId);
+    const r = resolveChordList(names.join(' '));
+    if (r.error) return;
+    finishLoad(r.steps);
+    extraNames = uniq(extraNames.filter(nm => { const pp = parseChordName(nm); const x = pp && resolveChord(pp); return x && x.note && x.note.kind === 'outside'; }).concat(r.outsideNames));
+    drawSeq();
+    document.getElementById('chord-note').textContent = `Switched to ${currentScale}; the chords are the same.` + (r.outside.length ? ` Still outside the key: ${uniq(r.outside).join(', ')}.` : ' All of them are now in the key.');
+    suggestKey();
+  }
+
   const normText = s => String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9# ]+/g, ' ').replace(/\s+/g, ' ').trim();
   function searchSongs(q) {
     const words = normText(q).split(' ').filter(Boolean);
@@ -2589,7 +2877,7 @@
   }
   function looksLikeChords(q) {
     const toks = q.split(/[\s,|]+/).filter(Boolean);
-    return toks.length >= 2 && toks.every(t => parseChordName(t));
+    return toks.length >= 2 && chordTokens(q).every(t => parseToken(t));
   }
 
 
@@ -2717,7 +3005,6 @@
     wrap.innerHTML = '';
     songHits = [];
     if (q.trim()) {
-      if (looksLikeChords(q)) songHits.push({ chordsText: q.trim() });
       searchSaved(q).forEach(r => songHits.push({ saved: r }));
       searchSongs(q).forEach(s => songHits.push({ song: s }));
     } else if (document.activeElement === inp && savedList.length) {
@@ -2983,7 +3270,7 @@
       sec.className = 'board';
       sec.innerHTML =
         `<div class="bd-head">` +
-        `<h2 class="single-title" data-title="${prefix}${c.roman}: ${c.name}"><span class="dot" style="background:${c.color}"></span>${prefix}${c.roman}: ${c.name}<span class="sub-notes">${c.notes.map(n => n.name).join(' ')}</span></h2>` +
+        `<h2 class="single-title" data-title="${prefix}${c.roman}: ${c.name}"><span class="dot" style="background:${c.color}"></span>${prefix}${c.roman}: ${c.name}<span class="sub-notes">${c.notes.map(n => n.name).join(' ')}${capo ? ` \u00b7 capo ${capo}: play ${capoShape(c)}` : ''}</span></h2>` +
         `<div class="bd-tools">` +
         `<button type="button" class="fv-btn" data-pos="${pos}" data-g="faded" aria-pressed="${fadeViewOf(pos) === 'scale'}" aria-label="Faded notes: switch between the chord's other shapes and the scale">Faded: ${fadeViewOf(pos) === 'scale' ? 'Scale' : 'Shapes'}</button>` +
         (singlePick(pos, c) ? `<button type="button" class="fv-btn bz-btn" data-zoompos="${pos}" data-g="singles" aria-pressed="${!!boardZoom[pos]}" aria-label="Zoom this board to 8 frets around the picked shape">Zoom</button>` : '') +
@@ -3567,10 +3854,10 @@
   function syncZoom() {
     zoomToggle.setAttribute('aria-pressed', String(zoom.on));
     zoomWrap.classList.toggle('off', !zoom.on);
-    STEPPERS.forEach(st => { valEls[st.key].textContent = zoom[st.key]; });
+    STEPPERS.forEach(st => { valEls[st.key].textContent = zoom[st.key] + (st.key === 'anchor' ? capo : 0); });
     const w = currentWindow();
     zoomRead.textContent = zoom.on
-      ? `Showing frets ${w.lo} to ${w.hi}, anchored on fret ${zoom.anchor}.${w.nutAdded ? ' The nut is included because the range starts near it.' : ''}`
+      ? `Showing frets ${w.lo + capo} to ${w.hi + capo}, anchored on fret ${zoom.anchor + capo}.${w.nutAdded ? ' The nut is included because the range starts near it.' : ''}`
       : 'Showing the whole neck. Turn zoom on, or change a value, to focus on a fret range.';
     renderAll();
   }
@@ -3664,7 +3951,10 @@
   function applyTuning(id) {
     const t = TUNINGS.find(x => x.id === id) || TUNINGS[0];
     tuningId = t.id;
-    t.midi.forEach((m, i) => { TUNING[i] = m % 12; OPEN_MIDI[i] = m; });
+    t.midi.forEach((m, i) => { TUNING[i] = (m + capo) % 12; OPEN_MIDI[i] = m + capo; });
+    FRETS = NECK - capo;
+    zoom.anchor = Math.min(zoom.anchor, FRETS);
+    document.querySelectorAll('#capo .key').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.capo) === capo)));
     shapeCache.clear();
     quizShapeCache.clear();
     quiz.sr = {};
@@ -3672,13 +3962,25 @@
     const std = t.id === 'standard';
     const cagedOk = cagedOffset() !== null;
     document.getElementById('tuning-hint').textContent = (std ? '' : `Low to high: ${t.strings.join(' ')}. `) + t.note +
-      (std ? '' : ' Shapes, note names and sound all follow the tuning.');
+      (std ? '' : ' Shapes, note names and sound all follow the tuning.') +
+      (capo ? ` Capo ${capo}: chord names and the key are what you hear; each board also says which shape to play, and frets are counted from the capo for shapes and tab.` : '');
     document.getElementById('caged-wrap').hidden = !cagedOk;
     document.getElementById('caged-off').hidden = cagedOk;
     drawShapeButtons();
     setScale(currentRoot, currentMode);   // redraws every board, clears picks, and starts a new quiz question
   }
   tuningSel.addEventListener('change', () => applyTuning(tuningSel.value));
+  function setCapo(n) { capo = Math.max(0, Math.min(CAPO_MAX, n | 0)); applyTuning(tuningId); }
+  const capoWrap = document.getElementById('capo');
+  for (let n = 0; n <= CAPO_MAX; n++) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'key'; b.dataset.capo = n;
+    b.textContent = n ? String(n) : 'None';
+    b.setAttribute('aria-label', n ? `Capo on fret ${n}` : 'No capo');
+    b.setAttribute('aria-pressed', String(n === capo));
+    b.addEventListener('click', () => { if (n !== capo) setCapo(n); });
+    capoWrap.appendChild(b);
+  }
   tuningSel.value = tuningId;
   document.getElementById('tuning-hint').textContent = tuningNow().note;
 
@@ -3753,15 +4055,16 @@
     const yStr = i => T + (5 - i) * SS;
     let g = `<div class="fbwrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Quiz fretboard">`;
     g += `<rect x="${L}" y="${T - 14}" width="${FRETS * FW + 20}" height="${5 * SS + 28}" rx="4" fill="var(--wood)"/>`;
-    [3, 5, 7, 9, 15, 17, 19, 21].forEach(f => { g += `<circle cx="${xFret(f)}" cy="${T + 2.5 * SS}" r="5" fill="#cbbb9c"/>`; });
-    g += `<circle cx="${xFret(12)}" cy="${T + 1.5 * SS}" r="5" fill="#cbbb9c"/><circle cx="${xFret(12)}" cy="${T + 3.5 * SS}" r="5" fill="#cbbb9c"/>`;
+    [3, 5, 7, 9, 15, 17, 19, 21].map(f => f - capo).filter(f => f >= 1 && f <= FRETS).forEach(f => { g += `<circle cx="${xFret(f)}" cy="${T + 2.5 * SS}" r="5" fill="#cbbb9c"/>`; });
+    if (12 - capo >= 1) g += `<circle cx="${xFret(12 - capo)}" cy="${T + 1.5 * SS}" r="5" fill="#cbbb9c"/><circle cx="${xFret(12 - capo)}" cy="${T + 3.5 * SS}" r="5" fill="#cbbb9c"/>`;
     for (let f = 1; f <= FRETS; f++) g += `<line x1="${L + f * FW}" y1="${T - 14}" x2="${L + f * FW}" y2="${T + 5 * SS + 14}" stroke="#a89a80" stroke-width="2"/>`;
-    g += `<rect x="${L - 5}" y="${T - 14}" width="6" height="${5 * SS + 28}" fill="#f6f1e7" stroke="#a89a80"/>`;
+    g += capo ? `<rect x="${L - 7}" y="${T - 18}" width="10" height="${5 * SS + 36}" rx="3" fill="#3b3833"/><text x="${L - 24}" y="${T + 5 * SS + 36}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="700" fill="#3b3833">Capo ${capo}</text>`
+      : `<rect x="${L - 5}" y="${T - 14}" width="6" height="${5 * SS + 28}" fill="#f6f1e7" stroke="#a89a80"/>`;
     for (let i = 0; i < 6; i++) {
       const hot = q.kind === 'find' && q.s === i;
       g += `<line x1="${L}" y1="${yStr(i)}" x2="${L + FRETS * FW + 20}" y2="${yStr(i)}" stroke="${hot ? '#b4532a' : 'var(--line)'}" stroke-width="${hot ? 3.2 : (2.6 - i * 0.35).toFixed(2)}"/>`;
     }
-    for (let f = 1; f <= FRETS; f++) g += `<text x="${xFret(f)}" y="${T + 5 * SS + 36}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" fill="#7a7466">${f}</text>`;
+    for (let f = 1; f <= FRETS; f++) g += `<text x="${xFret(f)}" y="${T + 5 * SS + 36}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" fill="#7a7466">${f + capo}</text>`;
     const nameOf = pc => (scaleNotes.find(n => n.pc === pc) || {}).name || '';
     const tx = (cx, cy, t, fill = '#fff') => `<text x="${cx}" y="${cy + 4.5}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="${fill}" stroke="#2b2a27" stroke-width="2.6" stroke-opacity="0.55" paint-order="stroke">${t}</text>`;
     if (q.kind === 'chord') {
@@ -4635,7 +4938,20 @@
       { id: 'arp', label: 'Arpeggio', slots: 'arp', note: 'Picked one string at a time, up and back down, in eighth notes.' },
     ],
   };
+  // Custom: your own pattern, one step per eighth note. Each time signature keeps its own. Chop makes every strum short.
+  // lock: hold the custom pattern; otherwise choosing a preset copies it into Custom
+  const customStrum = { slots: {}, chop: false, lock: false };
+  const STEP_COUNTS = { '4/4': '1 & 2 & 3 & 4 &', '3/4': '1 & 2 & 3 &', '6/8': '1 2 3 4 5 6', '2/4': '1 & 2 &' };
+  const customLen = m => STEP_COUNTS[m].split(' ').length;
+  Object.keys(STRUM_BY_METER).forEach(m => STRUM_BY_METER[m].push({
+    id: 'custom', label: 'Custom',
+    get slots() { return customStrum.slots[m] || 'DU'.repeat(8).slice(0, customLen(m)); },
+    get release() { return customStrum.chop ? 0.11 : undefined; },
+    note: 'Your own pattern: tap a step to cycle down, up, rest and bass note.',
+  }));
   const strumList = () => STRUM_BY_METER[tempo.meter] || STRUM_BY_METER['4/4'];
+  // Any pattern as a row of eighth-note steps (One Strum is a single down; Arpeggio is shown as down-up eighths)
+  const stepsOf = (pat, m) => { const L = customLen(m); return !pat.slots ? 'D' + '-'.repeat(L - 1) : pat.slots === 'arp' ? 'DU'.repeat(8).slice(0, L) : pat.slots.slice(0, L); };
   const strumPat = { id: 'one' };
   const curStrumPat = () => strumList().find(p => p.id === strumPat.id) || strumList()[0];
 
@@ -5527,14 +5843,71 @@
       b.dataset.strum = pat.id;
       b.setAttribute('aria-pressed', String(pat.id === strumPat.id));
       b.addEventListener('click', () => {
+        // Unless Lock is on, choosing a preset copies it into Custom, ready to change
+        if (!customStrum.lock && (pat.id !== 'custom' || strumPat.id !== 'custom')) {
+          const src = pat.id !== 'custom' ? pat : curStrumPat();   // choosing Custom itself copies the preset you were on
+          customStrum.slots[tempo.meter] = stepsOf(src, tempo.meter);
+          customStrum.chop = src.release !== undefined;
+        }
         strumPat.id = pat.id;
         strumWrap.querySelectorAll('.key').forEach(btn => btn.setAttribute('aria-pressed', String(btn.dataset.strum === strumPat.id)));
         syncStrumNote();
+        drawStrumSteps();
       });
       strumWrap.appendChild(b);
     });
     syncStrumNote();
+    drawStrumSteps();
   }
+  // The step editor under the patterns, shown for Custom: tap a step to cycle down, up, rest, bass note
+  const STEP_NEXT = { D: 'U', U: '-', '-': 'B', B: 'D', b: 'D' };
+  const STEP_SHOW = { D: '\u2193', U: '\u2191', '-': '\u2013', B: 'B', b: 'B\u2082' };
+  const STEP_NAME = { D: 'down', U: 'up', '-': 'rest', B: 'bass note', b: 'second bass note' };
+  // The step row is always shown: it shows the pattern being played. Changing a step, Chop or Clear switches to Custom.
+  function drawStrumSteps() {
+    const m = tempo.meter, counts = STEP_COUNTS[m].split(' ');
+    const pat = curStrumPat();
+    const slots = pat.id === 'custom' ? pat.slots : stepsOf(pat, m);
+    const arp = pat.slots === 'arp';
+    const grid = document.getElementById('strum-step-grid');
+    grid.style.gridTemplateColumns = `repeat(${slots.length}, minmax(0, 1fr))`;
+    grid.textContent = '';
+    grid.classList.toggle('preset', pat.id !== 'custom');
+    [...slots].forEach((ch, i) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'key ss-step' + (counts[i] === '&' ? ' ss-and' : '');
+      b.innerHTML = `<span class="ss-count">${counts[i]}</span><span class="ss-val">${arp ? '♪' : (STEP_SHOW[ch] || ch)}</span>`;
+      b.setAttribute('aria-label', `Step ${i + 1} (${counts[i]}): ${arp ? 'picked note' : STEP_NAME[ch]}. Tap to change (switches to Custom).`);
+      b.addEventListener('click', () => {
+        const cur = slots;
+        toCustom(cur.slice(0, i) + STEP_NEXT[cur[i]] + cur.slice(i + 1));
+      });
+      grid.appendChild(b);
+    });
+    [['strum-lock', customStrum.lock, 'Lock'], ['strum-chop', customStrum.chop, 'Chop']].forEach(([id, on, w]) => {
+      const el = document.getElementById(id);
+      el.setAttribute('aria-pressed', String(on));
+      el.textContent = `${w} ${on ? 'on' : 'off'}`;
+    });
+  }
+  // Make the given steps the Custom pattern and select Custom
+  function toCustom(steps) {
+    const fromPreset = strumPat.id !== 'custom';
+    if (fromPreset) customStrum.chop = curStrumPat().release !== undefined;
+    customStrum.slots[tempo.meter] = steps;
+    strumPat.id = 'custom';
+    strumWrap.querySelectorAll('.key').forEach(btn => btn.setAttribute('aria-pressed', String(btn.dataset.strum === 'custom')));
+    syncStrumNote();
+    drawStrumSteps();
+  }
+  document.getElementById('strum-lock').addEventListener('click', () => { customStrum.lock = !customStrum.lock; drawStrumSteps(); });
+  document.getElementById('strum-chop').addEventListener('click', () => {
+    if (strumPat.id !== 'custom') toCustom(stepsOf(curStrumPat(), tempo.meter));
+    customStrum.chop = !customStrum.chop;
+    drawStrumSteps();
+  });
+  document.getElementById('strum-clear').addEventListener('click', () => toCustom('-'.repeat(customLen(tempo.meter))));
   renderStrumButtons();
 
   function syncDrumNote() {
@@ -6106,7 +6479,7 @@
   // which shows the part of the guide for whatever you last touched ----
   const guideSrc = document.getElementById('guide-src').content;
   const guideSec = id => guideSrc.querySelector(`section[data-g="${id}"]`);
-  const GUIDE_GROUPS = [['Basics', ['start', 'setup', 'ipad']], ['Controls', ['tuning', 'key', 'scale', 'view', 'chords', 'display', 'labels', 'size', 'caged', 'shapes', 'zoom', 'prog', 'songs', 'vl', 'saved', 'sound', 'tempo', 'chordsound', 'strum', 'drums', 'metro', 'mix', 'focus', 'follow']],
+  const GUIDE_GROUPS = [['Basics', ['start', 'setup', 'ipad']], ['Controls', ['tuning', 'key', 'scale', 'view', 'chords', 'display', 'labels', 'size', 'caged', 'shapes', 'zoom', 'prog', 'songs', 'chordin', 'vl', 'saved', 'sound', 'tempo', 'chordsound', 'strum', 'drums', 'metro', 'mix', 'focus', 'follow']],
     ['The boards', ['scaleboard', 'quiz', 'groups', 'singles', 'playmode', 'faded']]];
   const guidePage = document.getElementById('guide-page');
   (function buildGuide() {
@@ -6312,13 +6685,13 @@
   const SETUP_VER = 1;
   function setupState() {
     return {
-      v: SETUP_VER, t: tuningId, r: currentRoot, m: currentMode, st: scaleType, a: active.map(x => x ? 1 : 0).join(''),
+      v: SETUP_VER, t: tuningId, cp: capo, r: currentRoot, m: currentMode, st: scaleType, a: active.map(x => x ? 1 : 0).join(''),
       c: [...cagedSel], sh: shapeType, sm: shapeMode instanceof Set ? [...shapeMode] : shapeMode,
       smt: shapeModeByType.triad instanceof Set ? [...shapeModeByType.triad] : shapeModeByType.triad, smf: shapeModeByType.full,
       fo: fadeOthers ? 1 : 0, l: labelMode, bc: boardCols, z: [zoom.on ? 1 : 0, zoom.anchor, zoom.below, zoom.above],
       p: progSeq.map(st => st.mod ? [st.deg, st.mod] : [st.deg]), pk: picks, fv: fadeView, bz: boardZoom,
       vl: [vlMove, vlPitch, vlShow ? 1 : 0], tp: [tempo.bpm, tempo.beats, tempo.meter], cs: chordSound.inst,
-      ss: strumCfg.speed, sp: strumPat.id, dr: [drums.on ? 1 : 0, drums.kick ? 1 : 0, drums.snare ? 1 : 0, drums.pattern],
+      ss: strumCfg.speed, sp: strumPat.id, cst: customStrum.slots, cch: customStrum.chop ? 1 : 0, clk: customStrum.lock ? 1 : 0, xn: extraNames, dr: [drums.on ? 1 : 0, drums.kick ? 1 : 0, drums.snare ? 1 : 0, drums.pattern],
       pad: pad.on ? 1 : 0, lp: loop.on ? 1 : 0, so: soundOn ? 1 : 0, fl: follow.on ? 1 : 0,
       me: [metro.on ? 1 : 0, metro.accent ? 1 : 0, metro.count ? 1 : 0, metro.sub, metro.sound],
       mx: [mix.guitar, mix.pad, mix.drums, mix.metro].map(x => Math.round(x * 100)),
@@ -6339,6 +6712,7 @@
     const step = f => { try { f(); } catch (e) { /* one bad field never stops the rest */ } };
     const isStr = x => typeof x === 'string', isNum = x => typeof x === 'number' && isFinite(x);
     step(() => { if (isStr(o.t) && TUNINGS.some(t => t.id === o.t) && o.t !== tuningId) { tuningSel.value = o.t; tuningSel.dispatchEvent(new Event('change')); } });
+    step(() => { const n = isNum(o.cp) ? Math.round(o.cp) : 0; if (n >= 0 && n <= CAPO_MAX && n !== capo) setCapo(n); });
     step(() => { if (isNum(o.r) && o.r >= 0 && o.r < 12 && MODES.some(m => m.id === o.m)) setScale(o.r, o.m); });
     step(() => { if (isStr(o.st)) { const b = document.querySelector(`#scaletype [data-type="${o.st}"], #scaleoutside [data-type="${o.st}"]`); if (b && !b.disabled && b.getAttribute('aria-pressed') !== 'true') b.click(); } });
     step(() => { if (isStr(o.a) && /^[01]{7}$/.test(o.a)) { [...o.a].forEach((x, i) => { active[i] = x === '1'; }); drawChordChips(); } });
@@ -6364,6 +6738,7 @@
         progSeq = o.p.filter(x => Array.isArray(x) && Number.isInteger(x[0]) && x[0] >= 0 && x[0] < 7 && (x[1] === undefined || MOD_ORDER.includes(x[1]) || isXMod(x[1])))
           .slice(0, SEQ_MAX).map(x => ({ deg: x[0], mod: x[1] || null }));
         selStep = null;
+        if (Array.isArray(o.xn)) extraNames = o.xn.filter(n => typeof n === 'string' && parseChordName(n)).slice(0, 24);
         drawSeq();
       }
     });
@@ -6376,7 +6751,12 @@
     step(() => { if (Array.isArray(o.tp)) { if (isNum(o.tp[0])) { tempoEl.value = o.tp[0]; tempoEl.dispatchEvent(new Event('input')); } if (isNum(o.tp[1])) { tempo.beats = Math.max(1, Math.min(8, o.tp[1])); syncTempo(); } const mb = document.querySelector(`#meter-row [data-meter="${o.tp[2]}"]`); if (mb && mb.getAttribute('aria-pressed') !== 'true') mb.click(); } });
     step(() => { if (isStr(o.cs) && (o.cs === 'guitar' || o.cs === 'piano' || TONES[o.cs]) && o.cs !== chordSound.inst) { const b = document.querySelector(`#chordsound-row [data-id="${o.cs}"]`); if (b) b.click(); } });
     step(() => { if (isNum(o.ss)) { strumEl.value = o.ss; strumEl.dispatchEvent(new Event('input')); } });
-    step(() => { if (isStr(o.sp)) { const b = document.querySelector(`#strum-patterns [data-strum="${o.sp}"]`); if (b) b.click(); } });
+    step(() => {
+      if (o.cst && typeof o.cst === 'object') Object.entries(o.cst).forEach(([m, v]) => { if (STEP_COUNTS[m] && isStr(v) && v.length === customLen(m) && /^[DUBb-]+$/.test(v)) customStrum.slots[m] = v; });
+      if (o.cch !== undefined) customStrum.chop = !!o.cch;
+      if (o.clk !== undefined) customStrum.lock = !!o.clk;
+    });
+    step(() => { if (isStr(o.sp) && strumList().some(x => x.id === o.sp)) { strumPat.id = o.sp; strumWrap.querySelectorAll('.key').forEach(btn => btn.setAttribute('aria-pressed', String(btn.dataset.strum === o.sp))); syncStrumNote(); drawStrumSteps(); } });
     step(() => {
       if (!Array.isArray(o.dr)) return;
       drums.on = !!o.dr[0]; setToggle('drums-toggle', drums.on, 'Drums');
@@ -6490,7 +6870,7 @@
   // ---- Title case for every button label and heading ("Sound On", "Voice Lead All Boards"). Musical text is
   // left alone: Roman numerals (ii, bvii°), chord and note names, the high e string, shape tabs and the line under each board. ----
   (function titleCase() {
-    const PICK = 'button, summary, h1, h2, h3, .ctl-label, .qb-lbl, option, optgroup, .pm-bar strong';
+    const PICK = 'button, summary, h1, h2, h3, .ctl-label, .qb-lbl, .pick-sub, option, optgroup, .pm-bar strong, .stepper > label, .stepper > span:first-child';
     const SKIP = 'svg, .shape-chip[data-skey], .bd-more > summary, .nt, .sub-notes, .chord-sub, #song-results, .tag, textarea, input, .fsub';
     const ROMAN = /^[b#]*(i|ii|iii|iv|v|vi|vii)[°ø+]?$/i;
     const fix = str => str.replace(/(^|[\s(\/–-])([a-z][A-Za-z'°ø+]*)/g, (m, pre, w) => (w === 'e' || w === 'x' || w === 'iPad' || ROMAN.test(w)) ? m : pre + w[0].toUpperCase() + w.slice(1));
