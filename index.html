@@ -584,6 +584,7 @@
   #shapes .key:last-child { grid-column: 1 / -1; }
   #sound-row2, #play-row, #drum-row, #metro-row, #metro-opts, #saved-box .keys, #labelmode, #stype, #strum-patterns { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   #bsize, #meter-row, #metro-sub, #metro-sound { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  #inversion { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   #capo { grid-template-columns: 1.6fr repeat(7, minmax(0, 1fr)); }
   #metro-sound, #metro-sub { grid-template-columns: repeat(4, minmax(max-content, 1fr)); }
   #metro-sound .key, #metro-sub .key { padding-left: 6px; padding-right: 6px; }
@@ -628,6 +629,41 @@
   body.play-mode #prog-section, body.play-mode .bd-more, body.play-mode .bz-btn { display: none !important; }
   /* Individual boards: title on the left, Faded / Focus / Play on the right of one row */
   /* When the card is too narrow for both, the buttons drop to their own line under the title */
+  #build-sec .bd-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 8px; }
+  #build-sec .bd-head .single-title { flex: 1 1 7em; min-width: 7em; margin: 0; padding-right: 0; }
+  #build-sec .bd-tools { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 5px; margin-left: auto; max-width: 100%; }
+  #build-sec .bd-tools .play, #build-sec .bd-tools .focus-btn { position: static; }
+  #build-sec .fv-btn { padding: 5px 11px; font: 600 12px system-ui, -apple-system, "Segoe UI", sans-serif; border: 1.5px solid #d9ceb8; border-radius: 16px; background: #fff; color: var(--ink); cursor: pointer; white-space: nowrap; }
+  #build-sec .fv-btn[aria-pressed="true"] { background: #2b2a27; color: #fffdf8; border-color: #2b2a27; }
+  .build-out { margin: 10px 0 0; }
+  .build-out .bo-name { font: 700 22px/1.2 Georgia, serif; margin: 0 0 4px; }
+  .build-out .bo-name small { font: 600 13px system-ui, -apple-system, "Segoe UI", sans-serif; color: #7a7466; margin-left: 6px; }
+  .build-out .bo-line { margin: 2px 0; font-size: 14px; color: var(--ink); }
+  .build-out .bo-line span { color: #7a7466; }
+  .build-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 6px; margin-top: 10px; max-width: 560px; }
+  #byo-sec .bd-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 8px; }
+  #byo-sec .bd-head .single-title { flex: 1 1 7em; min-width: 7em; margin: 0; padding-right: 0; }
+  #byo-sec .bd-tools { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 5px; margin-left: auto; }
+  #byo-sec .bd-tools .play { position: static; }
+  #byo-sec .fv-btn { padding: 5px 11px; font: 600 12px system-ui, -apple-system, "Segoe UI", sans-serif; border: 1.5px solid #d9ceb8; border-radius: 16px; background: #fff; color: var(--ink); cursor: pointer; white-space: nowrap; }
+  #byo-sec .fv-btn[aria-pressed="true"] { background: #2b2a27; color: #fffdf8; border-color: #2b2a27; }
+  .byo-strip { display: flex; flex-wrap: wrap; gap: 8px; min-height: 58px; padding: 8px; border: 1.5px dashed #d9ceb8; border-radius: 10px; background: #fffdf8; }
+  .byo-strip .empty { margin: auto 4px; color: #7a7466; font-size: 14px; }
+  .byo-card { position: relative; display: flex; align-items: stretch; border: 1.5px solid #d9ceb8; border-radius: 10px; background: #fff; min-width: 96px; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+  .byo-card.sel { border-color: #b4532a; box-shadow: 0 0 0 2px rgba(180, 83, 42, 0.25); }
+  .byo-card.now-playing { background: #fbe9df; border-color: #b4532a; }
+  .byo-card.dragging { opacity: 0.9; z-index: 5; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2); pointer-events: none; }
+  .byo-card.drop-before::before, .byo-card.drop-after::after { content: ''; position: absolute; top: 4px; bottom: 4px; width: 3px; border-radius: 2px; background: #b4532a; }
+  .byo-card.drop-before::before { left: -6px; }
+  .byo-card.drop-after::after { right: -6px; }
+  .byo-grip { touch-action: none; cursor: grab; padding: 0 5px; color: #a89a80; display: flex; align-items: center; font-size: 18px; border-right: 1px solid #efe7d8; }
+  .byo-main { padding: 6px 8px; cursor: pointer; display: flex; flex-direction: column; justify-content: center; gap: 1px; flex: 1; text-align: left; border: 0; background: none; font: inherit; color: inherit; }
+  .byo-main b { font: 700 16px/1.15 Georgia, serif; }
+  .byo-main span { font-size: 11px; color: #7a7466; }
+  .byo-main .byo-num { font-size: 10px; color: #a89a80; }
+  .byo-side { display: flex; flex-direction: column; justify-content: space-between; align-items: flex-end; padding: 4px 5px 4px 0; gap: 3px; }
+  .byo-beats { font: 600 11px system-ui, -apple-system, "Segoe UI", sans-serif; border: 1px solid #d9ceb8; border-radius: 10px; background: #fff; color: var(--ink); padding: 2px 7px; cursor: pointer; white-space: nowrap; }
+  .byo-del { border: 0; background: none; color: #a89a80; font-size: 16px; cursor: pointer; line-height: 1; padding: 0 2px; }
   #singles .bd-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 8px; }
   #singles .bd-head .single-title { flex: 1 1 7em; min-width: 7em; margin: 0; padding-right: 0; }
   #singles .bd-tools { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 5px; margin-left: auto; max-width: 100%; }
@@ -729,6 +765,11 @@
     <p class="ctl-label" id="lbl-shapes">Strings</p>
     <div class="keys" id="shapes" role="group" aria-label="Playable shapes"></div>
     <p class="hint explain" id="hint-shapes"></p>
+    </div>
+    <div data-g="inv">
+    <p class="ctl-label">Inversion</p>
+    <div class="keys" id="inversion" role="group" aria-label="Inversion"></div>
+    <p class="hint explain" id="inv-hint"></p>
     </div>
     <div data-g="labels">
     <p class="ctl-label">Dot labels</p>
@@ -866,7 +907,7 @@
         <div class="stepper">
           <span>Beats per chord</span>
           <button type="button" id="beats-minus" aria-label="Fewer beats per chord">&minus;</button>
-          <span class="val" id="beats-val">2</span>
+          <span class="val" id="beats-val">4</span>
           <button type="button" id="beats-plus" aria-label="More beats per chord">+</button>
         </div>
       </div>
@@ -1023,6 +1064,36 @@
     <div class="chips" id="scale-chips"></div>
   </section>
 
+  <section class="board" id="build-sec" data-show="build" data-g="build">
+    <div class="bd-head">
+      <h2 class="single-title" id="build-title">Build your own</h2>
+      <div class="bd-tools">
+        <button type="button" class="fv-btn" id="build-fade" data-g="build" aria-pressed="true" aria-label="Faded notes: the scale, or every note">Faded: Scale</button>
+        <button type="button" class="fv-btn" id="build-zoom" data-g="build" aria-pressed="false" aria-label="Zoom to 8 frets around the picked notes" hidden>Zoom</button>
+        <button type="button" class="focus-btn" data-focus="build" aria-pressed="false" aria-label="Focus view: enlarge the build a chord fretboard">Focus</button>
+        <button type="button" class="play" id="build-play" aria-label="Play the picked notes">▶ Play</button>
+      </div>
+    </div>
+    <div id="build"></div>
+    <div class="build-out" id="build-chips"></div>
+    <div class="build-actions"><button type="button" class="key" id="build-clear">Clear</button><button type="button" class="key" id="build-add" disabled>Add to song</button><button type="button" class="key" id="build-update" hidden>Update step</button></div>
+    <p class="hint" id="build-note" aria-live="polite"></p>
+  </section>
+
+  <section class="board" id="byo-sec" data-show="build" data-g="byo">
+    <div class="bd-head">
+      <h2 class="single-title" id="byo-title">Your song</h2>
+      <div class="bd-tools">
+        <button type="button" class="fv-btn" id="byo-loop" aria-pressed="false">Loop</button>
+        <button type="button" class="play" id="byo-play" aria-label="Play your song">▶ Play</button>
+      </div>
+    </div>
+    <div class="byo-strip" id="byo-strip" aria-label="Song steps"></div>
+    <p class="hint" id="byo-total"></p>
+    <div class="build-actions"><button type="button" class="key" id="byo-prog">Add chords to progression</button><button type="button" class="key" id="byo-clear">Clear song</button></div>
+    <p class="hint" id="byo-note" aria-live="polite"></p>
+  </section>
+
   <section class="board quiz-section" data-show="quiz" data-g="quiz">
     <button type="button" class="focus-btn quiz-focus" data-focus="quiz" aria-pressed="false" aria-label="Focus view: enlarge the quiz">Focus</button>
     <details class="quiz" id="quiz">
@@ -1167,6 +1238,10 @@
 <p><b>Fade other notes</b> dims chord tones that are not part of an outlined shape, so the playable shapes stand out. Open strings count as fret 0, so they appear only near the nut.</p>
 </section>
 
+<section data-g="inv"><h2>Inversion</h2>
+<p>Outlines only the triad shapes with the chosen note lowest; the rest fade. <b>Root</b> position has the root lowest, <b>1st</b> inversion the 3rd, and <b>2nd</b> inversion the 5th. On a sus chord, 1st puts the 2nd or 4th lowest. Seventh chords on four strings follow the same rule (there is no 3rd-inversion button for a 7th in the bass). Voice leading, Play and Jam mode use only the shapes shown. Inversions apply to triad shapes, not full chords.</p>
+</section>
+
 <section data-g="zoom"><h2>Zoom</h2>
 <p>Shows only a range of frets. Set the anchor fret and how many frets to include below and above it. Play buttons choose shapes nearest the anchor.</p>
 </section>
@@ -1250,6 +1325,16 @@
 
 <section data-g="scaleboard"><h2>Scale board</h2>
 <p>Every note of the chosen scale across the neck. The root is orange and has a dark ring; notes outside the mode are teal.</p>
+</section>
+
+<section data-g="build"><h2>Build your own</h2>
+<p>The scale is laid out faded, as on the Scale board. Tap notes to pick them (tap again to remove one) and the chord is named underneath. As on a real guitar, each string sounds only its highest picked note: a pick below another on the same string is greyed out with a slash and left out of the name and Play: its name, where it sits in the key (its numeral, or that it is outside the key), its notes and intervals, and other names for the same notes. When the lowest note is not the root, the name is a slash chord such as C/E, and the bass line says which chord tone is lowest.</p>
+<p><b>Faded: Scale</b> shows the scale's notes to pick from; <b>Faded: All notes</b> shows every note, with notes outside the key in teal, for chords like secondary dominants or diminished passing chords. Dot labels, Zoom (8 frets around the picked notes), Focus and Play work as on the individual chord boards; Fingering numbers the fingers when each picked note is on its own string. <b>Add to song</b> puts whatever is picked (one note or a chord) on the end of <b>Your song</b> below. The notes stay picked, since the next step usually comes from near them; tap notes to change them, or Clear to start fresh.</p>
+</section>
+
+<section data-g="byo"><h2>Your song</h2>
+<p>A strip of steps built on the board above, for writing chord parts, melody lines or both. Each step shows its chord name (or note) and its length. Tap the length to change it (½, 1, 1½, 2, 3, 4, 6 or 8 beats); a chord starts at Beats per chord and a single note at 1 beat. Tap a step to load it back onto the board and hear it, change the notes, and tap <b>Update step</b>. Drag a step by its ⠇ grip to move it; × removes it.</p>
+<p><b>Play</b> uses the Song Builder's tempo, time signature and strum pattern for chords; single notes ring for their length. Drums, the metronome (with its count-in) and <b>Loop</b> work as they do for the progression. <b>Add chords to progression</b> puts the song's chords on the end of the Progression Builder (single notes are left out). Your song is kept in the saved setup and the setup link.</p>
 </section>
 
 <section data-g="quiz"><h2>Quiz</h2>
@@ -1585,9 +1670,18 @@
   // Which kind of shape the outlines, tapping and Play buttons use: 'triad' or 'full'
   let shapeType = 'triad';
   const shapeCache = new Map();
+  // Inversion filter for triad shapes: null (off), 0 root position (root lowest), 1 first inversion (3rd lowest),
+  // 2 second inversion (5th lowest). Shapes with another note lowest are left out, so their notes fade.
+  let inversion = null;
+  const invApplies = chord => shapeType === 'triad' && inversion !== null && chord.pcs.length <= 4;
   function playableShapes(chord, low) {
-    const key = shapeType + '|' + chord.pcs.join(',') + '|' + (chord.dim ? 'd' : '') + '|' + low;
-    if (!shapeCache.has(key)) shapeCache.set(key, shapeType === 'full' ? fullShapes(chord, low) : triadShapes(chord, low));
+    const inv = invApplies(chord) ? inversion : '';
+    const key = shapeType + '|' + chord.pcs.join(',') + '|' + (chord.dim ? 'd' : '') + '|' + low + '|' + inv;
+    if (!shapeCache.has(key)) {
+      let list = shapeType === 'full' ? fullShapes(chord, low) : triadShapes(chord, low);
+      if (inv !== '') list = list.filter(sh => (TUNING[sh.low] + sh.frets[0]) % 12 === chord.pcs[inv]);
+      shapeCache.set(key, list);
+    }
     return shapeCache.get(key);
   }
 
@@ -3425,9 +3519,441 @@
     }
   }
 
+  // ---- Build a chord: the scale is laid out faded; tap notes to pick them and the chord is named ----
+  let buildPicks = [];          // "string,fret" of the picked notes (frets counted from the capo, like every board)
+  let buildFade = 'scale';      // faded notes: 'scale' (the Scale board's notes) or 'all' (every note, to reach outside the key)
+  let buildZoom = false;
+  const IVL = ['R', 'b2', '2', 'b3', '3', '4', 'b5', '5', 'b6', '6', 'b7', '7'];
+  const IVL_LONG = ['unison', 'minor 2nd', 'major 2nd', 'minor 3rd', 'major 3rd', 'perfect 4th', 'tritone', 'perfect 5th', 'minor 6th', 'major 6th', 'minor 7th', 'major 7th'];
+  // Chord types by their notes above the root. r is how common the name is (lower is preferred).
+  const BUILD_TYPES = [
+    ['', [0, 4, 7], 0], ['m', [0, 3, 7], 0], ['dim', [0, 3, 6], 1], ['aug', [0, 4, 8], 2], ['sus2', [0, 2, 7], 2], ['sus4', [0, 5, 7], 1], ['5', [0, 7], 1],
+    ['7', [0, 4, 7, 10], 1], ['maj7', [0, 4, 7, 11], 1], ['m7', [0, 3, 7, 10], 1], ['m7b5', [0, 3, 6, 10], 2], ['dim7', [0, 3, 6, 9], 2],
+    ['mMaj7', [0, 3, 7, 11], 3], ['6', [0, 4, 7, 9], 2], ['m6', [0, 3, 7, 9], 2], ['add9', [0, 2, 4, 7], 2], ['madd9', [0, 2, 3, 7], 2],
+    ['7sus4', [0, 5, 7, 10], 2], ['7#5', [0, 4, 8, 10], 3], ['7b5', [0, 4, 6, 10], 3], ['add11', [0, 4, 5, 7], 3],
+    ['9', [0, 2, 4, 7, 10], 2], ['maj9', [0, 2, 4, 7, 11], 2], ['m9', [0, 2, 3, 7, 10], 2], ['6/9', [0, 2, 4, 7, 9], 3], ['7b9', [0, 1, 4, 7, 10], 3], ['7#9', [0, 3, 4, 7, 10], 3],
+    ['7', [0, 4, 10], 3, 'no 5th'], ['maj7', [0, 4, 11], 3, 'no 5th'], ['m7', [0, 3, 10], 3, 'no 5th'],
+    ['9', [0, 2, 4, 10], 4, 'no 5th'], ['maj9', [0, 2, 4, 11], 4, 'no 5th'], ['m9', [0, 2, 3, 10], 4, 'no 5th'],
+  ];
+  const FLAT_NAMES = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+  const SHARP_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+  // A note's name in the current key: the scale's own spelling, else sharps or flats to match the key
+  function keyNoteName(pc) {
+    const n = scaleNotes.find(x => x.pc === pc);
+    if (n) return n.name;
+    const flats = scaleNotes.some(x => x.name.length > 1 && x.name[1] === 'b') || /b/.test(currentKey.slice(1)) || currentKey === 'F';
+    return (flats ? FLAT_NAMES : SHARP_NAMES)[pc];
+  }
+  // Every name that fits the picked notes, best first: a root in the bass beats a slash chord, then simpler names
+  function nameChord(pcsIn, bassPc) {
+    const pcs = [...new Set(pcsIn)];
+    const out = [];
+    pcs.forEach(root => {
+      const ivs = pcs.map(pc => (pc - root + 12) % 12).sort((a, b) => a - b);
+      BUILD_TYPES.forEach(([suf, tpl, r, extra]) => {
+        if (tpl.length !== ivs.length || !tpl.every((x, i) => x === ivs[i])) return;
+        const rn = keyNoteName(root);
+        const slash = root !== bassPc ? '/' + keyNoteName(bassPc) : '';
+        out.push({ name: rn + suf + slash, base: rn + suf, root, suf, extra, score: r + (slash ? 2.5 : 0) });
+      });
+    });
+    out.sort((a, b) => a.score - b.score);
+    return out;
+  }
+  // A string sounds only its highest fretted note: a pick below another pick on the same string is silenced
+  function buildNotes(all = false) {
+    const list = buildPicks.map(k => { const [si, f] = k.split(',').map(Number); return { si, f, midi: midiOf(si, f), pc: (TUNING[si] + f) % 12 }; })
+      .filter(n => n.f >= 0 && n.f <= FRETS);
+    const top = {};
+    list.forEach(n => { top[n.si] = Math.max(top[n.si] ?? -1, n.f); });
+    list.forEach(n => { n.silenced = n.f < top[n.si]; });
+    return list.filter(n => all || !n.silenced).sort((a, b) => a.midi - b.midi);
+  }
+  function buildResult() {
+    const notes = buildNotes();
+    const muted = buildNotes(true).filter(n => n.silenced);
+    if (!notes.length) return { notes, muted, names: [] };
+    return { notes, muted, names: nameChord(notes.map(n => n.pc), notes[0].pc) };
+  }
+  function buildWin(notes) {
+    if (!buildZoom || !notes.length) return null;
+    const fretted = notes.map(n => n.f).filter(f => f > 0);
+    const W = 8;
+    let lo, hi;
+    if (notes.some(n => n.f === 0) || !fretted.length || Math.min(...fretted) <= 3) { lo = 0; hi = W; }
+    else {
+      const mid = (Math.min(...fretted) + Math.max(...fretted)) / 2;
+      lo = Math.max(1, Math.min(Math.round(mid - (W - 1) / 2), FRETS - W + 1));
+      hi = lo + W - 1;
+    }
+    return { lo, hi: Math.min(hi, FRETS), zoomed: true, fill: true, anchor: Math.round((lo + hi) / 2) };
+  }
+  function renderBuild() {
+    if (!scaleNotes.length) return;
+    const { notes, muted, names } = buildResult();
+    const best = names[0] || null;
+    const refPc = best ? best.root : (notes.length ? notes[0].pc : currentRoot);   // Intervals: Chord count from here
+    const label = pc => labelMode === 'intervals' ? IVL[(pc - refPc + 12) % 12]
+      : labelMode === 'scaledeg' ? keyDegOf(keyNoteName(pc), pc) : keyNoteName(pc);
+    // Faded notes: the Scale board's notes, or all twelve with the ones outside the key in teal
+    const sb = scaleBoardNotes();
+    const keySet = currentPcSet();
+    const bgPcs = buildFade === 'all' ? [...Array(12).keys()] : sb.notes.map(n => n.pc);
+    const scaleBg = new Map(bgPcs.map(pc => [pc, label(pc)]));
+    const scaleOut = new Set(bgPcs.filter(pc => !keySet.has(pc)));
+    const rootPart = { pcs: best ? [best.root] : [], color: '#b4532a' };
+    const restPart = { pcs: [...new Set(notes.map(n => n.pc))].filter(pc => !best || pc !== best.root), color: '#3d5a80' };
+    const onlyPos = new Map();
+    notes.forEach(n => onlyPos.set(n.si + ',' + n.f, [best && n.pc === best.root ? rootPart : restPart]));
+    const mutedPart = { pcs: [...new Set(muted.map(n => n.pc))], color: '#9a9182' };
+    muted.forEach(n => onlyPos.set(n.si + ',' + n.f, [mutedPart]));
+    const pcNamesB = {};
+    for (let pc = 0; pc < 12; pc++) pcNamesB[pc] = label(pc);
+    // Fingering: when every picked note is on its own string, number the fingers like the chord boards
+    if (labelMode === 'fingers' && notes.length && new Set(notes.map(n => n.si)).size === notes.length) {
+      const lo = Math.min(...notes.map(n => n.si)), hiS = Math.max(...notes.map(n => n.si));
+      const frets = [];
+      for (let si = lo; si <= hiS; si++) { const n = notes.find(x => x.si === si); frets.push(n ? n.f : -1); }
+      const fm = fingerMap(frets);
+      if (fm) notes.forEach(n => { pcNamesB['@' + n.si + ',' + n.f] = String(fm[n.si - lo]); });
+    }
+    const extras = { onlyPos, scaleBg, scaleOut, rootPcs: new Set(best ? [best.root] : []) };
+    const w = buildWin(notes.concat(muted));
+    if (w) extras.win = w;
+    let svg = fretboard([rootPart, restPart, mutedPart], [true, true, true], pcNamesB, [], [], false, extras);
+    // Silenced picks: grey and see-through, with a slash, still tappable to remove
+    muted.forEach(n => {
+      svg = svg.replace(new RegExp(`<g class="note" data-s="${n.si}" data-f="${n.f}"([^>]*)>([\\s\\S]*?)</g>`), (m, attrs, inner) =>
+        `<g class="note silenced" data-s="${n.si}" data-f="${n.f}"${attrs.replace(/ opacity="[^"]*"/, '')} opacity="0.5">${inner}` +
+        inner.replace(/[\s\S]*?<circle cx="([\d.]+)" cy="([\d.]+)" r="([\d.]+)"[\s\S]*/, (q, cx, cy, r) => `<line x1="${+cx - r * 0.75}" y1="${+cy + r * 0.75}" x2="${+cx + r * 0.75}" y2="${+cy - r * 0.75}" stroke="#2b2a27" stroke-width="2.2"/>`) + `</g>`);
+    });
+    if (labelMode === 'fingers') {   // swap the picked dots' labels for finger numbers where there are some
+      notes.forEach(n => {
+        const t = pcNamesB['@' + n.si + ',' + n.f];
+        if (t === undefined) return;
+        svg = svg.replace(new RegExp(`(<g class="note" data-s="${n.si}" data-f="${n.f}"[^>]*>[\\s\\S]*?<text[^>]*>)[^<]*(</text>)`), `$1${t === '0' ? 'O' : t}$2`);
+      });
+    }
+    document.getElementById('build').innerHTML = svg;
+    const fb = document.getElementById('build-fade');
+    fb.textContent = 'Faded: ' + (buildFade === 'all' ? 'All notes' : 'Scale');
+    fb.setAttribute('aria-pressed', String(buildFade === 'scale'));
+    const zb = document.getElementById('build-zoom');
+    zb.hidden = !notes.length;
+    zb.setAttribute('aria-pressed', String(buildZoom && !!notes.length));
+    const mutedLine = muted.length ? `<p class="bo-line"><span>Silenced:</span> ${muted.map(n => `${keyNoteName(n.pc)} (a higher note is picked on the ${stringNames()[n.si]} string)`).join(', ')}</p>` : '';
+    document.getElementById('build-title').dataset.title = best ? `Build your own: ${best.name}` : 'Build your own';
+    // The answer under the board
+    const box = document.getElementById('build-chips');
+    document.getElementById('build-add').disabled = !notes.length;
+    syncByoButtons();
+    if (!notes.length) {
+      box.innerHTML = `<p class="bo-line"><span>Tap notes on the board to build a chord. Tap a picked note again to remove it.</span></p>`;
+      return;
+    }
+    const uniqPcs = [...new Set(notes.map(n => n.pc))];
+    const ordered = best ? uniqPcs.slice().sort((a, b) => ((a - best.root + 12) % 12) - ((b - best.root + 12) % 12)) : uniqPcs;
+    const noteLine = `<p class="bo-line"><span>Notes:</span> ${ordered.map(pc => keyNoteName(pc)).join(' ')}` +
+      (best ? ` &nbsp;<span>(${ordered.map(pc => IVL[(pc - best.root + 12) % 12]).join(' ')})</span>` : '') + `</p>`;
+    if (best) {
+      const inKey = uniqPcs.every(pc => keySet.has(pc));
+      let where = inKey ? `in ${currentScale}` : `outside ${currentScale}`;
+      const r = resolveChordList(best.base.replace('6/9', '6add9'));
+      if (!r.error && r.steps.length) {
+        const c = stepChord(r.steps[0]);
+        if (c && c.roman && best.suf !== '5') {
+          // The numeral when the progression's chord is this exact chord; otherwise the chord it is built on
+          const sfx = best.suf === 'm7b5' ? null : best.suf.replace(/^m(?!aj)/, '').replace(/^(dim|aug)/, '');
+          const rom = /\d/.test(c.roman) ? c.roman : sfx === null ? c.roman.replace('\u00b0', '') + '\u00f87' : c.roman + sfx;
+          const num = c.name === best.base ? rom : `built on ${c.roman}`;
+          where = (inKey ? `${num} in ` : `${num}, outside `) + currentScale;
+        }
+      }
+      const also = names.slice(1, 4).map(n => n.name + (n.extra ? ` (${n.extra})` : ''));
+      box.innerHTML = `<p class="bo-name">${best.name}${best.extra ? ` <small>(${best.extra})</small>` : ''}<small>${where}</small></p>` + noteLine +
+        (best.root !== notes[0].pc ? `<p class="bo-line"><span>Bass:</span> ${keyNoteName(notes[0].pc)} (${IVL[(notes[0].pc - best.root + 12) % 12]} of the chord in the bass)</p>` : '') +
+        (also.length ? `<p class="bo-line"><span>Also:</span> ${also.join(', ')}</p>` : '');
+    } else if (uniqPcs.length === 1) {
+      box.innerHTML = `<p class="bo-line"><span>One note:</span> ${keyNoteName(uniqPcs[0])}${notes.length > 1 ? ' (in octaves)' : ''}. Add more notes to make a chord.</p>`;
+    } else if (uniqPcs.length === 2) {
+      const iv = (uniqPcs.find(pc => pc !== notes[0].pc) - notes[0].pc + 12) % 12;
+      box.innerHTML = `<p class="bo-line"><span>Interval:</span> ${IVL_LONG[iv]} (${keyNoteName(notes[0].pc)} up to ${keyNoteName((notes[0].pc + iv) % 12)}). Add a third note to make a chord.</p>`;
+    } else {
+      box.innerHTML = `<p class="bo-line"><span>No common chord name for these notes.</span></p>` +
+        `<p class="bo-line"><span>From the bass:</span> ${uniqPcs.map(pc => keyNoteName(pc) + ' ' + IVL[(pc - notes[0].pc + 12) % 12]).join(', ')}</p>`;
+    }
+    if (mutedLine) box.insertAdjacentHTML('beforeend', mutedLine);
+  }
+  document.getElementById('build').addEventListener('click', e => {
+    const n = e.target.closest('.note');
+    if (!n) return;   // the shared board handler plays the tapped note
+    const k = n.dataset.s + ',' + n.dataset.f;
+    const i = buildPicks.indexOf(k);
+    if (i >= 0) buildPicks.splice(i, 1); else buildPicks.push(k);
+    if (!buildPicks.length) buildZoom = false;
+    document.getElementById('build-note').textContent = '';
+    renderBuild();
+    refreshFocus();
+  });
+  document.getElementById('build-fade').addEventListener('click', () => { buildFade = buildFade === 'all' ? 'scale' : 'all'; renderBuild(); refreshFocus(); });
+  document.getElementById('build-zoom').addEventListener('click', () => { buildZoom = !buildZoom; renderBuild(); refreshFocus(); });
+  document.getElementById('build-clear').addEventListener('click', () => { buildPicks = []; buildZoom = false; document.getElementById('build-note').textContent = ''; renderBuild(); refreshFocus(); });
+  document.getElementById('build-play').addEventListener('click', e => {
+    e.stopPropagation();
+    const notes = buildNotes();
+    if (!notes.length || !soundOn || !ensureAudio()) return;
+    stopAll();
+    const t0 = ac.currentTime + 0.03;
+    notes.forEach((n, i) => {
+      playNote(n.midi, t0 + i * 0.035, 0.3);
+      flashLazy(() => document.querySelector(`#build .note[data-s="${n.si}"][data-f="${n.f}"]`), 'playing', t0 + i * 0.035, 900);
+    });
+  });
+  // ---- Your song (Build your own): a strip of steps, each the notes picked on the board and a length in beats ----
+  let byo = [];          // { n: ["string,fret", ...] sounding notes, b: beats }
+  let byoSel = -1;       // the step loaded onto the board for editing
+  let byoRun = false;    // the song is what is playing
+  const BYO_BEATS = [0.5, 1, 1.5, 2, 3, 4, 6, 8];
+  const BYO_MAX = 64;
+  const fmtBeats = b => { const w = Math.floor(b), h = b - w >= 0.5 ? '½' : ''; return (w || '') + h + (b === 1 || b === 0.5 ? ' beat' : ' beats'); };
+  function stepNotes(st) {
+    return st.n.map(k => { const [si, f] = k.split(',').map(Number); return { si, f, midi: midiOf(si, f), pc: (TUNING[si] + f) % 12 }; })
+      .filter(x => x.f >= 0 && x.f <= FRETS).sort((a, b) => a.midi - b.midi);
+  }
+  function stepInfo(st) {
+    const ns = stepNotes(st);
+    if (!ns.length) return { name: '—', sub: '', chord: null, notes: ns };
+    const pcs = [...new Set(ns.map(x => x.pc))];
+    const sub = ns.map(x => keyNoteName(x.pc)).join(' ');
+    if (pcs.length === 1) return { name: keyNoteName(pcs[0]), sub: ns.length > 1 ? 'octaves' : 'note', chord: null, notes: ns };
+    const nm = nameChord(pcs, ns[0].pc)[0];
+    return { name: nm ? nm.name : pcs.map(pc => keyNoteName(pc)).join('+'), sub, chord: nm || null, notes: ns };
+  }
+  function syncByoButtons() {
+    const up = document.getElementById('build-update');
+    const ok = byoSel >= 0 && byoSel < byo.length;
+    up.hidden = !ok;
+    if (ok) up.textContent = `Update step ${byoSel + 1}`;
+    up.disabled = !buildNotes().length;
+  }
+  function renderByo() {
+    const strip = document.getElementById('byo-strip');
+    if (byoSel >= byo.length) byoSel = -1;
+    if (!byo.length) {
+      strip.innerHTML = '<p class="empty">Pick notes on the board above and tap Add To Song. A step can be one note or a chord.</p>';
+    } else {
+      strip.innerHTML = byo.map((st, i) => {
+        const inf = stepInfo(st);
+        return `<div class="byo-card${i === byoSel ? ' sel' : ''}" data-i="${i}">` +
+          `<span class="byo-grip" aria-label="Drag to move step ${i + 1}" title="Drag to move">⠇</span>` +
+          `<button type="button" class="byo-main" aria-label="Step ${i + 1}: ${inf.name}. Tap to edit on the board"><span class="byo-num">${i + 1}</span><b>${inf.name}</b><span>${inf.sub}</span></button>` +
+          `<span class="byo-side"><button type="button" class="byo-del" aria-label="Remove step ${i + 1}">×</button>` +
+          `<button type="button" class="byo-beats" aria-label="Length: ${fmtBeats(st.b)}. Tap to change">${fmtBeats(st.b)}</button></span></div>`;
+      }).join('');
+    }
+    const total = byo.reduce((a, st) => a + st.b, 0);
+    const bars = Math.round(total / curMeter().beats * 100) / 100;
+    document.getElementById('byo-total').textContent = byo.length
+      ? `${byo.length} step${byo.length === 1 ? '' : 's'} · ${fmtBeats(total)} (${bars} bar${bars === 1 ? '' : 's'} of ${tempo.meter}) at ${tempo.bpm} BPM · tap a step to edit, its length to change it, drag ⠇ to move`
+      : '';
+    document.getElementById('byo-prog').disabled = !byo.some(st => stepInfo(st).chord);
+    syncByoButtons();
+  }
+  const byoNote = t => { document.getElementById('byo-note').textContent = t; };
+  document.getElementById('build-add').addEventListener('click', () => {
+    const ns = buildNotes();
+    if (!ns.length) return;
+    if (byo.length >= BYO_MAX) { byoNote(`A song holds ${BYO_MAX} steps.`); return; }
+    const one = new Set(ns.map(x => x.pc)).size === 1;
+    byo.push({ n: ns.map(x => x.si + ',' + x.f), b: one ? 1 : tempo.beats });
+    byoSel = -1;   // the picks stay on the board: the next step usually starts from near them
+    document.getElementById('build-note').textContent = '';
+    byoNote('');
+    renderBuild(); renderByo(); refreshFocus();
+  });
+  document.getElementById('build-update').addEventListener('click', () => {
+    const ns = buildNotes();
+    if (byoSel < 0 || !ns.length) return;
+    byo[byoSel].n = ns.map(x => x.si + ',' + x.f);
+    byoNote(`Step ${byoSel + 1} updated.`);
+    renderByo();
+  });
+  // Hear one step now (when it is tapped)
+  function playStepNow(st) {
+    if (!soundOn || !ensureAudio()) return;
+    stopAll();
+    const ns = stepNotes(st), t0 = ac.currentTime + 0.03;
+    ns.forEach((x, i) => playNote(x.midi, t0 + i * 0.035, 0.3));
+  }
+  const stripEl = document.getElementById('byo-strip');
+  let byoDrag = null;
+  let byoJustDragged = false;
+  stripEl.addEventListener('click', e => {
+    const card = e.target.closest('.byo-card');
+    if (!card || byoJustDragged) return;
+    const i = Number(card.dataset.i);
+    if (e.target.closest('.byo-del')) {
+      byo.splice(i, 1);
+      if (byoSel === i) byoSel = -1; else if (byoSel > i) byoSel--;
+      renderByo(); return;
+    }
+    if (e.target.closest('.byo-beats')) {
+      const k = BYO_BEATS.indexOf(byo[i].b);
+      byo[i].b = BYO_BEATS[(k + 1) % BYO_BEATS.length];
+      renderByo(); return;
+    }
+    if (e.target.closest('.byo-main')) {
+      if (byoSel === i) byoSel = -1;
+      else { byoSel = i; buildPicks = byo[i].n.slice(); buildZoom = false; playStepNow(byo[i]); }
+      renderBuild(); renderByo(); refreshFocus();
+    }
+  });
+  // Drag a step by its grip to move it (pointer events, so a finger works on the iPad too)
+  stripEl.addEventListener('pointerdown', e => {
+    const grip = e.target.closest('.byo-grip');
+    if (!grip) return;
+    e.preventDefault();
+    const card = grip.closest('.byo-card');
+    byoDrag = { from: Number(card.dataset.i), card, x: e.clientX, y: e.clientY, to: null, moved: false };
+    try { grip.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+  });
+  stripEl.addEventListener('pointermove', e => {
+    if (!byoDrag) return;
+    const d = byoDrag, dx = e.clientX - d.x, dy = e.clientY - d.y;
+    if (!d.moved && Math.hypot(dx, dy) < 6) return;
+    d.moved = true;
+    d.card.classList.add('dragging');
+    d.card.style.transform = `translate(${dx}px, ${dy}px)`;
+    const cards = Array.from(stripEl.querySelectorAll('.byo-card')).filter(c => c !== d.card);
+    cards.forEach(c => c.classList.remove('drop-before', 'drop-after'));
+    let best = null, bd = Infinity;
+    cards.forEach(c => {
+      const r = c.getBoundingClientRect();
+      const cx = Math.max(r.left, Math.min(e.clientX, r.right)), cy = Math.max(r.top, Math.min(e.clientY, r.bottom));
+      const dist = Math.hypot(e.clientX - cx, e.clientY - cy);
+      if (dist < bd) { bd = dist; best = c; }
+    });
+    if (!best) { d.to = null; return; }
+    const r = best.getBoundingClientRect();
+    const after = e.clientX > r.left + r.width / 2;
+    best.classList.add(after ? 'drop-after' : 'drop-before');
+    const bi = Number(best.dataset.i);
+    d.to = after ? bi + 1 : bi;
+  });
+  function endDrag() {
+    if (!byoDrag) return;
+    const d = byoDrag;
+    byoDrag = null;
+    if (!d.moved || d.to === null) { d.card.classList.remove('dragging'); d.card.style.transform = ''; return; }
+    byoJustDragged = true;
+    setTimeout(() => { byoJustDragged = false; }, 50);   // the click that follows a drag is ignored
+    const to = d.to > d.from ? d.to - 1 : d.to;
+    const sel = byoSel >= 0 ? byo[byoSel] : null;
+    const [st] = byo.splice(d.from, 1);
+    byo.splice(to, 0, st);
+    if (sel) byoSel = byo.indexOf(sel);
+    renderByo();
+  }
+  stripEl.addEventListener('pointerup', endDrag);
+  stripEl.addEventListener('pointercancel', endDrag);
+  // Play the song: each step lasts its beats at the Song Builder tempo. Chords follow the strum pattern;
+  // single notes ring for their length. Drums, metronome (with count-in) and Loop work as for the progression.
+  function scheduleByo(t0) {
+    const beat = beatSeconds();
+    let t = t0, prevChoke = null, total = 0;
+    byo.forEach((st, k) => {
+      const len = st.b * beat;
+      const ns = stepNotes(st);
+      const choke = ac.createGain();
+      choke.connect(master);
+      if (prevChoke) prevChoke.gain.setTargetAtTime(0.0001, t, 0.04);
+      prevChoke = choke;
+      if (ns.length === 1) playNote(ns[0].midi, t, 0.36, choke);
+      else if (ns.length > 1) {
+        const lo = Math.min(...ns.map(x => x.si)), hi = Math.max(...ns.map(x => x.si));
+        const frets = [];
+        for (let si = lo; si <= hi; si++) { const x = ns.find(y => y.si === si); frets.push(x ? x.f : -1); }
+        scheduleGuitarChord({ low: lo, frets }, null, null, t, len, t0, choke);
+      }
+      flashLazy(() => stripEl.querySelector(`.byo-card[data-i="${k}"]`), 'now-playing', t, Math.max(60, len * 1000 - 60));
+      t += len;
+      total += st.b;
+    });
+    scheduleDrums(t0, Math.ceil(total));
+    if (metro.on) scheduleMetro(t0, Math.ceil(total), false);
+    return t - t0;
+  }
+  function playByo() {
+    if (!byo.length || !soundOn || !ensureAudio()) return;
+    stopAll();
+    byoRun = true;
+    let start = ac.currentTime + 0.05;
+    if (metro.on && metro.count) { const bar = curMeter().beats; scheduleMetro(start, bar, true); start += bar * beatSeconds(); }
+    let first = true;
+    const next = () => {
+      loopTimer = null;
+      if (!first && !loop.on) return;
+      const len = scheduleByo(start);
+      first = false;
+      if (!len || !loop.on) return;
+      start += len;
+      loopTimer = setTimeout(next, Math.max(0, (start - ac.currentTime - 0.6) * 1000));
+      timers.push(loopTimer);
+    };
+    next();
+  }
+  const byoSounding = () => byoRun && (loopTimer !== null || liveSources.size > 0);
+  document.getElementById('byo-play').addEventListener('click', e => {
+    e.stopPropagation();
+    if (byoSounding()) stopAll(); else playByo();
+    setTimeout(syncByoPlay, 60);
+  });
+  function syncByoPlay() {
+    const on = byoSounding();
+    document.getElementById('byo-play').textContent = on ? '■ Stop' : '▶ Play';
+    const lb = document.getElementById('byo-loop');
+    lb.setAttribute('aria-pressed', String(loop.on));
+    lb.textContent = loop.on ? 'Loop on' : 'Loop off';
+  }
+  setInterval(syncByoPlay, 300);
+  document.getElementById('byo-loop').addEventListener('click', () => { document.getElementById('loop-toggle').click(); syncByoPlay(); });
+  let byoClearArmed = false;
+  document.getElementById('byo-clear').addEventListener('click', e => {
+    const b = e.currentTarget;
+    if (!byo.length) return;
+    if (!byoClearArmed) {
+      byoClearArmed = true; b.textContent = 'Tap again to clear';
+      setTimeout(() => { byoClearArmed = false; b.textContent = 'Clear song'; }, 3000);
+      return;
+    }
+    byoClearArmed = false; b.textContent = 'Clear song';
+    byo = []; byoSel = -1; byoNote('');
+    renderByo();
+  });
+  // The song's chords go on the end of the progression (single notes and unnamed note groups are left out)
+  document.getElementById('byo-prog').addEventListener('click', () => {
+    const named = byo.map(st => stepInfo(st).chord).filter(Boolean);
+    const skipped = byo.length - named.length;
+    if (!named.length) return;
+    const r = resolveChordList(named.map(c => c.base.replace('6/9', '6add9')).join(' '));
+    if (r.error || !r.steps.length) { byoNote(`"${r.error}" can't go in the progression.`); return; }
+    snapProg();
+    extraNames = uniq(extraNames.concat(r.outsideNames));
+    const steps = progSeq.concat(r.steps);
+    finishLoad(steps);
+    byoNote(`Added ${r.steps.length} chord${r.steps.length === 1 ? '' : 's'} to the progression (${progSeq.length} steps in all).` +
+      (skipped ? ` Left out ${skipped} single-note step${skipped === 1 ? '' : 's'}.` : '') +
+      (steps.length > SEQ_MAX ? ` A progression holds ${SEQ_MAX} steps, so the rest were left off.` : '') +
+      (named.some(c => c.name.includes('/')) ? ' Slash chords go in without their bass note.' : '') +
+      (r.simplified.length ? ` Simplified: ${uniq(r.simplified).join(', ')}.` : ''));
+    suggestKey();
+  });
+
   function renderAll() {
     const selected = chords.filter((c, i) => active[i]);
     renderScale();
+    renderBuild();
+    renderByo();
     renderGroup('combined', selected, 'No chords selected. Turn on a chord above.');
     renderGroup('major', selected.filter(c => c.type === 'major'), 'No major chords selected.');
     renderGroup('minor', selected.filter(c => c.type === 'minor'), 'No minor chords selected.');
@@ -3626,10 +4152,41 @@
       });
       drawShapeButtons();   // rebuilds the string choices for this shape type
       updateShapeText();
+      syncInversion();
       renderAll();
     });
     stypeWrap.appendChild(b);
   });
+
+  // Inversion buttons
+  const INV_OPTIONS = [['Off', null], ['Root', 0], ['1st', 1], ['2nd', 2]];
+  const INV_TEXT = { null: 'Off: every triad shape is outlined.', 0: 'Root position: the root is the lowest note.',
+    1: '1st inversion: the 3rd is the lowest note.', 2: '2nd inversion: the 5th is the lowest note.' };
+  const invWrap = document.getElementById('inversion');
+  function syncInversion() {
+    invWrap.querySelectorAll('.key').forEach((b, i) => { b.setAttribute('aria-pressed', String(INV_OPTIONS[i][1] === inversion)); b.disabled = shapeType !== 'triad'; });
+    document.getElementById('inv-hint').textContent = shapeType === 'triad' ? INV_TEXT[inversion] : 'Inversions apply to triad shapes.';
+  }
+  function setInversion(v) {
+    inversion = v;
+    // picked shapes that no longer fit are dropped
+    (boardChords || []).forEach((c, pos) => {
+      const k = posKeyOf(pos, c);
+      if (!picks[k]) return;
+      const ok = new Set([0, 1, 2, 3, 4, 5].flatMap(low => playableShapes(c, low).map(sh => low + ':' + sh.frets.join(','))));
+      picks[k] = picks[k].filter(sk => ok.has(sk));
+      if (!picks[k].length) delete picks[k];
+    });
+    syncInversion();
+    renderAll();
+  }
+  INV_OPTIONS.forEach(([label, value]) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'key'; b.textContent = label;
+    b.addEventListener('click', () => { if (value !== inversion) setInversion(value); });
+    invWrap.appendChild(b);
+  });
+  syncInversion();
 
   /* 7TH AND 9TH CHORD SELECTION (hidden for now; remove this comment, and the HTML one, to bring it back)
   const CTYPE_OPTIONS = [['Triads', 3], ['7th chords', 4], ['9th chords', 5]];
@@ -4531,6 +5088,7 @@
     liveSources.forEach(src => { try { src.stop(); } catch (e) { /* already stopped */ } });
     liveSources.clear();
     document.querySelectorAll('.now-playing').forEach(el => el.classList.remove('now-playing'));
+    byoRun = false;
   }
 
   // Brief visual feedback, timed to when the note sounds
@@ -4582,7 +5140,7 @@
       gate.gain.setTargetAtTime(0.0001, startAt + o.release, 0.025);
       dest = gate;
     }
-    let order = frets.map((f, j) => j);
+    let order = frets.map((f, j) => j).filter(j => frets[j] >= 0);   // -1 is a muted string (Build your own voicings)
     if (up) order = order.slice(-3).reverse();
     order.forEach((j, n) => {
       const f = frets[j];
@@ -4963,7 +5521,8 @@
     const eighth = beatSeconds() / mt.sub;
     const barLen = mt.beats * mt.sub;
     if (!pat.slots) { strum(v.low, v.frets, t0, card, dest); return; }
-    const n = v.frets.length;
+    const live = v.frets.map((f, i) => f >= 0 ? i : -1).filter(i => i >= 0);   // strings that sound
+    const n = live.length;
     const gap = Math.min(strumGap(), eighth * 0.8 / Math.max(1, n - 1)); // never longer than the slot
     const ev = [];
     const first = Math.ceil((t0 - passT0) / eighth - 1e-6);
@@ -4972,8 +5531,8 @@
       const when = passT0 + k * eighth;
       if (pat.slots === 'arp') {
         const seq = [];
-        for (let i = 0; i < n; i++) seq.push(i);
-        for (let i = n - 2; i >= 1; i--) seq.push(i);
+        for (let i = 0; i < n; i++) seq.push(live[i]);
+        for (let i = n - 2; i >= 1; i--) seq.push(live[i]);
         ev.push({ when, kind: 'N', idx: seq[count % seq.length], accent: k % mt.sub === 0 ? 1 : 0.8 });
       } else {
         const ch = pat.slots[((k % barLen) + barLen) % barLen];
@@ -4987,7 +5546,7 @@
       if (e.kind === 'D' || e.kind === 'U') {
         strum(v.low, v.frets, e.when, card, dest, { dir: e.kind, gain: e.accent, gap, release, noShape: true });
       } else {
-        const j = e.kind === 'B' ? 0 : e.kind === 'b' ? Math.min(1, n - 1) : e.idx;
+        const j = e.kind === 'B' ? live[0] : e.kind === 'b' ? live[Math.min(1, n - 1)] : e.idx;
         playNote(midiOf(v.low + j, v.frets[j]), e.when, 0.3 * e.accent, dest);
         if (card) flash(card.querySelector(`.note[data-s="${v.low + j}"][data-f="${v.frets[j]}"]`), 'playing', e.when, 420);
       }
@@ -5372,7 +5931,7 @@
 
   // Tempo: each chord lasts `beats` beats at `bpm` beats per minute
   // Each chord lasts `beats` beats at `bpm` beats per minute, for the guitar and synth together.
-  const tempo = { bpm: 80, beats: 2, meter: '4/4' };
+  const tempo = { bpm: 80, beats: 4, meter: '4/4' };
   const beatSeconds = () => 60 / tempo.bpm;
   const chordSeconds = () => tempo.beats * beatSeconds();
   const plural = n => `${n} beat${n === 1 ? '' : 's'}`;
@@ -6126,7 +6685,7 @@
   });
   applyFollow();
   // ---- Focus view: an enlarged copy of one fretboard, kept up to date as the page changes ----
-  const FOCUS_ROOTS = { scale: 'scale', combined: 'combined', major: 'major', minor: 'minor', sumboard: 'sum-board-fb' };
+  const FOCUS_ROOTS = { build: 'build', scale: 'scale', combined: 'combined', major: 'major', minor: 'minor', sumboard: 'sum-board-fb' };
   function focusSource(target) {
     if (!target) return null;
     if (target.startsWith('single:')) {
@@ -6173,10 +6732,11 @@
     restoreQuiz();
     instBtn.hidden = false;
     // The label button is for the individual chord boards, on the guitar view (piano keys show note names or intervals only)
-    document.getElementById('focus-label-btn').hidden = !(focusTarget.startsWith('single:') && focusCfg.inst === 'guitar');
+    const ownOpts = (focusTarget.startsWith('single:') || focusTarget === 'build') && focusCfg.inst === 'guitar';
+    document.getElementById('focus-label-btn').hidden = !ownOpts;
     const ffb = document.getElementById('focus-fade-btn');
-    ffb.hidden = !(focusTarget.startsWith('single:') && focusCfg.inst === 'guitar');
-    if (!ffb.hidden) ffb.textContent = 'Faded: ' + (fadeViewOf(Number(focusTarget.slice(7))) === 'scale' ? 'Scale' : 'Shapes');
+    ffb.hidden = !ownOpts;
+    if (!ffb.hidden) ffb.textContent = 'Faded: ' + (focusTarget === 'build' ? (buildFade === 'all' ? 'All notes' : 'Scale') : fadeViewOf(Number(focusTarget.slice(7))) === 'scale' ? 'Scale' : 'Shapes');
     const src = focusSource(focusTarget);
     if (!src || !src.wrap) { closeFocus(); return; }
     const el = document.getElementById('focus');
@@ -6301,6 +6861,7 @@
     renderAll();   // the same setting as Dot labels in the controls, so every board follows it
   });
   document.getElementById('focus-fade-btn').addEventListener('click', () => {
+    if (focusTarget === 'build') { buildFade = buildFade === 'all' ? 'scale' : 'all'; renderBuild(); refreshFocus(); return; }
     if (!focusTarget || !focusTarget.startsWith('single:')) return;
     const pos = Number(focusTarget.slice(7));
     fadeView[pos] = fadeViewOf(pos) === 'scale' ? 'shapes' : 'scale';
@@ -6457,7 +7018,7 @@
   syncSecs();
 
   // ---- Main page view: hide whole sections of the main view ----
-  const VIEWS = [['scale', 'Scale'], ['quiz', 'Quiz'], ['combined', 'Combined'], ['major', 'Major chords'], ['minor', 'Minor chords'], ['singles', 'Individual']];
+  const VIEWS = [['scale', 'Scale'], ['build', 'Build your own'], ['quiz', 'Quiz'], ['combined', 'Combined'], ['major', 'Major chords'], ['minor', 'Minor chords'], ['singles', 'Individual']];
   const viewOn = {};
   VIEWS.forEach(([id]) => { viewOn[id] = true; });
   try { Object.assign(viewOn, JSON.parse(localStorage.getItem('views') || '{}')); } catch (e) { /* storage unavailable */ }
@@ -6479,8 +7040,8 @@
   // which shows the part of the guide for whatever you last touched ----
   const guideSrc = document.getElementById('guide-src').content;
   const guideSec = id => guideSrc.querySelector(`section[data-g="${id}"]`);
-  const GUIDE_GROUPS = [['Basics', ['start', 'setup', 'ipad']], ['Controls', ['tuning', 'key', 'scale', 'view', 'chords', 'display', 'labels', 'size', 'caged', 'shapes', 'zoom', 'prog', 'songs', 'chordin', 'vl', 'saved', 'sound', 'tempo', 'chordsound', 'strum', 'drums', 'metro', 'mix', 'focus', 'follow']],
-    ['The boards', ['scaleboard', 'quiz', 'groups', 'singles', 'playmode', 'faded']]];
+  const GUIDE_GROUPS = [['Basics', ['start', 'setup', 'ipad']], ['Controls', ['tuning', 'key', 'scale', 'view', 'chords', 'display', 'labels', 'size', 'caged', 'shapes', 'inv', 'zoom', 'prog', 'songs', 'chordin', 'vl', 'saved', 'sound', 'tempo', 'chordsound', 'strum', 'drums', 'metro', 'mix', 'focus', 'follow']],
+    ['The boards', ['scaleboard', 'build', 'byo', 'quiz', 'groups', 'singles', 'playmode', 'faded']]];
   const guidePage = document.getElementById('guide-page');
   (function buildGuide() {
     const toc = document.getElementById('gp-toc'), body = document.getElementById('gp-body');
@@ -6685,11 +7246,11 @@
   const SETUP_VER = 1;
   function setupState() {
     return {
-      v: SETUP_VER, t: tuningId, cp: capo, r: currentRoot, m: currentMode, st: scaleType, a: active.map(x => x ? 1 : 0).join(''),
+      v: SETUP_VER, t: tuningId, cp: capo, inv: inversion, r: currentRoot, m: currentMode, st: scaleType, a: active.map(x => x ? 1 : 0).join(''),
       c: [...cagedSel], sh: shapeType, sm: shapeMode instanceof Set ? [...shapeMode] : shapeMode,
       smt: shapeModeByType.triad instanceof Set ? [...shapeModeByType.triad] : shapeModeByType.triad, smf: shapeModeByType.full,
       fo: fadeOthers ? 1 : 0, l: labelMode, bc: boardCols, z: [zoom.on ? 1 : 0, zoom.anchor, zoom.below, zoom.above],
-      p: progSeq.map(st => st.mod ? [st.deg, st.mod] : [st.deg]), pk: picks, fv: fadeView, bz: boardZoom,
+      p: progSeq.map(st => st.mod ? [st.deg, st.mod] : [st.deg]), pk: picks, fv: fadeView, bz: boardZoom, bp: buildPicks, bf: buildFade, bzz: buildZoom ? 1 : 0, by: byo.map(st => [st.n, st.b]),
       vl: [vlMove, vlPitch, vlShow ? 1 : 0], tp: [tempo.bpm, tempo.beats, tempo.meter], cs: chordSound.inst,
       ss: strumCfg.speed, sp: strumPat.id, cst: customStrum.slots, cch: customStrum.chop ? 1 : 0, clk: customStrum.lock ? 1 : 0, xn: extraNames, dr: [drums.on ? 1 : 0, drums.kick ? 1 : 0, drums.snare ? 1 : 0, drums.pattern],
       pad: pad.on ? 1 : 0, lp: loop.on ? 1 : 0, so: soundOn ? 1 : 0, fl: follow.on ? 1 : 0,
@@ -6744,8 +7305,21 @@
     });
     step(() => { if (Array.isArray(o.vl)) { if (VL_MOVES.some(x => x[0] === o.vl[0])) vlMove = o.vl[0]; if (VL_PITCH.some(x => x[0] === o.vl[1])) vlPitch = o.vl[1]; vlShow = !!o.vl[2]; drawVlOptions(); } });
     step(() => { if (o.fv && typeof o.fv === 'object') Object.entries(o.fv).forEach(([k, v]) => { if (v === 'scale' || v === 'shapes') fadeView[k] = v; }); });
+    step(() => {
+      if (Array.isArray(o.bp)) buildPicks = o.bp.filter(k => isStr(k) && /^[0-5],\d{1,2}$/.test(k));
+      if (o.bf === 'all' || o.bf === 'scale') buildFade = o.bf;
+      buildZoom = !!o.bzz && buildPicks.length > 0;
+      if (Array.isArray(o.by)) {
+        byo = o.by.filter(x => Array.isArray(x) && Array.isArray(x[0]) && BYO_BEATS.includes(x[1]))
+          .map(x => ({ n: x[0].filter(k => isStr(k) && /^[0-5],\d{1,2}$/.test(k)), b: x[1] })).filter(st => st.n.length).slice(0, BYO_MAX);
+        byoSel = -1;
+      }
+      renderBuild();
+      renderByo();
+    });
     step(() => { if (o.bz && typeof o.bz === 'object') Object.entries(o.bz).forEach(([k, v]) => { boardZoom[k] = !!v; }); });
     step(() => { if (Array.isArray(o.z) && o.z.length === 4 && o.z.slice(1).every(isNum)) { zoom.on = !!o.z[0]; zoom.anchor = Math.max(0, Math.min(FRETS, o.z[1])); zoom.below = Math.max(0, Math.min(12, o.z[2])); zoom.above = Math.max(0, Math.min(12, o.z[3])); syncZoom(); } });
+    step(() => { inversion = [0, 1, 2].includes(o.inv) ? o.inv : null; syncInversion(); });
     step(() => { renderAll(); if (o.pk && typeof o.pk === 'object') { const pk = {}; Object.entries(o.pk).forEach(([k, v]) => { if (Array.isArray(v)) pk[k] = v.filter(isStr); }); picks = pk; drawSeq(); renderAll(); } });
     // Play song and the rest
     step(() => { if (Array.isArray(o.tp)) { if (isNum(o.tp[0])) { tempoEl.value = o.tp[0]; tempoEl.dispatchEvent(new Event('input')); } if (isNum(o.tp[1])) { tempo.beats = Math.max(1, Math.min(8, o.tp[1])); syncTempo(); } const mb = document.querySelector(`#meter-row [data-meter="${o.tp[2]}"]`); if (mb && mb.getAttribute('aria-pressed') !== 'true') mb.click(); } });
@@ -6871,7 +7445,7 @@
   // left alone: Roman numerals (ii, bvii°), chord and note names, the high e string, shape tabs and the line under each board. ----
   (function titleCase() {
     const PICK = 'button, summary, h1, h2, h3, .ctl-label, .qb-lbl, .pick-sub, option, optgroup, .pm-bar strong, .stepper > label, .stepper > span:first-child';
-    const SKIP = 'svg, .shape-chip[data-skey], .bd-more > summary, .nt, .sub-notes, .chord-sub, #song-results, .tag, textarea, input, .fsub';
+    const SKIP = 'svg, .shape-chip[data-skey], .bd-more > summary, .nt, .sub-notes, .chord-sub, #song-results, .tag, textarea, input, .fsub, .byo-main';
     const ROMAN = /^[b#]*(i|ii|iii|iv|v|vi|vii)[°ø+]?$/i;
     const fix = str => str.replace(/(^|[\s(\/–-])([a-z][A-Za-z'°ø+]*)/g, (m, pre, w) => (w === 'e' || w === 'x' || w === 'iPad' || ROMAN.test(w)) ? m : pre + w[0].toUpperCase() + w.slice(1));
     function doNode(t) {
